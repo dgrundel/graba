@@ -1,0 +1,30 @@
+@import-normalize; /* bring in normalize.css styles */
+
+// https://fontlibrary.org/en/font/poppins
+@import url(https://fontlibrary.org//face/poppins);
+
+body {
+  margin: 0;
+  background-color: #282c34;
+  color: #fff;
+  font-size: 12px;
+    font-weight: normal;
+    font-style: normal; 
+  font-family: 'PoppinsRegular', sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+a {
+    color: #91b6e5;
+    text-decoration: none;
+
+    &:hover {
+        text-decoration: underline;
+    }
+}  
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}

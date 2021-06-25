@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-    BrowserRouter as Router,
+    HashRouter as Router,
     Switch,
     Route,
     Link
@@ -25,19 +25,9 @@ export default function App() {
 
       <Router>
         <div>
-          <ul>
-            <li>
-              <Link to="/">Home</Link>
-            </li>
-            <li>
-              <Link to="/about">About</Link>
-            </li>
-            <li>
-              <Link to="/dashboard">Dashboard</Link>
-            </li>
-          </ul>
-  
-          <hr />
+        <Link to="/">Home</Link>&nbsp;
+        <Link to="/about">About</Link>&nbsp;
+        <Link to="/dashboard">Dashboard</Link>
   
           {/*
             A <Switch> looks through all its children <Route>
