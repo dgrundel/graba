@@ -1,0 +1,19 @@
+{
+  "name": "video-diff",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.ts",
+  "scripts": {
+    "test": "exit 0"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "concat-frames": "^1.0.3",
+    "jpg-stream": "^1.1.2",
+    "pixelmatch": "^5.2.1",
+    "pngjs": "^6.0.0",
+    "sharp": "^0.28.3"
+  }
+}
