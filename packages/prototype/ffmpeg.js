@@ -2,7 +2,6 @@ const child_process = require('child_process');
 const fs = require('fs');
 const path = require('path');
 const sharp = require('sharp');
-const os = require('os');
 
 const QUALITY_LEVEL = 24;
 const MAX_FRAME_RATE = 10;
@@ -10,8 +9,8 @@ const MAX_FRAME_RATE = 10;
 const sourceUrl = require('./secrets.json').feeds[1];
 const outputDir = path.resolve('./output');
 
-const JPG_START = 'ffd8';
-const JPG_END = 'ffd9';
+const JPG_START = Buffer.from('ffd8', 'hex');
+const JPG_END = Buffer.from('ffd9', 'hex');
 
 const ffmpegArgs = [
     '-i', sourceUrl, // input
@@ -25,31 +24,26 @@ const ffmpegArgs = [
 ];
 const ff = child_process.spawn('ffmpeg', ffmpegArgs);
 
-console.log(ffmpegArgs.join(' '));
+console.log('ffmpegArgs', ffmpegArgs.join(' '));
 
 let fileStream;
 
 ff.stdout.on('data', data => {
-    const startBytes = data.slice(0, 2).toString('hex');
-    if (startBytes === JPG_START) {
+    if (Buffer.compare(data.slice(0, 2), JPG_START) === 0) {
         fileStream = fs.createWriteStream(path.join(outputDir, `output-${+new Date()}.jpg`));
+        // fileStream = sharp({ sequentialRead: true });
     }
-    
-    // console.log('contains EOL', data.toString().indexOf(os.EOL));
-
-    // should handle rejection here and skip
-    // frame if need be
-    // sharp(data, { sequentialRead: true })
-    //     .ensureAlpha()
-    //     .jpeg()
-    //     .toFile(path.join(outputDir, `output-${+new Date()}.jpg`))
-    //     .catch(err => console.error(err));
-
+        
     fileStream.write(data);
 
-    const endBytes = data.slice(-2).toString('hex');
-    if (endBytes === JPG_END) {
+    if (Buffer.compare(data.slice(-2), JPG_END) === 0) {
         fileStream.end();
+        
+        // fileStream.ensureAlpha()
+        //     .jpeg()
+        //     // should handle rejection here and skip frame if need be
+        //     .toFile(path.join(outputDir, `output-${+new Date()}.jpg`))
+        //     .catch(err => console.error(err));
     }
 });
 
