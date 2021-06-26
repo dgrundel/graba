@@ -68,6 +68,8 @@ const run = async () => {
 
         // const diff = new PNG({ width, height });
 
+        // for diff.data, should be able to use Buffer.alloc(px.length) instead of PNG 
+        // to avoid size mismatch and remove need to ensureAlpha
         const diffValue = pixelmatch(prev, px, /* diff.data */ null, width, height, {
             threshold: 0.1,
             alpha: 0.3,
