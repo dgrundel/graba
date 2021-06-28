@@ -1,18 +1,14 @@
 import * as fs from 'fs';
 import * as path from 'path';
-import * as util from 'util';
 
-const readdir = util.promisify(fs.readdir);
-const stat = util.promisify(fs.stat);
-
-const CONFIG_FILE_NAME = 'hastyCam.config.json';
+const CONFIG_FILE_NAME = 'app.config.json';
 const PACKAGE_FILE = 'lerna.json'; // used to understand where the package root lives
 
-const findFile = async (name: string) => {
+const findFile = (name: string) => {
     let dir = __dirname;
 
-    while(true) {
-        const files = await readdir(dir);
+    while(dir !== path.resolve('/')) {
+        const files = fs.readdirSync(dir);
         if (files.includes(name)) {
             const filePath = path.join(dir, name);
             return filePath;
@@ -31,18 +27,14 @@ const findFile = async (name: string) => {
 };
 
 interface Feed {
+    name: string;
     streamUrl: string;
 }
 
-class Config {
-    filePath: string;
-
-    constructor(filePath: string) {
-        this.filePath = filePath;
-    }
+interface Config {
+    feeds: Feed[];
 }
 
-const getConfig = async () => {
-    const filePath = await findFile(CONFIG_FILE_NAME);
-    return new Config(filePath);
+export const getConfig = (): Config => {
+    return require(findFile(CONFIG_FILE_NAME)) as Config;
 };
