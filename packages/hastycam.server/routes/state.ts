@@ -3,17 +3,17 @@ import conf from 'conf';
 
 export const router = express.Router();
 
-const config = new conf({
-    configName: 'appConfig',
+const state = new conf({
+    configName: 'appState',
 });
 
-console.log('config.path: ', config.path);
+console.log('state.path: ', state.path);
 
 router.get('/:key', function(req, res, next) {
     const key = req.params.key;
-    const value = config.get(key);
+    const value = state.get(key);
 
-    console.log('config.get', key, value);
+    console.log('state.get', key, value);
 
     res.type('text/plain').send(value);
 });
@@ -22,17 +22,17 @@ router.post('/:key', function(req, res, next) {
     const key = req.params.key;
     const value = req.body;
 
-    console.log('config.post', key, value);
+    console.log('state.post', key, value);
 
-    config.set(key, value);
+    state.set(key, value);
     res.send('OK');
 });
 
 router.delete('/:key', function(req, res, next) {
     const key = req.params.key;
 
-    console.log('config.delete', key);
+    console.log('state.delete', key);
 
-    config.delete(key);
+    state.delete(key);
     res.send('OK');
 });

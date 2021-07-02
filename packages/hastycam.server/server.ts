@@ -5,7 +5,7 @@ import { text } from 'body-parser';
 import logger from 'morgan';
 import cors from 'cors';
 import { router as indexRouter } from './routes/index';
-import { router as configRouter } from './routes/config';
+import { router as stateRouter } from './routes/state';
 import { router as feedRouter } from './routes/feed';
 import { start as startFeeds } from './background/feeds';
 
@@ -29,7 +29,7 @@ app.use(text());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
-app.use('/config', configRouter);
+app.use('/state', stateRouter);
 app.use('/feed', feedRouter);
 
 app.listen(PORT, () => {

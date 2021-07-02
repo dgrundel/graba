@@ -5,7 +5,7 @@ import { FetchStorage } from './fetchStorage';
 
 const persistConfig = {
     key: 'root',
-    storage: new FetchStorage('http://localhost:4000/config/'),
+    storage: new FetchStorage('http://localhost:4000/state/'),
 }
 
 const reducer = persistReducer(persistConfig, combineReducers({

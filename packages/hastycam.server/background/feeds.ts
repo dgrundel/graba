@@ -1,7 +1,7 @@
 import { ChildProcess, spawn } from 'child_process';
 import { EventEmitter } from 'stream';
-import { getConfig } from '../models/config';
-const fs = require('fs');
+import { config } from './config';
+// const fs = require('fs');
 // const path = require('path');
 // const sharp = require('sharp');
 
@@ -134,8 +134,7 @@ export const getAllFeeds = (): Feed[] => {
 
 export const start = () => {
     // set up feeds
-    const config = getConfig();
-    config.feeds.forEach(feed => {
+    config.get('feeds').forEach(feed => {
         addFeed(feed.name, feed.streamUrl);
     });
 };

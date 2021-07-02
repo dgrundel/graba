@@ -1,10 +1,19 @@
 import { Storage } from 'redux-persist'
 
+
+const trailing = (s: string, char: string): string => {
+    if (s.charAt(s.length - 1) === char) {
+        return s;
+    }
+    return s + char;
+}
+
 export class FetchStorage implements Storage {
     private readonly endpoint: string;
 
     constructor(endpoint: string) {
-        this.endpoint = endpoint;
+        // add trailing slash
+        this.endpoint = trailing(endpoint, '/');
     }
 
     getItem(key: string): Promise<string | undefined> {
