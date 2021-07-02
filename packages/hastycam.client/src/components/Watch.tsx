@@ -9,23 +9,57 @@ interface Props {
     setFeeds?: (feeds: string[]) => void;
 }
 
-class Component extends React.Component<Props, {}> {
+interface State {
+    activeFeeds: Record<string, boolean>;
+}
+
+class Component extends React.Component<Props, State> {
 
     constructor(props: Props) {
         super(props);
+
+        this.state = {
+            activeFeeds: {},
+        };
     }
 
     componentDidMount() {
         fetch('http://localhost:4000/feed/list')
             .then(response => response.json())
-            .then(feeds => this.props.setFeeds!(feeds));
+            .then(feeds => {
+                this.setState({
+                    activeFeeds: feeds.reduce((map: Record<string, boolean>, name: string) => {
+                        map[name] = true;
+                        return map;
+                    }, {})
+                })
+                this.props.setFeeds!(feeds);
+            });
+    }
+
+    toggleActiveFeed(name: string, isActive: boolean) {
+        this.setState(prev => ({
+            activeFeeds: {
+                ...prev.activeFeeds,
+                [name]: isActive,
+            }
+        }));
     }
 
     render() {
         return (
             <div>
+                <hr/>
+                {this.props.feeds.map(f => <label>
+                    <input type="checkbox" checked={this.state.activeFeeds[f]} onChange={e => this.toggleActiveFeed(f, e.target.checked)} /> {f}
+                </label>)}
+                <hr/>
                 {this.props.feeds.map(f => {
-                    return <img style={{ width: '30vw' }} src={`http://localhost:4000/feed/view/${f}`}/>
+                    if (this.state.activeFeeds[f]) {
+                        return <img style={{ width: '30vw' }} src={`http://localhost:4000/feed/view/${encodeURIComponent(f)}`}/>
+                    } else {
+                        return undefined;
+                    }
                 })}
             </div>
         );
