@@ -1,16 +1,17 @@
 import express from 'express';
 import { ServerResponse } from 'http';
-import { FeedEventType, getFeed } from '../feeds/feeds';
+import { FeedEvent, FeedEventType, getAllFeeds, getFeed } from '../feeds/feeds';
 
 export const router = express.Router();
 
-// stream dashboard
-// router.get('/', function(req, res, next) {
-//     res.send('Express + TypeScript Server');
-// });
 const MJPEG_BOUNDARY = 'mjpegBoundary';
 
-router.get('/:name', function(req, res: ServerResponse, next) {
+router.get('/list', function(req: any, res: any, next: () => void) {
+    const feeds = getAllFeeds();
+    res.json(feeds.map(f => f.name));
+});
+
+router.get('/view/:name', function(req: any, res: any, next: () => void) {
     const name = req.params.name;
 
     const feed = getFeed(name);
@@ -28,25 +29,22 @@ router.get('/:name', function(req, res: ServerResponse, next) {
         'Content-Type': 'multipart/x-mixed-replace;boundary=' + MJPEG_BOUNDARY
     });
 
-    feed.on(FeedEventType.JpgChunk, data => {
+    const jpgListener = (data: FeedEvent) => {
         const jpgData = data.data!;
         
-        if (data.isStart) {
-            res.write(Buffer.from(`\r\n--${MJPEG_BOUNDARY}`));
-            res.write(Buffer.from(`\r\nContent-Type: image/jpeg`));
-            res.write(Buffer.from(`\r\nContent-length: ${jpgData.length}\r\n\r\n`));
-        }
-
+        res.write(Buffer.from(`\r\n--${MJPEG_BOUNDARY}`));
+        res.write(Buffer.from(`\r\nContent-Type: image/jpeg`));
+        res.write(Buffer.from(`\r\nContent-length: ${jpgData.length}\r\n\r\n`));
         res.write(jpgData);
-    });
+    };
 
-    feed.on(FeedEventType.FeedClose, () => {
+    feed.on(FeedEventType.JpgComplete, jpgListener);
+
+    feed.once(FeedEventType.FeedClose, () => {
         res.end();
     });
     
-    // httpListeners.push(res);
-
     res.socket!.on('close', () => {
-        // httpListeners.splice(httpListeners.indexOf(res), 1);
+        feed.off(FeedEventType.JpgComplete, jpgListener);
     });
 });

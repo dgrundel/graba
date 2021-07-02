@@ -1,6 +1,6 @@
 import { ChildProcess, spawn } from 'child_process';
 import { EventEmitter } from 'stream';
-// const fs = require('fs');
+const fs = require('fs');
 // const path = require('path');
 // const sharp = require('sharp');
 
@@ -111,6 +111,10 @@ class Feed extends EventEmitter {
                 isEnd,
                 data: this.buffer!
             });
+
+            // new Promise(resolve => {
+            //     fs.writeFile(`output-${this.name}-${+new Date()}.jpg`, this.buffer!, resolve);
+            // });
         }
     }
 }
