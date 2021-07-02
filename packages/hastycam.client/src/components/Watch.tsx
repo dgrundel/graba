@@ -19,22 +19,11 @@ class Component extends React.Component<Props, State> {
         super(props);
 
         this.state = {
-            activeFeeds: {},
+            activeFeeds: props.feeds.reduce((map: Record<string, boolean>, name: string) => {
+                map[name] = true;
+                return map;
+            }, {}),
         };
-    }
-
-    componentDidMount() {
-        fetch('http://localhost:4000/feed/list')
-            .then(response => response.json())
-            .then(feeds => {
-                this.setState({
-                    activeFeeds: feeds.reduce((map: Record<string, boolean>, name: string) => {
-                        map[name] = true;
-                        return map;
-                    }, {})
-                })
-                this.props.setFeeds!(feeds);
-            });
     }
 
     toggleActiveFeed(name: string, isActive: boolean) {
@@ -50,13 +39,13 @@ class Component extends React.Component<Props, State> {
         return (
             <div>
                 <hr/>
-                {this.props.feeds.map(f => <label>
-                    <input type="checkbox" checked={this.state.activeFeeds[f]} onChange={e => this.toggleActiveFeed(f, e.target.checked)} /> {f}
+                {this.props.feeds.map(name => <label>
+                    <input type="checkbox" checked={this.state.activeFeeds[name]} onChange={e => this.toggleActiveFeed(name, e.target.checked)} /> {name}
                 </label>)}
                 <hr/>
-                {this.props.feeds.map(f => {
-                    if (this.state.activeFeeds[f]) {
-                        return <img style={{ width: '30vw' }} src={`http://localhost:4000/feed/view/${encodeURIComponent(f)}`}/>
+                {this.props.feeds.map(name => {
+                    if (this.state.activeFeeds[name]) {
+                        return <img style={{ width: '30vw' }} alt={name} src={`http://localhost:4000/feed/view/${encodeURIComponent(name)}`}/>
                     } else {
                         return undefined;
                     }
