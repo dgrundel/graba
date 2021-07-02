@@ -1,0 +1,17 @@
+.App {
+    display: grid;
+    grid-template-columns: 12rem 1fr;
+    grid-template-rows: .25rem 1fr;
+
+    position: fixed;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    left: 0;
+}
+
+.stripe {
+    grid-column: 1 / span 2;
+    height: .25rem;
+    background: linear-gradient(to right, #ff004c, #ffc400, #00ff68, #0094ff);
+}

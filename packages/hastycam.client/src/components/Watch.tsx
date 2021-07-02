@@ -1,10 +1,12 @@
 import React from 'react';
+import { Spinner } from './Spinner';
 
 interface State {
     feeds: Record<string, boolean>;
 }
 
-class Component extends React.Component<{}, State> {
+export class Watch extends React.Component<{}, State> {
+    private readonly loader: Promise<any>;
 
     constructor() {
         super({});
@@ -12,10 +14,8 @@ class Component extends React.Component<{}, State> {
         this.state = {
             feeds: {}
         };
-    }
 
-    componentDidMount() {
-        fetch('http://localhost:4000/feed/list')
+        this.loader = fetch('http://localhost:4000/feed/list')
             .then(response => response.json())
             .then(names => {
                 this.setState({
@@ -38,12 +38,10 @@ class Component extends React.Component<{}, State> {
 
     render() {
         return (
-            <div>
-                <hr/>
-                {Object.keys(this.state.feeds).map(name => <label>
+            <Spinner waitFor={this.loader}>
+                {Object.keys(this.state.feeds).map(name => <label style={{ display: 'block', margin: '.25rem' }}>
                     <input type="checkbox" checked={this.state.feeds[name]} onChange={e => this.toggleActiveFeed(name, e.target.checked)} /> {name}
                 </label>)}
-                <hr/>
                 {Object.keys(this.state.feeds).map(name => {
                     if (this.state.feeds[name]) {
                         return <img style={{ width: '30vw' }} alt={name} src={`http://localhost:4000/feed/view/${encodeURIComponent(name)}`}/>
@@ -51,9 +49,7 @@ class Component extends React.Component<{}, State> {
                         return undefined;
                     }
                 })}
-            </div>
+            </Spinner>
         );
     }
 }
-
-export const Watch = Component;

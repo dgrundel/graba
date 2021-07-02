@@ -28,8 +28,15 @@ const remove = (key: keyof Config): void => {
     store.delete(key);
 }
 
+const all = (): Config => {
+    return {
+        ...store.store,
+    };
+}
+
 export const config = {
     get,
     set,
     remove,
+    all,
 };

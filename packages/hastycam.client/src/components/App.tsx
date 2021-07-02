@@ -6,21 +6,20 @@ import {
     Link
 } from "react-router-dom";
 
-import './App.css';
+import './App.scss';
 import { Watch } from './Watch';
+import { Config } from './Config';
+import { SideNav } from './SideNav';
 
-class Component extends React.Component<{}, {}> {
+export class App extends React.Component<{}, {}> {
     render() {
         return (
             <div className="App">
-                <header className="stripe"></header>
-
+                <div className="stripe"></div>
                 <Router>
+                    <SideNav/>
+                    
                     <div>
-                        <Link to="/">Home</Link>&nbsp;
-                        <Link to="/watch">Watch</Link>&nbsp;
-                        <Link to="/dashboard">Dashboard</Link>
-
                         <Switch>
                             <Route exact path="/">
                                 <Home />
@@ -28,8 +27,8 @@ class Component extends React.Component<{}, {}> {
                             <Route path="/watch">
                                 <Watch />
                             </Route>
-                            <Route path="/dashboard">
-                                <Dashboard />
+                            <Route path="/config">
+                                <Config />
                             </Route>
                         </Switch>
                     </div>
@@ -39,20 +38,10 @@ class Component extends React.Component<{}, {}> {
     }
 }
 
-export const App = Component;
-  
 function Home() {
     return (
         <div>
             <h2>Home</h2>
-        </div>
-    );
-}
-
-function Dashboard() {
-    return (
-        <div>
-            <h2>Dashboard</h2>
         </div>
     );
 }
