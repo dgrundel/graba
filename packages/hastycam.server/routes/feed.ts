@@ -1,6 +1,5 @@
 import express from 'express';
-import { ServerResponse } from 'http';
-import { FeedEvent, FeedEventType, getAllFeeds, getFeed } from '../feeds/feeds';
+import { FeedEvent, FeedEventType, getAllFeeds, getFeed } from '../background/feeds';
 
 export const router = express.Router();
 

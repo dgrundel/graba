@@ -4,18 +4,19 @@ import cookieParser from 'cookie-parser';
 import logger from 'morgan';
 import cors from 'cors';
 import { router as indexRouter } from './routes/index';
-import { router as streamRouter } from './routes/stream';
-import { getConfig } from './models/config';
-import { addFeed } from './feeds/feeds';
+import { router as feedRouter } from './routes/feed';
+import { start as startFeeds } from './background/feeds';
 
+/**
+ * Start background process(es)
+ */
+startFeeds();
+
+/**
+ * Set up express
+ */
 const app = express();
 const PORT = 4000;
-
-// set up feeds
-const config = getConfig();
-config.feeds.forEach(feed => {
-    addFeed(feed.name, feed.streamUrl);
-});
 
 app.use(cors());
 app.use(logger('dev'));
@@ -25,7 +26,7 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
-app.use('/stream', streamRouter);
+app.use('/feed', feedRouter);
 
 app.listen(PORT, () => {
   console.log(`Server is running at http://localhost:${PORT}`);

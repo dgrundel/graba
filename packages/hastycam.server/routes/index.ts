@@ -4,5 +4,6 @@ export const router = express.Router();
 
 /* GET home page. */
 router.get('/', function(req, res, next) {
-    res.send('Express + TypeScript Server');
+    // redirect to react dev server
+    res.redirect('http://localhost:3000/');
 });
