@@ -6,7 +6,8 @@ import {
     Route,
     Link
 } from "react-router-dom";
-import { AppState, SetFeedsAction } from '../store/reducers/appReducer';
+import { AppState, setFeeds } from '../store/reducers/configReducer';
+import { RootState } from '../store/store';
   
   // This site has 3 pages, all of which are rendered
   // dynamically in the browser (not server rendered).
@@ -22,7 +23,7 @@ import './App.css';
 
 interface Props {
     feeds: string[];
-    setFeeds?: (feeds: string[]) => SetFeedsAction;
+    setFeeds?: (feeds: string[]) => void;
 }
 
 class Component extends React.Component<Props, {}> {
@@ -70,19 +71,14 @@ class Component extends React.Component<Props, {}> {
     }
 }
 
-const mapStateToProps = (state: AppState): Props => {
+const mapStateToProps = (state: RootState): Props => {
     return {
-        feeds: state.feeds
+        feeds: state.config.feeds
     }
 };
 
 const mapDispatchToProps = {
-    setFeeds: (feeds: string[]): SetFeedsAction => {
-        return {
-            type: 'setFeeds',
-            feeds,
-        }
-    }
+    setFeeds,
 };
 
 export const App = connect(mapStateToProps, mapDispatchToProps)(Component);

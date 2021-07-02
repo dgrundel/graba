@@ -1,7 +1,15 @@
-import { createStore } from 'redux';
-import { appReducer } from './reducers/appReducer';
+import { configureStore } from '@reduxjs/toolkit';
+import { configReducer } from './reducers/configReducer';
 
-export const store = createStore(appReducer);
+const reducer = {
+    config: configReducer,
+};
+
+export const store = configureStore({
+    reducer
+});
+
+export type RootState = ReturnType<typeof store.getState>
 
 console.log('Initial state: ', store.getState());
 
