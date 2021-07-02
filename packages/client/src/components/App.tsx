@@ -1,10 +1,12 @@
 import React from 'react';
+import { connect } from 'react-redux';
 import {
     HashRouter as Router,
     Switch,
     Route,
     Link
 } from "react-router-dom";
+import { AppState, SetFeedsAction } from '../store/reducers/appReducer';
   
   // This site has 3 pages, all of which are rendered
   // dynamically in the browser (not server rendered).
@@ -18,18 +20,21 @@ import {
 import './App.css';
   
 
-interface AppState {
-    feedNames: string[];
+interface Props {
+    feeds: string[];
+    setFeeds?: (feeds: string[]) => SetFeedsAction;
 }
 
-export default class App extends React.Component<{}, AppState> {
+class Component extends React.Component<Props, {}> {
 
-    constructor() {
-        super({});
+    constructor(props: Props) {
+        super(props);
+    }
 
-        this.state = {
-            feedNames: [],
-        };
+    componentDidMount() {
+        fetch('http://localhost:4000/stream/list')
+            .then(response => response.json())
+            .then(feeds => this.props.setFeeds!(feeds));
     }
 
     render() {
@@ -56,10 +61,31 @@ export default class App extends React.Component<{}, AppState> {
                         </Switch>
                     </div>
                 </Router>
+
+                {this.props.feeds.map(f => {
+                    return <img style={{ width: '48vw' }} src={`http://localhost:4000/stream/view/${f}`}/>
+                })}
             </div>
         );
     }
 }
+
+const mapStateToProps = (state: AppState): Props => {
+    return {
+        feeds: state.feeds
+    }
+};
+
+const mapDispatchToProps = {
+    setFeeds: (feeds: string[]): SetFeedsAction => {
+        return {
+            type: 'setFeeds',
+            feeds,
+        }
+    }
+};
+
+export const App = connect(mapStateToProps, mapDispatchToProps)(Component);
   
 // You can think of these components as "pages"
 // in your app.

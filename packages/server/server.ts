@@ -2,6 +2,7 @@ import * as path from 'path';
 import express from 'express';
 import cookieParser from 'cookie-parser';
 import logger from 'morgan';
+import cors from 'cors';
 import { router as indexRouter } from './routes/index';
 import { router as streamRouter } from './routes/stream';
 import { getConfig } from './models/config';
@@ -16,6 +17,7 @@ config.feeds.forEach(feed => {
     addFeed(feed.name, feed.streamUrl);
 });
 
+app.use(cors());
 app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
