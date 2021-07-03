@@ -1,8 +1,8 @@
-import {
-    createTheme
-} from '@fluentui/react';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faCheck } from '@fortawesome/free-solid-svg-icons'
+import { createTheme, registerIcons } from '@fluentui/react';
 
-// const myTheme = createTheme({
+// const generated = ({
 //     palette: {
 //         themePrimary: '#54ebbb',
 //         themeLighterAlt: '#030907',
@@ -29,7 +29,7 @@ import {
 //     }
 // });
 
-const myTheme = createTheme({
+const generated = {
     palette: {
         themePrimary: '#0078d4',
         themeLighterAlt: '#eff6fc',
@@ -54,6 +54,19 @@ const myTheme = createTheme({
         black: '#000000',
         white: '#ffffff',
     }
+};
+
+export const theme = createTheme({
+    ...generated,
+    defaultFontStyle: { 
+        fontFamily: "'BrisaSansThin', sans-serif",
+        fontWeight: 'regular',
+        letterSpacing: '0.03rem',
+    },
 });
 
-export const theme = myTheme;
+registerIcons({
+    icons: {
+        FaCheck: <FontAwesomeIcon icon={faCheck} />
+    }
+});

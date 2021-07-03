@@ -1,5 +1,5 @@
 import React from 'react';
-import { DefaultButton, PrimaryButton, Stack } from '@fluentui/react';
+import { ActionButton, Text, PrimaryButton, Stack, TextField } from '@fluentui/react';
 import { Config } from 'hastycam.interface';
 import { Spinner } from './Spinner';
 import './Options.scss';
@@ -30,20 +30,26 @@ export class Options extends React.Component<{}, State> {
 
     render() {
         return <Spinner waitFor={this.loader}>
-            <h2>Feeds</h2>
+            <h2><Text variant="xLarge">Feeds</Text></h2>
 
             <Stack tokens={{ childrenGap: 's1', }}>
-                {this.state.config?.feeds.map(feed => <div key={feed.name} className="feed-edit-box" style={{ backgroundColor: theme.palette.neutralLighter }}>
-                    <label className="block-label">
-                        <span>Feed Name</span>
-                        <input type="text" value={feed.name} onChange={() => { /* fuck off, react */ }} />
-                    </label>
-                    <label className="block-label">
-                        <span>Stream URL</span>
-                        <input type="text" value={feed.streamUrl} onChange={() => { /* fuck off, react */ }} />
-                    </label>
-                    <DefaultButton text="Delete Feed"/>
-                </div>)}
+                {this.state.config?.feeds.map(feed => {
+                    return <Stack tokens={{ childrenGap: 's1', padding: 'm' }} style={{ backgroundColor: theme.palette.neutralLighter }}>
+                        <TextField
+                            label="Feed Name"
+                            value={feed.name}
+                            onChange={() => { /* fuck off, react */ }}
+                        />
+                        <TextField
+                            label="Stream URL"
+                            value={feed.streamUrl}
+                            onChange={() => { /* fuck off, react */ }}
+                        />
+                        <Stack horizontal horizontalAlign="end">
+                            <ActionButton text="Delete Feed"/>
+                        </Stack>
+                    </Stack>;
+                })}
             </Stack>
 
             <PrimaryButton text="Add Feed"/>

@@ -1,6 +1,6 @@
+import { Checkbox } from '@fluentui/react';
 import React from 'react';
 import { Spinner } from './Spinner';
-
 interface State {
     feeds: Record<string, boolean>;
 }
@@ -43,7 +43,7 @@ export class Watch extends React.Component<{}, State> {
         return (
             <Spinner waitFor={this.loader}>
                 {Object.keys(this.state.feeds).map(name => <label style={{ display: 'block', margin: '.25rem' }}>
-                    <input type="checkbox" checked={this.state.feeds[name]} key={name} onChange={e => this.toggleActiveFeed(name, e.target.checked)} /> {name}
+                    <Checkbox checkmarkIconProps={{ iconName: 'FaCheck' }} label={name} checked={this.state.feeds[name]} onChange={(e, checked) => this.toggleActiveFeed(name, checked === true)} />
                 </label>)}
                 {Object.keys(this.state.feeds).map(name => {
                     if (this.state.feeds[name]) {

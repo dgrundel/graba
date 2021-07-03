@@ -4,7 +4,7 @@ import {
     Switch,
     Route,
 } from "react-router-dom";
-
+import { Text } from '@fluentui/react';
 import './App.scss';
 import { Watch } from './Watch';
 import { Options } from './Options';
@@ -43,7 +43,7 @@ export class App extends React.Component<{}, {}> {
 function Home() {
     return (
         <div>
-            <h2>Home</h2>
+            <h2><Text variant="xLarge">Home</Text></h2>
         </div>
     );
 }
