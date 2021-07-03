@@ -27,7 +27,7 @@ export class Config extends React.Component<{}, State> {
     render() {
         return (
             <div>
-                <pre>{JSON.stringify(this.state.config)}</pre>
+                <pre>{JSON.stringify(this.state.config, null, 4)}</pre>
             </div>
         );
     }
