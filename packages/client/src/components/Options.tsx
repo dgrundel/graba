@@ -1,17 +1,16 @@
 import React from 'react';
+import { Config } from 'hastycam.interface';
 
 interface State {
-    config: Record<string, any>;
+    config?: Config;
 }
 
-export class Config extends React.Component<{}, State> {
+export class Options extends React.Component<{}, State> {
 
     constructor() {
         super({});
 
-        this.state = {
-            config: {}
-        };
+        this.state = {};
     }
 
     componentDidMount() {

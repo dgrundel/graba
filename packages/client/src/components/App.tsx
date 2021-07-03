@@ -8,7 +8,7 @@ import {
 
 import './App.scss';
 import { Watch } from './Watch';
-import { Config } from './Config';
+import { Options } from './Options';
 import { SideNav } from './SideNav';
 
 export class App extends React.Component<{}, {}> {
@@ -28,7 +28,7 @@ export class App extends React.Component<{}, {}> {
                                 <Watch />
                             </Route>
                             <Route path="/config">
-                                <Config />
+                                <Options />
                             </Route>
                         </Switch>
                     </div>

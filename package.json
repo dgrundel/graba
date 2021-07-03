@@ -1,5 +1,5 @@
 {
-  "name": "root",
+  "name": "hastycam",
   "private": true,
   "scripts": {
     "start": "lerna run start --stream",

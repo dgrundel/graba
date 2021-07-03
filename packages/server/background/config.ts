@@ -1,13 +1,5 @@
 import conf from 'conf';
-
-interface Feed {
-    name: string;
-    streamUrl: string;
-}
-
-interface Config {
-    feeds: Feed[];
-}
+import { Config } from 'hastycam.interface';
 
 const store = new conf<Config>({
     configName: 'appConfig',
