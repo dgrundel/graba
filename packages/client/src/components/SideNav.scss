@@ -1,9 +1,17 @@
-.SideNav {
-    background-color: #252526;
-
+.side-nav {
     ul, li {
         margin: 0;
         padding: 0;
         list-style-type: none;
+    }
+
+    li > a {
+        display: block;
+        margin: .1rem 0;
+        padding: .8rem .6rem;
+
+        &.active {
+            background-color: #37373d;
+        }
     }
 }

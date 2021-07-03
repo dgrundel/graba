@@ -1,6 +1,7 @@
 import React from 'react';
 import { Config } from 'hastycam.interface';
 import { Spinner } from './Spinner';
+import './Options.scss';
 
 interface State {
     config?: Config;
@@ -24,7 +25,21 @@ export class Options extends React.Component<{}, State> {
 
     render() {
         return <Spinner waitFor={this.loader}>
-            {JSON.stringify(this.state.config, null, 4)}
+            <h2>Feeds</h2>
+
+            {this.state.config?.feeds.map(feed => <div className="feed-edit-box">
+                <label className="block-label">
+                    <span>Feed Name</span>
+                    <input type="text" value={feed.name} />
+                </label>
+                <label className="block-label">
+                    <span>Stream URL</span>
+                    <input type="text" value={feed.streamUrl} />
+                </label>
+                <button>Delete Feed</button>
+            </div>)}
+
+            <button>Add Feed</button>
         </Spinner>;
     }
 }

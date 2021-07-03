@@ -14,12 +14,14 @@ import { SideNav } from './SideNav';
 export class App extends React.Component<{}, {}> {
     render() {
         return (
-            <div className="App">
-                <div className="stripe"></div>
-                <Router>
-                    <SideNav/>
-                    
-                    <div>
+            <Router>
+                <div className="app-container">
+                    <div className="stripe"></div>
+                    <div className="side-nav-container">
+                        <SideNav/>
+                    </div>
+                        
+                    <div className="main-content-container">
                         <Switch>
                             <Route exact path="/">
                                 <Home />
@@ -32,8 +34,8 @@ export class App extends React.Component<{}, {}> {
                             </Route>
                         </Switch>
                     </div>
-                </Router>
-            </div>
+                </div>
+            </Router>
         );
     }
 }

@@ -1,6 +1,6 @@
 import React from 'react';
 import {
-    Link
+    NavLink
 } from "react-router-dom";
 import './SideNav.scss';
 
@@ -18,11 +18,11 @@ export class SideNav extends React.Component<{}, State> {
 
     render() {
         return (
-            <nav className="SideNav">
+            <nav className="side-nav">
                 <ul>
-                    <li><Link to="/">Home</Link></li>
-                    <li><Link to="/watch">Watch</Link></li>
-                    <li><Link to="/config">Config</Link></li>
+                    <li><NavLink activeClassName="active" exact to="/">Home</NavLink></li>
+                    <li><NavLink activeClassName="active" to="/watch">Watch</NavLink></li>
+                    <li><NavLink activeClassName="active" to="/config">Config</NavLink></li>
                 </ul>
             </nav>
         );

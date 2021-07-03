@@ -28,3 +28,30 @@ a {
 code {
     font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New', monospace;
 }
+
+button {
+    background-color: #0e639c;
+    color: #fff;
+    font-size: inherit;
+    font-family: inherit;
+    padding: .3rem .6rem;
+    margin: .5rem 0;
+    border: 0;
+}
+
+input, textarea {
+    border: 0;
+    background-color: #3c3c3c;
+    color: #cccccc;
+    font-size: inherit;
+    font-family: inherit;
+    
+    $h-padding: .5rem;
+    padding: .15rem $h-padding;
+    width: calc(100% - #{2 * $h-padding});
+}
+
+label.block-label {
+    display: block;
+    margin: .5rem 0;
+}
