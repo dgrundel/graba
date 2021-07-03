@@ -3,13 +3,13 @@ import {
     HashRouter as Router,
     Switch,
     Route,
-    Link
 } from "react-router-dom";
 
 import './App.scss';
 import { Watch } from './Watch';
 import { Options } from './Options';
 import { SideNav } from './SideNav';
+import { theme } from '../theme';
 
 export class App extends React.Component<{}, {}> {
     render() {
@@ -17,7 +17,7 @@ export class App extends React.Component<{}, {}> {
             <Router>
                 <div className="app-container">
                     <div className="stripe"></div>
-                    <div className="side-nav-container">
+                    <div className="side-nav-container" style={{ backgroundColor: theme.palette.neutralLight }}>
                         <SideNav/>
                     </div>
                         

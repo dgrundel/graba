@@ -1,30 +1,51 @@
-import React from 'react';
+import { IComponentAsProps, INavButtonProps, INavLink, INavLinkGroup, Nav } from '@fluentui/react';
 import {
-    NavLink
+    NavLink, useLocation
 } from "react-router-dom";
 import './SideNav.scss';
 
-interface State {
-}
+const CustomLink = (props: IComponentAsProps<INavButtonProps>) => {
+    const url = props.link!.url;
+    const isExact = props.link!.exact === true;
+    const DefaultRender = props.defaultRender;
 
-export class SideNav extends React.Component<{}, State> {
-
-    constructor() {
-        super({});
-
-        this.state = {
+    const Nested = (navLinkProps: any) => {
+        const nestedProps = {
+            ...props,
+            href: navLinkProps.href,
         };
-    }
+        return <DefaultRender {...nestedProps}/>;
+    };
 
-    render() {
-        return (
-            <nav className="side-nav">
-                <ul>
-                    <li><NavLink activeClassName="active" exact to="/">Home</NavLink></li>
-                    <li><NavLink activeClassName="active" to="/watch">Watch</NavLink></li>
-                    <li><NavLink activeClassName="active" to="/config">Config</NavLink></li>
-                </ul>
-            </nav>
-        );
-    }
-}
+    return <NavLink exact={isExact} to={url} component={Nested}/>;
+};
+
+export const SideNav = () => {
+    const links: INavLink[] = [{
+        name: 'Home',
+        url: '/',
+        exact: true,
+    },{
+        name: 'Watch',
+        url: '/watch',
+    },{
+        name: 'Options',
+        url: '/config',
+    }].map(link => ({
+        ...link, 
+        key: link.url 
+    }));
+    const navLinkGroups: INavLinkGroup[] = [{
+        links
+    }];
+
+    return (
+        <nav className="side-nav">
+            <Nav
+                selectedKey={useLocation().pathname}
+                groups={navLinkGroups}
+                linkAs={CustomLink}
+            />
+        </nav>
+    );
+};

@@ -8,23 +8,26 @@ interface State {
 export class Watch extends React.Component<{}, State> {
     private readonly loader: Promise<any>;
 
-    constructor() {
-        super({});
+    constructor(props: any) {
+        super(props);
 
         this.state = {
             feeds: {}
         };
 
         this.loader = fetch('http://localhost:4000/feed/list')
-            .then(response => response.json())
-            .then(names => {
-                this.setState({
-                    feeds: names.reduce((map: Record<string, boolean>, name: string) => {
-                        map[name] = true;
-                        return map;
-                    }, {})
-                })
-            });
+            .then(response => response.json());
+    }
+
+    componentDidMount() {
+        this.loader.then(names => {
+            this.setState({
+                feeds: names.reduce((map: Record<string, boolean>, name: string) => {
+                    map[name] = true;
+                    return map;
+                }, {})
+            })
+        });
     }
 
     toggleActiveFeed(name: string, isActive: boolean) {
