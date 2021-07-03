@@ -1,20 +1,19 @@
 import React from 'react';
 import { Config } from 'hastycam.interface';
+import { Spinner } from './Spinner';
 
 interface State {
     config?: Config;
 }
 
 export class Options extends React.Component<{}, State> {
+    private readonly loader: Promise<void>;
 
     constructor() {
         super({});
 
         this.state = {};
-    }
-
-    componentDidMount() {
-        fetch('http://localhost:4000/config')
+        this.loader = fetch('http://localhost:4000/config')
             .then(response => response.json())
             .then(config => {
                 this.setState({
@@ -24,10 +23,8 @@ export class Options extends React.Component<{}, State> {
     }
 
     render() {
-        return (
-            <div>
-                <pre>{JSON.stringify(this.state.config, null, 4)}</pre>
-            </div>
-        );
+        return <Spinner waitFor={this.loader}>
+            {JSON.stringify(this.state.config, null, 4)}
+        </Spinner>;
     }
 }
