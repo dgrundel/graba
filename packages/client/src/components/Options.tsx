@@ -33,7 +33,7 @@ export class Options extends React.Component<{}, State> {
             <h2>Feeds</h2>
 
             <Stack tokens={{ childrenGap: 's1', }}>
-                {this.state.config?.feeds.map(feed => <div className="feed-edit-box" style={{ backgroundColor: theme.palette.neutralLighter }}>
+                {this.state.config?.feeds.map(feed => <div key={feed.name} className="feed-edit-box" style={{ backgroundColor: theme.palette.neutralLighter }}>
                     <label className="block-label">
                         <span>Feed Name</span>
                         <input type="text" value={feed.name} onChange={() => { /* fuck off, react */ }} />

@@ -43,11 +43,11 @@ export class Watch extends React.Component<{}, State> {
         return (
             <Spinner waitFor={this.loader}>
                 {Object.keys(this.state.feeds).map(name => <label style={{ display: 'block', margin: '.25rem' }}>
-                    <input type="checkbox" checked={this.state.feeds[name]} onChange={e => this.toggleActiveFeed(name, e.target.checked)} /> {name}
+                    <input type="checkbox" checked={this.state.feeds[name]} key={name} onChange={e => this.toggleActiveFeed(name, e.target.checked)} /> {name}
                 </label>)}
                 {Object.keys(this.state.feeds).map(name => {
                     if (this.state.feeds[name]) {
-                        return <img style={{ width: '30vw' }} alt={name} src={`http://localhost:4000/feed/view/${encodeURIComponent(name)}`}/>
+                        return <img style={{ width: '30vw' }} key={name} alt={name} src={`http://localhost:4000/feed/view/${encodeURIComponent(name)}`}/>
                     } else {
                         return undefined;
                     }

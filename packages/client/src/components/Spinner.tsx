@@ -1,4 +1,6 @@
 import React from 'react';
+import spinnerSvg from '../hasty-nostroke.svg';
+import './Spinner.scss';
 
 interface Props {
     waitFor: Promise<any>;
@@ -30,8 +32,8 @@ export class Spinner extends React.Component<Props, State> {
 
         // if not ready, show loading indicator
         return (
-            <div>
-                Loading...
+            <div className="spinner">
+                <img alt="Loading..." src={spinnerSvg}/>
             </div>
         );
     }
