@@ -14,10 +14,11 @@ export const postJson = async <T>(url: string, data: any): Promise<T> => {
     };
 
     const response = await fetch(url, options);
+    const responseData = await response.json();
+
     if (response.status === 200) {
-        return response.json();
+        return responseData;
     }
 
-    const text = await response.text();
-    throw new Error(text);
+    return Promise.reject(responseData);
 }

@@ -1,4 +1,4 @@
-import { createTheme, Icon, registerIcons } from '@fluentui/react';
+import { createTheme, registerIcons } from '@fluentui/react';
 import { IconCheck, IconPlus, IconTrash, IconChevronUp, IconChevronDown, IconChevronLeft, IconChevronRight, IconSettings, IconPlayerPlay, IconHome, IconVideo, IconDeviceFloppy, IconPencil, IconX } from '@tabler/icons';
 import { CSSProperties } from 'react';
 

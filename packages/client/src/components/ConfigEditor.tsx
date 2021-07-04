@@ -1,5 +1,5 @@
 import React from 'react';
-import { Text, PrimaryButton, Stack, CommandBar, ICommandBarItemProps } from '@fluentui/react';
+import { Text, PrimaryButton, Stack } from '@fluentui/react';
 import { Config } from 'hastycam.interface';
 import { Spinner } from './Spinner';
 import { theme } from '../theme';

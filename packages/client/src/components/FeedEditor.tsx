@@ -1,6 +1,6 @@
 import React from 'react';
-import { ActionButton, Text, Stack, TextField, Separator, PrimaryButton, Spinner, DefaultButton } from '@fluentui/react';
-import { Feed } from 'hastycam.interface';
+import { ActionButton, Text, Stack, TextField, PrimaryButton, Spinner, DefaultButton } from '@fluentui/react';
+import { ErrorMessage, Feed } from 'hastycam.interface';
 import { theme } from '../theme';
 import { postJson } from '../fetch';
 
@@ -53,8 +53,13 @@ export class FeedEditor extends React.Component<Props, State> {
                 console.log('feed', feed);
                 this.setState({ editing: false });
             })
-            .catch(err => {
-                this.setState({ error: err.toString() });
+            .catch((errs: any) => {
+                if (Array.isArray(errs)) {
+                    const err = errs.map(e => e.message).join(' ');
+                    this.setState({ error: err });
+                } else {
+                    this.setState({ error: errs.toString() });
+                }
             })
             .finally(() => this.setState({ saving: false }));
     }
