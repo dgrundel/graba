@@ -1,6 +1,5 @@
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faCheck } from '@fortawesome/free-solid-svg-icons'
 import { createTheme, registerIcons } from '@fluentui/react';
+import { IconCheck, IconPlus, IconTrash } from '@tabler/icons';
 
 // const generated = ({
 //     palette: {
@@ -61,12 +60,20 @@ export const theme = createTheme({
     defaultFontStyle: { 
         fontFamily: "'BrisaSansThin', sans-serif",
         fontWeight: 'regular',
+        fontSize: '15px',
         letterSpacing: '0.03rem',
     },
 });
 
+const iconStyle = {
+    width: '100%',
+    height: '100%',
+};
+
 registerIcons({
     icons: {
-        FaCheck: <FontAwesomeIcon icon={faCheck} />
+        Check: <IconCheck style={{ ...iconStyle, position: 'relative', top: '.1rem'}} />,
+        Plus: <IconPlus style={iconStyle} />,
+        Trash: <IconTrash style={iconStyle} />,
     }
 });

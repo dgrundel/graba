@@ -1,6 +1,8 @@
 import { Checkbox } from '@fluentui/react';
-import React from 'react';
+import React, { CSSProperties } from 'react';
 import { Spinner } from './Spinner';
+import './Watch.scss';
+
 interface State {
     feeds: Record<string, boolean>;
 }
@@ -40,18 +42,32 @@ export class Watch extends React.Component<{}, State> {
     }
 
     render() {
+        const displayGridStyle = {
+            display: 'grid',
+            gridTemplateColumns: '1fr 1fr',
+            gridTemplateRows: '1fr 1fr',
+            gridGap: '1rem',
+            maxWidth: '100%',
+        };
+
+        const imgStyle = {
+            width: '100%',
+            height: '100%',
+            objectFit: "cover",
+        } as CSSProperties;
+
         return (
             <Spinner waitFor={this.loader}>
-                {Object.keys(this.state.feeds).map(name => <label style={{ display: 'block', margin: '.25rem' }}>
-                    <Checkbox checkmarkIconProps={{ iconName: 'FaCheck' }} label={name} checked={this.state.feeds[name]} onChange={(e, checked) => this.toggleActiveFeed(name, checked === true)} />
-                </label>)}
-                {Object.keys(this.state.feeds).map(name => {
-                    if (this.state.feeds[name]) {
-                        return <img style={{ width: '30vw' }} key={name} alt={name} src={`http://localhost:4000/feed/view/${encodeURIComponent(name)}`}/>
-                    } else {
-                        return undefined;
-                    }
-                })}
+                {Object.keys(this.state.feeds).map(name => <Checkbox key={name} checkmarkIconProps={{ iconName: 'Check' }} label={name} checked={this.state.feeds[name]} onChange={(e, checked) => this.toggleActiveFeed(name, checked === true)} />)}
+                <div style={displayGridStyle}>
+                    {Object.keys(this.state.feeds).map(name => {
+                        if (this.state.feeds[name]) {
+                            return <img key={name} style={imgStyle} alt={name} src={`http://localhost:4000/feed/view/${encodeURIComponent(name)}`}/>
+                        } else {
+                            return undefined;
+                        }
+                    })}
+                </div>
             </Spinner>
         );
     }

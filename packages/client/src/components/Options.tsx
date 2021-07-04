@@ -2,7 +2,6 @@ import React from 'react';
 import { ActionButton, Text, PrimaryButton, Stack, TextField } from '@fluentui/react';
 import { Config } from 'hastycam.interface';
 import { Spinner } from './Spinner';
-import './Options.scss';
 import { theme } from '../theme';
 
 interface State {
@@ -46,13 +45,16 @@ export class Options extends React.Component<{}, State> {
                             onChange={() => { /* fuck off, react */ }}
                         />
                         <Stack horizontal horizontalAlign="end">
-                            <ActionButton text="Delete Feed"/>
+                            <ActionButton iconProps={{ iconName: 'Trash' }} text="Delete Feed"/>
                         </Stack>
                     </Stack>;
                 })}
-            </Stack>
 
-            <PrimaryButton text="Add Feed"/>
+                <Stack horizontal horizontalAlign="start">
+                    <PrimaryButton iconProps={{ iconName: 'Plus' }} text="Add Feed"/>
+                </Stack>
+
+            </Stack>
         </Spinner>;
     }
 }

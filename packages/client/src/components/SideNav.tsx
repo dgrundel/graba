@@ -2,7 +2,6 @@ import { IComponentAsProps, INavButtonProps, INavLink, INavLinkGroup, Nav } from
 import {
     NavLink, useLocation
 } from "react-router-dom";
-import './SideNav.scss';
 
 const CustomLink = (props: IComponentAsProps<INavButtonProps>) => {
     const url = props.link!.url;
