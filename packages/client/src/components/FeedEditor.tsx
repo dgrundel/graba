@@ -1,6 +1,6 @@
 import React from 'react';
 import { ActionButton, Text, Stack, TextField, PrimaryButton, Spinner, DefaultButton } from '@fluentui/react';
-import { ErrorMessage, Feed } from 'hastycam.interface';
+import { Feed } from 'hastycam.interface';
 import { theme } from '../theme';
 import { postJson } from '../fetch';
 
@@ -74,7 +74,7 @@ export class FeedEditor extends React.Component<Props, State> {
     }
 
     renderData() {
-        return <Stack tokens={{ childrenGap: 's1', }}>
+        return <Stack grow tokens={{ childrenGap: 's1', }}>
             <Stack>
                 <Text style={{ color: theme.palette.neutralTertiary }}>
                     Feed name &nbsp;
@@ -91,11 +91,19 @@ export class FeedEditor extends React.Component<Props, State> {
                     {this.state.feed.streamUrl}
                 </Text>
             </Stack>
+            <Stack>
+                <Text style={{ color: theme.palette.neutralTertiary }}>
+                    Still Image URL &nbsp;
+                </Text>
+                <Text>
+                    {this.state.feed.stillUrl}
+                </Text>
+            </Stack>
         </Stack>;
     }
 
     renderForm() {
-        return <Stack>
+        return <Stack grow>
             <TextField
                 label="Feed Name"
                 value={this.state.feed.name}
@@ -105,6 +113,11 @@ export class FeedEditor extends React.Component<Props, State> {
                 label="Stream URL"
                 value={this.state.feed.streamUrl}
                 onChange={(e, streamUrl) => { this.setFeedData({ streamUrl }) }}
+            />
+            <TextField
+                label="Still Image URL"
+                value={this.state.feed.stillUrl}
+                onChange={(e, stillUrl) => { this.setFeedData({ stillUrl }) }}
             />
         </Stack>;
     }
@@ -127,17 +140,23 @@ export class FeedEditor extends React.Component<Props, State> {
     render() {
         return <div>
             <Stack tokens={{ childrenGap: 'm', }}>
-                <Text block variant="xLarge">
-                    {this.state.feed.name}
-
-                    <Text variant="small" style={{ color: theme.palette.neutralTertiary }}>
-                        &nbsp; {this.state.feed.id}
-                    </Text>
-                </Text>
+                <Stack horizontal>
+                    <Stack horizontal grow>
+                        <Text variant="xLarge">{this.state.feed.name}</Text>
+                    </Stack>
+                    <Stack horizontal grow horizontalAlign="end">
+                        <Text variant="small" style={{ color: theme.palette.neutralTertiary }}>id: {this.state.feed.id}</Text>
+                    </Stack>
+                </Stack>
+                
 
                 {this.state.error ? <Text block style={{ color: theme.palette.redDark }}>{this.state.error}</Text> : ''}
                 
-                {this.state.editing ? this.renderForm() : this.renderData()}
+                <Stack horizontal>
+                    {this.state.editing ? this.renderForm() : this.renderData()}
+
+                    {this.state.feed.stillUrl ? <img alt={this.state.feed.name} src={this.state.feed.stillUrl} style={{ maxWidth: '15vw', objectFit: 'contain' }}/> : ''}
+                </Stack>
                 
                 <Stack horizontal>
                     <Stack horizontal grow>

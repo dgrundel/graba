@@ -2,9 +2,6 @@ import { ChildProcess, spawn } from 'child_process';
 import { EventEmitter } from 'stream';
 import { Feed } from 'hastycam.interface';
 import { config } from './config';
-// const fs = require('fs');
-// const path = require('path');
-// const sharp = require('sharp');
 
 const QUALITY_LEVEL = 24;
 const MAX_FRAME_RATE = 10;

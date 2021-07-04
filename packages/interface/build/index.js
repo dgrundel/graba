@@ -11,7 +11,8 @@ const validateNotEmpty = (obj, field, label) => {
 };
 const validateFeed = (feed) => {
     return []
-        .concat(validateNotEmpty(feed, 'name'))
-        .concat(validateNotEmpty(feed, 'streamUrl'));
+        .concat(validateNotEmpty(feed, 'id'))
+        .concat(validateNotEmpty(feed, 'name', 'Feed name'))
+        .concat(validateNotEmpty(feed, 'streamUrl', 'Stream URL'));
 };
 exports.validateFeed = validateFeed;
