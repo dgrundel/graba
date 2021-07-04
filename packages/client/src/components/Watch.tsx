@@ -1,47 +1,56 @@
 import { Dropdown, IDropdownOption, Stack } from '@fluentui/react';
 import React, { CSSProperties, FormEvent } from 'react';
+import { Feed } from '../../../interface/build';
 import { getJson } from '../fetch';
 import { Spinner } from './Spinner';
 import './Watch.scss';
 
+type FeedDisplay = Pick<Feed, 'name' | 'id'>;
+
 interface State {
-    feeds: Record<string, boolean>;
+    feeds: FeedDisplay[];
+    selectedFeeds: Set<string>;
 }
 
 export class Watch extends React.Component<{}, State> {
-    private readonly loader: Promise<string[]>;
+    private readonly loader: Promise<FeedDisplay[]>;
 
     constructor(props: any) {
         super(props);
 
         this.state = {
-            feeds: {}
+            feeds: [],
+            selectedFeeds: new Set(),
         };
 
-        this.loader = getJson<string[]>('http://localhost:4000/feed/list');
+        this.loader = getJson<FeedDisplay[]>('http://localhost:4000/feed/list');
 
         this.toggleActiveFeed = this.toggleActiveFeed.bind(this);
     }
 
     componentDidMount() {
-        this.loader.then(names => {
+        this.loader.then(feeds => {
             this.setState({
-                feeds: names.reduce((map: Record<string, boolean>, name: string) => {
-                    map[name] = true;
-                    return map;
-                }, {})
+                feeds,
+                selectedFeeds: new Set(feeds.map(f => f.id)),
             })
         });
     }
 
     toggleActiveFeed(e: FormEvent<HTMLDivElement>, item?: IDropdownOption) {
         if (item) {
-            this.setState(prev => ({
-                feeds: {
-                    ...prev.feeds,
-                    [item.key as string]: item.selected === true,
+            const key = item.key as string;
+            this.setState(prev => {
+                const selectedFeeds = new Set(prev.selectedFeeds);
+                if (item.selected) {
+                    selectedFeeds.add(key);
+                } else {
+                    selectedFeeds.delete(key);
                 }
-            }));
+                return {
+                    selectedFeeds
+                }
+            });
         }
     }
 
@@ -60,7 +69,7 @@ export class Watch extends React.Component<{}, State> {
             objectFit: "cover",
         } as CSSProperties;
 
-        const dropdownOptions = Object.keys(this.state.feeds).map(name => ({ key: name, text: name }));
+        const dropdownOptions = this.state.feeds.map(f => ({ key: f.id, text: f.name }));
 
         return (
             <Spinner waitFor={this.loader}>
@@ -68,19 +77,15 @@ export class Watch extends React.Component<{}, State> {
                     <Dropdown
                         placeholder="Select feeds"
                         label="Selected Feeds"
-                        selectedKeys={Object.keys(this.state.feeds).filter(name => this.state.feeds[name])}
+                        selectedKeys={Array.from(this.state.selectedFeeds)}
                         onChange={this.toggleActiveFeed}
                         multiSelect
                         options={dropdownOptions}
                     />
 
                     <div style={displayGridStyle}>
-                        {Object.keys(this.state.feeds).map(name => {
-                            if (this.state.feeds[name]) {
-                                return <img key={name} style={imgStyle} alt={name} src={`http://localhost:4000/feed/view/${encodeURIComponent(name)}`}/>
-                            } else {
-                                return undefined;
-                            }
+                        {this.state.feeds.filter(f => this.state.selectedFeeds.has(f.id)).map(feed => {
+                            return <img key={feed.id} style={imgStyle} alt={feed.name} src={`http://localhost:4000/feed/stream/${encodeURIComponent(feed.id)}`}/>
                         })}
                     </div>
                 </Stack>

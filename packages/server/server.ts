@@ -7,7 +7,7 @@ import cors from 'cors';
 import { router as indexRouter } from './routes/index';
 import { router as configRouter } from './routes/config';
 import { router as feedRouter } from './routes/feed';
-import { start as startFeeds } from './background/feeds';
+import { start as startFeeds } from './background/streams';
 
 /**
  * Start background process(es)

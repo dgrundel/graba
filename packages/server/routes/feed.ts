@@ -1,20 +1,22 @@
 import express from 'express';
-import { FeedEvent, FeedEventType, getAllFeeds, getFeed } from '../background/feeds';
+import { validateFeed } from 'hastycam.interface';
+import { config } from '../background/config';
+import { StreamEvent, StreamEventType, getAllStreams, getStream, addStream } from '../background/streams';
 
 export const router = express.Router();
 
 const MJPEG_BOUNDARY = 'mjpegBoundary';
 
 router.get('/list', function(req: any, res: any, next: () => void) {
-    const feeds = getAllFeeds();
-    res.json(feeds.map(f => f.name));
+    const streams = getAllStreams();
+    res.json(streams.map(stream => ({ name: stream.feed.name, id: stream.id })));
 });
 
-router.get('/view/:name', function(req: any, res: any, next: () => void) {
-    const name = req.params.name;
+router.get('/stream/:id', function(req: any, res: any, next: () => void) {
+    const id = req.params.id;
 
-    const feed = getFeed(name);
-    if (!feed) {
+    const stream = getStream(id);
+    if (!stream) {
         res.writeHead(404);
         res.end('Not found.');
         return;
@@ -28,7 +30,7 @@ router.get('/view/:name', function(req: any, res: any, next: () => void) {
         'Content-Type': 'multipart/x-mixed-replace;boundary=' + MJPEG_BOUNDARY
     });
 
-    const jpgListener = (data: FeedEvent) => {
+    const jpgListener = (data: StreamEvent) => {
         const jpgData = data.data!;
         
         res.write(Buffer.from(`\r\n--${MJPEG_BOUNDARY}`));
@@ -37,13 +39,45 @@ router.get('/view/:name', function(req: any, res: any, next: () => void) {
         res.write(jpgData);
     };
 
-    feed.on(FeedEventType.JpgComplete, jpgListener);
+    stream.on(StreamEventType.JpgComplete, jpgListener);
 
-    feed.once(FeedEventType.FeedClose, () => {
+    stream.once(StreamEventType.FeedClose, () => {
         res.end();
     });
     
     res.socket!.on('close', () => {
-        feed.off(FeedEventType.JpgComplete, jpgListener);
+        stream.off(StreamEventType.JpgComplete, jpgListener);
     });
+});
+
+router.post('/', function(req: any, res: any, next: () => void) {
+    const feed = req.body;
+        
+    const errors = validateFeed(feed);
+    if (errors.length === 0) {
+        
+        // add to or update config file
+        const feeds = config.get('feeds');
+        const i = feeds.findIndex(f => f.id === feed.id);
+        if (i !== -1) {
+            feeds.splice(i, 1, feed);
+        } else {
+            feeds.push(feed);
+        }
+        config.set('feeds', feeds);
+
+        // create/update stream
+        const stream = getStream(feed.id);
+        if (stream) {
+            // update existing
+            stream.updateFeed(feed);
+        } else {
+            // create new
+            addStream(feed);
+        }
+
+        res.json("OK!");
+    } else {
+        res.status(400).json(errors);
+    }
 });

@@ -48,7 +48,7 @@ export class FeedEditor extends React.Component<Props, State> {
     save() {
         this.setState({ saving: true, error: undefined });
 
-        postJson<Feed>(`http://localhost:4000/config/feed/${this.state.feed.id}`, this.state.feed)
+        postJson<Feed>('http://localhost:4000/feed/', this.state.feed)
             .then(feed => {
                 console.log('feed', feed);
                 this.setState({ editing: false });
