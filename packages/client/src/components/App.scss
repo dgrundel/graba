@@ -13,7 +13,13 @@
 .stripe {
     grid-column: 1 / span 2;
     height: .25rem;
-    background: linear-gradient(to right, #ff004c, #ffc400, #00ff68, #0094ff);
+    background: linear-gradient(
+        to right,
+        #0094ff,
+        #00ff68,
+        #ffc400,
+        #ff004c,
+    );
 }
 
 .main-content-container {

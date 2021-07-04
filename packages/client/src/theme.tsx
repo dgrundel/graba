@@ -66,24 +66,38 @@ export const theme = createTheme({
     },
 });
 
-const iconStyle: CSSProperties = {
-    width: '100%',
-    height: '100%',
-};
+const iconProps = {
+    style: {
+        width: '100%',
+        height: '100%',
+    } as CSSProperties,
+    stroke: 1.5,
+    size: 16,
+}
 
-const embedIconStyle: CSSProperties = { ...iconStyle, position: 'relative', top: '.1rem' };
+const fluentIconProps = {
+    ...iconProps,
+    style: {
+        ...iconProps.style,
+        position: 'relative', 
+        top: '.15rem',
+    } as CSSProperties
+}
 
 registerIcons({
     icons: {
-        CheckMark: <IconCheck style={embedIconStyle} />,
-        ChevronDown: <IconChevronDown style={embedIconStyle} />,
-        ChevronLeft: <IconChevronLeft style={embedIconStyle} />,
-        ChevronRight: <IconChevronRight style={embedIconStyle} />,
-        ChevronUp: <IconChevronUp style={embedIconStyle} />,
-        Home: <IconHome style={embedIconStyle} />,
-        PlayerPlay: <IconPlayerPlay style={iconStyle} />,
-        Plus: <IconPlus style={iconStyle} />,
-        Settings: <IconSettings style={iconStyle} />,
-        Trash: <IconTrash style={iconStyle} />,
+        // used by Fluent
+        CheckMark: <IconCheck {...fluentIconProps} />,
+        ChevronDown: <IconChevronDown {...fluentIconProps} />,
+        ChevronLeft: <IconChevronLeft {...fluentIconProps} />,
+        ChevronRight: <IconChevronRight {...fluentIconProps} />,
+        ChevronUp: <IconChevronUp {...fluentIconProps} />,
+
+        // others
+        Home: <IconHome {...iconProps} />,
+        PlayerPlay: <IconPlayerPlay {...iconProps} />,
+        Plus: <IconPlus {...iconProps} />,
+        Settings: <IconSettings {...iconProps} />,
+        Trash: <IconTrash {...iconProps} />,
     }
 });
