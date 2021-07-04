@@ -3,6 +3,7 @@ import React, { CSSProperties, FormEvent } from 'react';
 import { Feed } from '../../../interface/build';
 import { getJson } from '../fetch';
 import { Spinner } from './Spinner';
+import { StreamImg } from './StreamImg';
 import './Watch.scss';
 
 type FeedDisplay = Pick<Feed, 'name' | 'id'>;
@@ -85,7 +86,7 @@ export class Watch extends React.Component<{}, State> {
 
                     <div style={displayGridStyle}>
                         {this.state.feeds.filter(f => this.state.selectedFeeds.has(f.id)).map(feed => {
-                            return <img key={feed.id} style={imgStyle} alt={feed.name} src={`http://localhost:4000/feed/stream/${encodeURIComponent(feed.id)}`}/>
+                            return <StreamImg key={feed.id} style={imgStyle} alt={feed.name} src={`http://localhost:4000/feed/stream/${encodeURIComponent(feed.id)}`}/>
                         })}
                     </div>
                 </Stack>

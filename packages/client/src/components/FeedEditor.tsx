@@ -152,7 +152,7 @@ export class FeedEditor extends React.Component<Props, State> {
 
                 {this.state.error ? <Text block style={{ color: theme.palette.redDark }}>{this.state.error}</Text> : ''}
                 
-                <Stack horizontal>
+                <Stack horizontal tokens={{ childrenGap: 'm', }}>
                     {this.state.editing ? this.renderForm() : this.renderData()}
 
                     {this.state.feed.stillUrl ? <img alt={this.state.feed.name} src={this.state.feed.stillUrl} style={{ maxWidth: '15vw', objectFit: 'contain' }}/> : ''}
