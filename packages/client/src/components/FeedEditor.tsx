@@ -1,9 +1,11 @@
 import React from 'react';
 import { ActionButton, Text, Stack, TextField } from '@fluentui/react';
 import { Feed } from 'hastycam.interface';
+import { theme } from '../theme';
 
 interface Props {
     feed: Feed;
+    deleteFeed: (id: string) => void;
 }
 
 interface State extends Feed {
@@ -14,21 +16,23 @@ export class FeedEditor extends React.Component<Props, State> {
         super(props);
 
         this.state = {
-            name: props.feed.name,
-            streamUrl: props.feed.streamUrl,
+            ...props.feed,
         };
 
         this.delete = this.delete.bind(this);
     }
 
     delete() {
-        alert('oh no!');
+        this.props.deleteFeed(this.props.feed.id);
     }
 
     render() {
         return <div>
             <Text block variant="xLarge">
                 {this.state.name}
+            </Text>
+            <Text block variant="small" style={{ color: theme.palette.neutralTertiary }}>
+                {this.state.id}
             </Text>
 
             <TextField

@@ -65,6 +65,9 @@ export const theme = createTheme({
         letterSpacing: '0.03rem',
     },
     fonts: {
+        xSmall: {
+            fontSize: '9px',
+        },
         small: {
             fontSize: '12px',
         },
@@ -87,7 +90,7 @@ const iconProps = {
         width: '100%',
         height: '100%',
     } as CSSProperties,
-    stroke: 1.5,
+    stroke: 1.25,
     size: 16,
 }
 

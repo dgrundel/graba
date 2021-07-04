@@ -7,7 +7,7 @@ import {
 import { Text } from '@fluentui/react';
 import './App.scss';
 import { Watch } from './Watch';
-import { Options } from './Options';
+import { ConfigEditor } from './ConfigEditor';
 import { SideNav } from './SideNav';
 import { theme } from '../theme';
 
@@ -30,7 +30,7 @@ export class App extends React.Component<{}, {}> {
                                 <Watch />
                             </Route>
                             <Route path="/config">
-                                <Options />
+                                <ConfigEditor />
                             </Route>
                         </Switch>
                     </div>
