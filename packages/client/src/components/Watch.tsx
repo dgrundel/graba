@@ -1,5 +1,5 @@
-import { Checkbox } from '@fluentui/react';
-import React, { CSSProperties } from 'react';
+import { Dropdown, IDropdownOption, Stack } from '@fluentui/react';
+import React, { CSSProperties, FormEvent } from 'react';
 import { Spinner } from './Spinner';
 import './Watch.scss';
 
@@ -19,6 +19,8 @@ export class Watch extends React.Component<{}, State> {
 
         this.loader = fetch('http://localhost:4000/feed/list')
             .then(response => response.json());
+
+        this.toggleActiveFeed = this.toggleActiveFeed.bind(this);
     }
 
     componentDidMount() {
@@ -32,13 +34,15 @@ export class Watch extends React.Component<{}, State> {
         });
     }
 
-    toggleActiveFeed(name: string, isActive: boolean) {
-        this.setState(prev => ({
-            feeds: {
-                ...prev.feeds,
-                [name]: isActive,
-            }
-        }));
+    toggleActiveFeed(e: FormEvent<HTMLDivElement>, item?: IDropdownOption) {
+        if (item) {
+            this.setState(prev => ({
+                feeds: {
+                    ...prev.feeds,
+                    [item.key as string]: item.selected === true,
+                }
+            }));
+        }
     }
 
     render() {
@@ -56,18 +60,30 @@ export class Watch extends React.Component<{}, State> {
             objectFit: "cover",
         } as CSSProperties;
 
+        const dropdownOptions = Object.keys(this.state.feeds).map(name => ({ key: name, text: name }));
+
         return (
             <Spinner waitFor={this.loader}>
-                {Object.keys(this.state.feeds).map(name => <Checkbox key={name} checkmarkIconProps={{ iconName: 'Check' }} label={name} checked={this.state.feeds[name]} onChange={(e, checked) => this.toggleActiveFeed(name, checked === true)} />)}
-                <div style={displayGridStyle}>
-                    {Object.keys(this.state.feeds).map(name => {
-                        if (this.state.feeds[name]) {
-                            return <img key={name} style={imgStyle} alt={name} src={`http://localhost:4000/feed/view/${encodeURIComponent(name)}`}/>
-                        } else {
-                            return undefined;
-                        }
-                    })}
-                </div>
+                <Stack tokens={{ childrenGap: 's1', }}>
+                    <Dropdown
+                        placeholder="Select feeds"
+                        label="Selected Feeds"
+                        selectedKeys={Object.keys(this.state.feeds).filter(name => this.state.feeds[name])}
+                        onChange={this.toggleActiveFeed}
+                        multiSelect
+                        options={dropdownOptions}
+                    />
+
+                    <div style={displayGridStyle}>
+                        {Object.keys(this.state.feeds).map(name => {
+                            if (this.state.feeds[name]) {
+                                return <img key={name} style={imgStyle} alt={name} src={`http://localhost:4000/feed/view/${encodeURIComponent(name)}`}/>
+                            } else {
+                                return undefined;
+                            }
+                        })}
+                    </div>
+                </Stack>
             </Spinner>
         );
     }

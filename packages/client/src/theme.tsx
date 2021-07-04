@@ -1,5 +1,6 @@
 import { createTheme, registerIcons } from '@fluentui/react';
-import { IconCheck, IconPlus, IconTrash } from '@tabler/icons';
+import { IconCheck, IconPlus, IconTrash, IconChevronUp, IconChevronDown, IconChevronLeft, IconChevronRight, IconSettings, IconPlayerPlay, IconHome } from '@tabler/icons';
+import { CSSProperties } from 'react';
 
 // const generated = ({
 //     palette: {
@@ -65,15 +66,24 @@ export const theme = createTheme({
     },
 });
 
-const iconStyle = {
+const iconStyle: CSSProperties = {
     width: '100%',
     height: '100%',
 };
 
+const embedIconStyle: CSSProperties = { ...iconStyle, position: 'relative', top: '.1rem' };
+
 registerIcons({
     icons: {
-        Check: <IconCheck style={{ ...iconStyle, position: 'relative', top: '.1rem'}} />,
+        CheckMark: <IconCheck style={embedIconStyle} />,
+        ChevronDown: <IconChevronDown style={embedIconStyle} />,
+        ChevronLeft: <IconChevronLeft style={embedIconStyle} />,
+        ChevronRight: <IconChevronRight style={embedIconStyle} />,
+        ChevronUp: <IconChevronUp style={embedIconStyle} />,
+        Home: <IconHome style={embedIconStyle} />,
+        PlayerPlay: <IconPlayerPlay style={iconStyle} />,
         Plus: <IconPlus style={iconStyle} />,
+        Settings: <IconSettings style={iconStyle} />,
         Trash: <IconTrash style={iconStyle} />,
     }
 });

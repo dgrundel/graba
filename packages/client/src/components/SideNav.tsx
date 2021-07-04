@@ -23,13 +23,16 @@ export const SideNav = () => {
     const links: INavLink[] = [{
         name: 'Home',
         url: '/',
+        icon: 'Home',
         exact: true,
     },{
         name: 'Watch',
         url: '/watch',
+        icon: 'PlayerPlay',
     },{
         name: 'Options',
         url: '/config',
+        icon: 'Settings',
     }].map(link => ({
         ...link, 
         key: link.url 
