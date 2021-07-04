@@ -1,5 +1,5 @@
 import { createTheme, registerIcons } from '@fluentui/react';
-import { IconCheck, IconPlus, IconTrash, IconChevronUp, IconChevronDown, IconChevronLeft, IconChevronRight, IconSettings, IconPlayerPlay, IconHome } from '@tabler/icons';
+import { IconCheck, IconPlus, IconTrash, IconChevronUp, IconChevronDown, IconChevronLeft, IconChevronRight, IconSettings, IconPlayerPlay, IconHome, IconVideo } from '@tabler/icons';
 import { CSSProperties } from 'react';
 
 // const generated = ({
@@ -64,6 +64,22 @@ export const theme = createTheme({
         fontSize: '15px',
         letterSpacing: '0.03rem',
     },
+    fonts: {
+        small: {
+            fontSize: '12px',
+        },
+        medium: {
+            fontSize: '15px',
+        },
+        large: {
+            fontSize: '20px',
+            fontWeight: 'semibold',
+        },
+        xLarge: {
+            fontSize: '22px',
+            fontWeight: 'bold',
+        },
+    },
 });
 
 const iconProps = {
@@ -99,5 +115,6 @@ registerIcons({
         Plus: <IconPlus {...iconProps} />,
         Settings: <IconSettings {...iconProps} />,
         Trash: <IconTrash {...iconProps} />,
+        Video: <IconVideo {...iconProps} />,
     }
 });

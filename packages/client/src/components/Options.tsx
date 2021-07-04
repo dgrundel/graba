@@ -1,11 +1,11 @@
 import React from 'react';
-import { ActionButton, Text, PrimaryButton, Stack, TextField } from '@fluentui/react';
+import { Text, PrimaryButton, Stack } from '@fluentui/react';
 import { Config } from 'hastycam.interface';
 import { Spinner } from './Spinner';
 import { theme } from '../theme';
+import { FeedEditor } from './FeedEditor';
 
-interface State {
-    config?: Config;
+interface State extends Config {
 }
 
 export class Options extends React.Component<{}, State> {
@@ -14,17 +14,28 @@ export class Options extends React.Component<{}, State> {
     constructor(props: any) {
         super(props);
 
-        this.state = {};
+        this.state = {
+            feeds: [],
+        };
         this.loader = fetch('http://localhost:4000/config')
             .then(response => response.json());
+
+        this.addFeed = this.addFeed.bind(this);
     }
 
     componentDidMount() {
-        this.loader.then(config => {
+        this.loader.then((config: Config) => {
             this.setState({
-                config
+                ...config
             });
         });
+    }
+
+    addFeed() {
+        this.setState(prev => ({
+            ...prev,
+            feeds: prev.feeds.concat({ name: '', streamUrl: '' })
+        }));
     }
 
     render() {
@@ -32,26 +43,14 @@ export class Options extends React.Component<{}, State> {
             <h2><Text variant="xLarge">Feeds</Text></h2>
 
             <Stack tokens={{ childrenGap: 's1', }}>
-                {this.state.config?.feeds.map(feed => {
+                {this.state.feeds.map(feed => {
                     return <Stack tokens={{ childrenGap: 's1', padding: 'm' }} style={{ backgroundColor: theme.palette.neutralLighter }}>
-                        <TextField
-                            label="Feed Name"
-                            value={feed.name}
-                            onChange={() => { /* fuck off, react */ }}
-                        />
-                        <TextField
-                            label="Stream URL"
-                            value={feed.streamUrl}
-                            onChange={() => { /* fuck off, react */ }}
-                        />
-                        <Stack horizontal horizontalAlign="end">
-                            <ActionButton iconProps={{ iconName: 'Trash' }} text="Delete Feed"/>
-                        </Stack>
+                        <FeedEditor feed={feed}/>
                     </Stack>;
                 })}
 
                 <Stack horizontal horizontalAlign="start">
-                    <PrimaryButton iconProps={{ iconName: 'Plus' }} text="Add Feed"/>
+                    <PrimaryButton iconProps={{ iconName: 'Plus' }} text="Add Feed" onClick={this.addFeed}/>
                 </Stack>
 
             </Stack>
