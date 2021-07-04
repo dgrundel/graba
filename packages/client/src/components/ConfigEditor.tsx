@@ -5,7 +5,7 @@ import { Spinner } from './Spinner';
 import { theme } from '../theme';
 import { FeedEditor } from './FeedEditor';
 import { nanoid } from 'nanoid';
-import { getJson, postJson } from '../fetch';
+import { getJson } from '../fetch';
 
 interface State {
     config: Config;
@@ -25,7 +25,6 @@ export class ConfigEditor extends React.Component<{}, State> {
 
         this.loader = getJson<Config>('http://localhost:4000/config');
 
-        this.save = this.save.bind(this);
         this.addFeed = this.addFeed.bind(this);
         this.deleteFeed = this.deleteFeed.bind(this);
     }
@@ -36,13 +35,6 @@ export class ConfigEditor extends React.Component<{}, State> {
                 config
             });
         });
-    }
-
-    save() {
-        postJson<Config>('http://localhost:4000/config', this.state.config)
-            .then(config => {
-                console.log('config', config);
-            });
     }
 
     addFeed() {
