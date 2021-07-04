@@ -1,17 +1,18 @@
 import React from 'react';
-import { Text, PrimaryButton, Stack } from '@fluentui/react';
+import { Text, PrimaryButton, Stack, CommandBar, ICommandBarItemProps } from '@fluentui/react';
 import { Config } from 'hastycam.interface';
 import { Spinner } from './Spinner';
 import { theme } from '../theme';
 import { FeedEditor } from './FeedEditor';
 import { nanoid } from 'nanoid';
+import { getJson, postJson } from '../fetch';
 
 interface State {
     config: Config;
 }
 
 export class ConfigEditor extends React.Component<{}, State> {
-    private readonly loader: Promise<any>;
+    private readonly loader: Promise<Config>;
 
     constructor(props: any) {
         super(props);
@@ -22,9 +23,9 @@ export class ConfigEditor extends React.Component<{}, State> {
             }
         };
 
-        this.loader = fetch('http://localhost:4000/config')
-            .then(response => response.json());
+        this.loader = getJson<Config>('http://localhost:4000/config');
 
+        this.save = this.save.bind(this);
         this.addFeed = this.addFeed.bind(this);
         this.deleteFeed = this.deleteFeed.bind(this);
     }
@@ -35,6 +36,13 @@ export class ConfigEditor extends React.Component<{}, State> {
                 config
             });
         });
+    }
+
+    save() {
+        postJson<Config>('http://localhost:4000/config', this.state.config)
+            .then(config => {
+                console.log('config', config);
+            });
     }
 
     addFeed() {
@@ -67,9 +75,9 @@ export class ConfigEditor extends React.Component<{}, State> {
 
     render() {
         return <Spinner waitFor={this.loader}>
-            <h2><Text variant="xLarge">Feeds</Text></h2>
-
             <Stack tokens={{ childrenGap: 's1', }}>
+            <Text block variant="xLarge">Feeds</Text>
+
                 {this.state.config.feeds.map(feed => {
                     return <Stack key={feed.id} tokens={{ childrenGap: 's1', padding: 'm' }} style={{ backgroundColor: theme.palette.neutralLighter }}>
                         <FeedEditor feed={feed} deleteFeed={this.deleteFeed}/>

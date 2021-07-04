@@ -1,7 +1,7 @@
 import * as path from 'path';
 import express from 'express';
 import cookieParser from 'cookie-parser';
-import { text } from 'body-parser';
+import { text, json } from 'body-parser';
 import logger from 'morgan';
 import cors from 'cors';
 import { router as indexRouter } from './routes/index';
@@ -25,7 +25,8 @@ app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
-app.use(text());
+app.use(text()); // body-parser
+app.use(json()); // body-parser
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);

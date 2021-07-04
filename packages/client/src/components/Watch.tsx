@@ -1,5 +1,6 @@
 import { Dropdown, IDropdownOption, Stack } from '@fluentui/react';
 import React, { CSSProperties, FormEvent } from 'react';
+import { getJson } from '../fetch';
 import { Spinner } from './Spinner';
 import './Watch.scss';
 
@@ -8,7 +9,7 @@ interface State {
 }
 
 export class Watch extends React.Component<{}, State> {
-    private readonly loader: Promise<any>;
+    private readonly loader: Promise<string[]>;
 
     constructor(props: any) {
         super(props);
@@ -17,8 +18,7 @@ export class Watch extends React.Component<{}, State> {
             feeds: {}
         };
 
-        this.loader = fetch('http://localhost:4000/feed/list')
-            .then(response => response.json());
+        this.loader = getJson<string[]>('http://localhost:4000/feed/list');
 
         this.toggleActiveFeed = this.toggleActiveFeed.bind(this);
     }
