@@ -4,8 +4,7 @@ import { Feed } from 'hastycam.interface';
 import { config } from './config';
 
 const QUALITY_LEVEL = 24;
-const MAX_FRAME_RATE = 24;
-const SCALE_EXPR = 'iw/2:ih/2';
+const DEFAULT_MAX_FRAME_RATE = 24;
 
 // https://docs.fileformat.com/image/jpeg/
 const JPG_START = Buffer.from([0xff, 0xd8]);
@@ -26,6 +25,31 @@ export interface StreamEvent {
 
 const streams: Record<string, Stream> = {};
 
+type FFmpegArgs = string[];
+const buildFFmpegArgs = (feed: Feed): FFmpegArgs => {
+    const filters: string[] = [];
+
+    // scale video
+    if (feed.scaleFactor) {
+        filters.push(`scale='iw*${feed.scaleFactor}:ih*${feed.scaleFactor}'`);  
+    }
+
+    // set max fps
+    const maxFps = feed.maxFps || DEFAULT_MAX_FRAME_RATE;
+    filters.push(`fps='fps=min(${maxFps},source_fps)'`); 
+
+    return [
+        '-i', feed.streamUrl, // input
+        '-filter:v', filters.join(','), 
+        '-f', 'image2', // use image processor
+        '-c:v', 'mjpeg', // output a jpg
+        '-qscale:v', QUALITY_LEVEL.toString(), // set quality level
+        // '-frames:v', '1', // output a single frame
+        '-update', '1', // reuse the same output (stdout in this case)
+        'pipe:1', // pipe to stdout
+    ];
+}
+
 class Stream extends EventEmitter {
     readonly id: string;
     feed: Feed;
@@ -42,23 +66,12 @@ class Stream extends EventEmitter {
 
         this.id = feed.id;
         this.feed = feed;
-        this.ffmpeg = this.spawnFFmpeg(feed.streamUrl);
+        this.ffmpeg = this.spawnFFmpeg(buildFFmpegArgs(feed));
 
         streams[feed.id] = this;
     }
 
-    spawnFFmpeg(url: string): ChildProcess {
-        const ffmpegArgs = [
-            '-i', url, // input
-            '-filter:v', `scale='${SCALE_EXPR}',fps='fps=min(${MAX_FRAME_RATE},source_fps)'`, // set max fps
-            '-f', 'image2', // use image processor
-            '-c:v', 'mjpeg', // output a jpg
-            '-qscale:v', QUALITY_LEVEL.toString(), // set quality level
-            // '-frames:v', '1', // output a single frame
-            '-update', '1', // reuse the same output (stdout in this case)
-            'pipe:1', // pipe to stdout
-        ];
-        
+    spawnFFmpeg(ffmpegArgs: FFmpegArgs): ChildProcess {
         const ff = spawn('ffmpeg', ffmpegArgs);
         ff.stdout.on('data', this.onData);
         ff.on('close', this.onClose);
@@ -72,11 +85,18 @@ class Stream extends EventEmitter {
             throw new Error(`Bad feed id. This: ${this.id}, Update: ${feed.id}`);
         }
 
+        // build args for old feed
+        const prevArgs = buildFFmpegArgs(this.feed);
+
         // update feed
         this.feed = feed;
 
-        if (feed.streamUrl === this.feed.streamUrl) {
-            // do nothing if URLs are same
+        // build args for new FFmpeg process
+        const newFFmpegArgs = buildFFmpegArgs(feed);
+
+        // check to see if we need to restart ffmpeg
+        if (prevArgs.join(' ') === newFFmpegArgs.join(' ')) {
+            // args are same, no need to restart
             return;
         }
 
@@ -94,7 +114,7 @@ class Stream extends EventEmitter {
         this.buffer = undefined;
 
         // respawn ffmpeg
-        this.ffmpeg = this.spawnFFmpeg(feed.streamUrl);
+        this.ffmpeg = this.spawnFFmpeg(newFFmpegArgs);
     }
 
     emit(eventName: StreamEventType, data?: StreamEvent): boolean {
