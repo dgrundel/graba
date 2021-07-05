@@ -91,14 +91,6 @@ export class FeedEditor extends React.Component<Props, State> {
                     {this.state.feed.streamUrl}
                 </Text>
             </Stack>
-            <Stack>
-                <Text style={{ color: theme.palette.neutralTertiary }}>
-                    Still Image URL &nbsp;
-                </Text>
-                <Text>
-                    {this.state.feed.stillUrl}
-                </Text>
-            </Stack>
         </Stack>;
     }
 
@@ -113,11 +105,6 @@ export class FeedEditor extends React.Component<Props, State> {
                 label="Stream URL"
                 value={this.state.feed.streamUrl}
                 onChange={(e, streamUrl) => { this.setFeedData({ streamUrl }) }}
-            />
-            <TextField
-                label="Still Image URL"
-                value={this.state.feed.stillUrl}
-                onChange={(e, stillUrl) => { this.setFeedData({ stillUrl }) }}
             />
         </Stack>;
     }
@@ -155,7 +142,7 @@ export class FeedEditor extends React.Component<Props, State> {
                 <Stack horizontal tokens={{ childrenGap: 'm', }}>
                     {this.state.editing ? this.renderForm() : this.renderData()}
 
-                    {this.state.feed.stillUrl ? <img alt={this.state.feed.name} src={this.state.feed.stillUrl} style={{ maxWidth: '15vw', objectFit: 'contain' }}/> : ''}
+                    <img alt={this.state.feed.name} src={`http://localhost:4000/feed/still/${this.state.feed.id}`} style={{ maxWidth: '15vw', objectFit: 'contain' }}/>
                 </Stack>
                 
                 <Stack horizontal>

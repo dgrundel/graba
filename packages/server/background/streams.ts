@@ -4,7 +4,8 @@ import { Feed } from 'hastycam.interface';
 import { config } from './config';
 
 const QUALITY_LEVEL = 24;
-const MAX_FRAME_RATE = 10;
+const MAX_FRAME_RATE = 24;
+const SCALE_EXPR = 'iw/2:ih/2';
 
 // https://docs.fileformat.com/image/jpeg/
 const JPG_START = Buffer.from([0xff, 0xd8]);
@@ -49,7 +50,7 @@ class Stream extends EventEmitter {
     spawnFFmpeg(url: string): ChildProcess {
         const ffmpegArgs = [
             '-i', url, // input
-            '-filter:v', `fps='fps=min(${MAX_FRAME_RATE},source_fps)'`, // set max fps
+            '-filter:v', `scale='${SCALE_EXPR}',fps='fps=min(${MAX_FRAME_RATE},source_fps)'`, // set max fps
             '-f', 'image2', // use image processor
             '-c:v', 'mjpeg', // output a jpg
             '-qscale:v', QUALITY_LEVEL.toString(), // set quality level

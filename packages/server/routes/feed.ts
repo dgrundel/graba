@@ -50,6 +50,33 @@ router.get('/stream/:id', function(req: any, res: any, next: () => void) {
     });
 });
 
+router.get('/still/:id', function(req: any, res: any, next: () => void) {
+    const id = req.params.id;
+
+    const stream = getStream(id);
+    if (!stream) {
+        res.writeHead(404);
+        res.end('Not found.');
+        return;
+    }
+
+    const jpgListener = (data: StreamEvent) => {
+        const jpgData = data.data!;
+        
+        res.writeHead(200, {
+            'Expires': 'Mon, 01 Jul 1980 00:00:00 GMT',
+            'Cache-Control': 'no-cache, no-store, must-revalidate',
+            'Pragma': 'no-cache',
+            'Content-Type': 'image/jpeg',
+            'Content-length': jpgData.length
+        });
+        res.write(jpgData);
+        res.end();
+    };
+
+    stream.once(StreamEventType.JpgComplete, jpgListener);
+});
+
 router.post('/', function(req: any, res: any, next: () => void) {
     const feed = req.body;
         
