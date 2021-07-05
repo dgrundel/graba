@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActionButton, Text, Stack, TextField, PrimaryButton, Spinner, DefaultButton } from '@fluentui/react';
+import { ActionButton, Text, Stack, TextField, PrimaryButton, Spinner, DefaultButton, Slider } from '@fluentui/react';
 import { Feed } from 'hastycam.interface';
 import { theme } from '../theme';
 import { postJson } from '../fetch';
@@ -73,29 +73,32 @@ export class FeedEditor extends React.Component<Props, State> {
         }))
     }
 
+    renderDataField(label: string, value?: string) {
+        if (!value) {
+            return;
+        }
+        
+        return <Stack>
+            <Text style={{ color: theme.palette.neutralTertiary }}>
+                {label} &nbsp;
+            </Text>
+            <Text>
+                {value}
+            </Text>
+        </Stack>;
+    }
+
     renderData() {
         return <Stack grow tokens={{ childrenGap: 's1', }}>
-            <Stack>
-                <Text style={{ color: theme.palette.neutralTertiary }}>
-                    Feed name &nbsp;
-                </Text>
-                <Text>
-                    {this.state.feed.name}
-                </Text>
-            </Stack>
-            <Stack>
-                <Text style={{ color: theme.palette.neutralTertiary }}>
-                    Stream URL &nbsp;
-                </Text>
-                <Text>
-                    {this.state.feed.streamUrl}
-                </Text>
-            </Stack>
+            {this.renderDataField('Feed name', this.state.feed.name)}
+            {this.renderDataField('Stream URL', this.state.feed.streamUrl)}
+            {this.renderDataField('Max FPS', this.state.feed.maxFps?.toString())}
+            {this.renderDataField('Scale Factor', this.state.feed.scaleFactor ? (this.state.feed.scaleFactor.toFixed(2) + 'x') : '')}
         </Stack>;
     }
 
     renderForm() {
-        return <Stack grow>
+        return <Stack grow tokens={{ childrenGap: 's1', }}>
             <TextField
                 label="Feed Name"
                 value={this.state.feed.name}
@@ -105,6 +108,26 @@ export class FeedEditor extends React.Component<Props, State> {
                 label="Stream URL"
                 value={this.state.feed.streamUrl}
                 onChange={(e, streamUrl) => { this.setFeedData({ streamUrl }) }}
+            />
+            <Slider
+                label="Max FPS"
+                min={0}
+                step={1}
+                max={60}
+                value={this.state.feed.maxFps}
+                showValue
+                onChange={(maxFps) => { this.setFeedData({ maxFps }) }}
+                valueFormat={(n) => n === 0 ? 'Unset' : n.toString()}
+            />
+            <Slider
+                label="Scale Factor"
+                min={0}
+                step={0.05}
+                max={2}
+                value={this.state.feed.scaleFactor}
+                showValue
+                onChange={(scaleFactor) => { this.setFeedData({ scaleFactor }) }}
+                valueFormat={(n) => n === 0 ? 'Unset' : (n.toFixed(2) + 'x')}
             />
         </Stack>;
     }
