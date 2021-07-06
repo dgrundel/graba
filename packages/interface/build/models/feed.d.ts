@@ -5,6 +5,7 @@ export interface Feed {
     streamUrl: string;
     maxFps?: number;
     scaleFactor?: number;
+    videoQuality?: number;
 }
 export declare const validateFeed: (feed: Partial<Feed>) => ErrorMessage[];
 export interface Config {

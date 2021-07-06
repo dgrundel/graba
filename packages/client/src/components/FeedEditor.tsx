@@ -1,8 +1,9 @@
 import React from 'react';
-import { ActionButton, Text, Stack, TextField, PrimaryButton, Spinner, DefaultButton, Slider } from '@fluentui/react';
+import { ActionButton, Text, Stack, TextField, PrimaryButton, Spinner, DefaultButton, Slider, TooltipHost, Icon, DirectionalHint } from '@fluentui/react';
 import { Feed } from 'hastycam.interface';
 import { theme } from '../theme';
 import { postJson } from '../fetch';
+import { nanoid } from 'nanoid';
 
 interface Props {
     feed: Feed;
@@ -73,15 +74,28 @@ export class FeedEditor extends React.Component<Props, State> {
         }))
     }
 
-    renderDataField(label: string, value?: string) {
+    renderDataField(label: string, value?: string, tooltip?: string | JSX.Element) {
         if (!value) {
             return;
         }
+
+        let labelElement = <Text style={{ color: theme.palette.neutralTertiary }}>
+            {label} &nbsp;
+        </Text>;
+        
+        if (tooltip) {
+            const ttId = `tooltip-${nanoid(6)}`;
+            labelElement = <div>
+                <TooltipHost content={tooltip} id={ttId}>
+                    <Text aria-describedby={ttId} style={{ color: theme.palette.neutralTertiary, position: 'relative' }}>
+                        {label} <Icon iconName="InfoCircle" /> &nbsp;
+                    </Text>
+                </TooltipHost>
+            </div>;
+        }
         
         return <Stack>
-            <Text style={{ color: theme.palette.neutralTertiary }}>
-                {label} &nbsp;
-            </Text>
+            {labelElement}
             <Text>
                 {value}
             </Text>
@@ -92,15 +106,32 @@ export class FeedEditor extends React.Component<Props, State> {
         return <Stack grow tokens={{ childrenGap: 's1', }}>
             {this.renderDataField('Feed name', this.state.feed.name)}
             {this.renderDataField('Stream URL', this.state.feed.streamUrl)}
-            {this.renderDataField('Max FPS', this.state.feed.maxFps?.toString())}
-            {this.renderDataField('Scale Factor', this.state.feed.scaleFactor ? (this.state.feed.scaleFactor.toFixed(2) + 'x') : '')}
+            {this.renderDataField(
+                'Max FPS', 
+                this.state.feed.maxFps?.toString(),
+                <span>
+                    Set an upper bound for video frame rate.
+                    Default is to use the native frame rate of the feed.
+                    Set lower to improve performance of video processing and viewing in browser.
+                </span>
+            )}
+            {this.renderDataField(
+                'Scale Factor', 
+                this.state.feed.scaleFactor ? (this.state.feed.scaleFactor.toFixed(2) + 'x') : '',
+                <span>Scale the width and height of the video. Set lower to improve performance of video processing and viewing in browser.</span>
+            )}
+            {this.renderDataField(
+                'Video quality', 
+                this.state.feed.videoQuality ? this.state.feed.videoQuality.toString() : '',
+                <span>Quality level of the video output. Range is 2-31 where <em>a lower number represents better quality</em>.</span>
+            )}
         </Stack>;
     }
 
     renderForm() {
         return <Stack grow tokens={{ childrenGap: 's1', }}>
             <TextField
-                label="Feed Name"
+                label="Feed name"
                 value={this.state.feed.name}
                 onChange={(e, name) => { this.setFeedData({ name }) }}
             />
@@ -120,7 +151,7 @@ export class FeedEditor extends React.Component<Props, State> {
                 valueFormat={(n) => n === 0 ? 'Unset' : n.toString()}
             />
             <Slider
-                label="Scale Factor"
+                label="Scale factor"
                 min={0}
                 step={0.05}
                 max={2}
@@ -128,6 +159,16 @@ export class FeedEditor extends React.Component<Props, State> {
                 showValue
                 onChange={(scaleFactor) => { this.setFeedData({ scaleFactor }) }}
                 valueFormat={(n) => n === 0 ? 'Unset' : (n.toFixed(2) + 'x')}
+            />
+            <Slider
+                label="Video quality"
+                min={-31}
+                step={1}
+                max={-2}
+                value={this.state.feed.videoQuality ? this.state.feed.videoQuality * -1 : -31}
+                showValue
+                onChange={(videoQuality) => { this.setFeedData({ videoQuality: videoQuality * -1 }) }}
+                valueFormat={(n) => (n * -1).toString()}
             />
         </Stack>;
     }
