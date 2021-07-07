@@ -6,6 +6,7 @@ export interface Feed {
     maxFps?: number;
     scaleFactor?: number;
     videoQuality?: number;
+    detectMotion?: boolean;
 }
 export declare namespace Feed {
     const DEFAULT_VIDEO_QUALITY = 24;

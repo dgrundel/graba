@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActionButton, Text, Stack, TextField, PrimaryButton, Spinner, DefaultButton, Slider, TooltipHost, Icon, DirectionalHint } from '@fluentui/react';
+import { ActionButton, Text, Stack, TextField, PrimaryButton, Spinner, DefaultButton, Slider, TooltipHost, Icon, DirectionalHint, Toggle, Separator } from '@fluentui/react';
 import { Feed } from 'hastycam.interface';
 import { theme } from '../theme';
 import { postJson } from '../fetch';
@@ -131,12 +131,23 @@ export class FeedEditor extends React.Component<Props, State> {
     }
 
     renderForm() {
+        const separatorStyles = {
+            root: {
+                '::before': { 
+                    background: theme.palette.neutralQuaternaryAlt,
+                }
+            }
+        };
+
         return <Stack grow tokens={{ childrenGap: 's1', }}>
             <TextField
                 label="Feed name"
                 value={this.state.feed.name}
                 onChange={(e, name) => { this.setFeedData({ name }) }}
             />
+
+            <Separator styles={separatorStyles} />
+
             <TextField
                 label="Stream URL"
                 value={this.state.feed.streamUrl}
@@ -171,6 +182,15 @@ export class FeedEditor extends React.Component<Props, State> {
                 showValue
                 onChange={(videoQuality) => { this.setFeedData({ videoQuality: videoQuality * -1 }) }}
                 valueFormat={(n) => (n * -1).toString()}
+            />
+
+            <Separator styles={separatorStyles} />
+
+            <Toggle 
+                label="Detect motion" 
+                inlineLabel
+                defaultChecked={this.state.feed.detectMotion === true}
+                onChange={(e, detectMotion) => this.setFeedData({ detectMotion })}
             />
         </Stack>;
     }

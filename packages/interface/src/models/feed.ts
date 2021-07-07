@@ -3,10 +3,15 @@ import { ErrorMessage, mergeErrors, validateIf, validateNotEmpty, validateNumber
 export interface Feed {
     id: string;
     name: string;
+
+    // stream processing (ffmpeg)
     streamUrl: string;
     maxFps?: number;
-    scaleFactor?: number;
+    scaleFactor?: number; // multiplied by width and height of video to resize
     videoQuality?: number; // range 2-31, 31 is worst
+
+    // motion detection
+    detectMotion?: boolean;
 }
 
 export namespace Feed {
