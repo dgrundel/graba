@@ -87,8 +87,8 @@ export class FeedEditor extends React.Component<Props, State> {
             const ttId = `tooltip-${nanoid(6)}`;
             labelElement = <div>
                 <TooltipHost content={tooltip} id={ttId}>
-                    <Text aria-describedby={ttId} style={{ color: theme.palette.neutralTertiary, position: 'relative' }}>
-                        {label} <Icon iconName="InfoCircle" /> &nbsp;
+                    <Text aria-describedby={ttId} style={{ color: theme.palette.neutralTertiary }}>
+                        {label} <Icon iconName="Help" /> &nbsp;
                     </Text>
                 </TooltipHost>
             </div>;
@@ -111,14 +111,16 @@ export class FeedEditor extends React.Component<Props, State> {
                 this.state.feed.maxFps?.toString(),
                 <span>
                     Set an upper bound for video frame rate.
-                    Default is to use the native frame rate of the feed.
                     Set lower to improve performance of video processing and viewing in browser.
                 </span>
             )}
             {this.renderDataField(
                 'Scale Factor', 
                 this.state.feed.scaleFactor ? (this.state.feed.scaleFactor.toFixed(2) + 'x') : '',
-                <span>Scale the width and height of the video. Set lower to improve performance of video processing and viewing in browser.</span>
+                <span>
+                    Scale the width and height of the video. 
+                    Set lower to improve performance of video processing and viewing in browser.
+                </span>
             )}
             {this.renderDataField(
                 'Video quality', 
@@ -145,7 +147,7 @@ export class FeedEditor extends React.Component<Props, State> {
                 min={0}
                 step={1}
                 max={60}
-                value={this.state.feed.maxFps}
+                value={this.state.feed.maxFps || Feed.DEFAULT_MAX_FPS}
                 showValue
                 onChange={(maxFps) => { this.setFeedData({ maxFps }) }}
                 valueFormat={(n) => n === 0 ? 'Unset' : n.toString()}
@@ -165,7 +167,7 @@ export class FeedEditor extends React.Component<Props, State> {
                 min={-31}
                 step={1}
                 max={-2}
-                value={this.state.feed.videoQuality ? this.state.feed.videoQuality * -1 : -31}
+                value={(this.state.feed.videoQuality ? this.state.feed.videoQuality : Feed.DEFAULT_VIDEO_QUALITY) * -1}
                 showValue
                 onChange={(videoQuality) => { this.setFeedData({ videoQuality: videoQuality * -1 }) }}
                 valueFormat={(n) => (n * -1).toString()}

@@ -3,9 +3,6 @@ import { EventEmitter } from 'stream';
 import { Feed } from 'hastycam.interface';
 import { config } from './config';
 
-const QUALITY_LEVEL = 24;
-const DEFAULT_MAX_FRAME_RATE = 24;
-
 // https://docs.fileformat.com/image/jpeg/
 const JPG_START = Buffer.from([0xff, 0xd8]);
 const JPG_END = Buffer.from([0xff, 0xd9]);
@@ -35,15 +32,17 @@ const buildFFmpegArgs = (feed: Feed): FFmpegArgs => {
     }
 
     // set max fps
-    const maxFps = feed.maxFps || DEFAULT_MAX_FRAME_RATE;
+    const maxFps = feed.maxFps || Feed.DEFAULT_MAX_FPS;
     filters.push(`fps='fps=min(${maxFps},source_fps)'`); 
+
+    const qualityLevel = feed.videoQuality || Feed.DEFAULT_VIDEO_QUALITY;
 
     return [
         '-i', feed.streamUrl, // input
         '-filter:v', filters.join(','), 
         '-f', 'image2', // use image processor
         '-c:v', 'mjpeg', // output a jpg
-        '-qscale:v', QUALITY_LEVEL.toString(), // set quality level
+        '-qscale:v', qualityLevel.toString(), // set quality level
         // '-frames:v', '1', // output a single frame
         '-update', '1', // reuse the same output (stdout in this case)
         'pipe:1', // pipe to stdout

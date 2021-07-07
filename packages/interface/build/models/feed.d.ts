@@ -7,6 +7,10 @@ export interface Feed {
     scaleFactor?: number;
     videoQuality?: number;
 }
+export declare namespace Feed {
+    const DEFAULT_VIDEO_QUALITY = 24;
+    const DEFAULT_MAX_FPS = 16;
+}
 export declare const validateFeed: (feed: Partial<Feed>) => ErrorMessage[];
 export interface Config {
     feeds: Feed[];

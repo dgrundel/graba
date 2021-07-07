@@ -1,5 +1,5 @@
 import { createTheme, registerIcons } from '@fluentui/react';
-import { IconCheck, IconPlus, IconTrash, IconChevronUp, IconChevronDown, IconChevronLeft, IconChevronRight, IconSettings, IconPlayerPlay, IconHome, IconVideo, IconDeviceFloppy, IconPencil, IconX, IconInfoCircle } from '@tabler/icons';
+import { IconCheck, IconPlus, IconTrash, IconChevronUp, IconChevronDown, IconChevronLeft, IconChevronRight, IconSettings, IconPlayerPlay, IconHome, IconVideo, IconDeviceFloppy, IconPencil, IconX, IconInfoCircle, IconHelp } from '@tabler/icons';
 import { CSSProperties } from 'react';
 
 // const generated = ({
@@ -114,6 +114,7 @@ registerIcons({
 
         // others
         DeviceFloppy: <IconDeviceFloppy {...iconProps} />,
+        Help: <IconHelp {...iconProps} />,
         Home: <IconHome {...iconProps} />,
         InfoCircle: <IconInfoCircle {...iconProps} />,
         Pencil: <IconPencil {...iconProps} />,

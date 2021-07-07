@@ -9,6 +9,11 @@ export interface Feed {
     videoQuality?: number; // range 2-31, 31 is worst
 }
 
+export namespace Feed {
+    export const DEFAULT_VIDEO_QUALITY = 24;
+    export const DEFAULT_MAX_FPS = 16;
+}
+
 export const validateFeed = (feed: Partial<Feed>): ErrorMessage[] => {
     return mergeErrors(
         validateNotEmpty(feed, 'id'),
