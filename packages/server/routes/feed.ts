@@ -9,7 +9,7 @@ const MJPEG_BOUNDARY = 'mjpegBoundary';
 
 router.get('/list', (req: any, res: any, next: () => void) => {
     const streams = getAllStreams();
-    res.json(streams.map(stream => ({ name: stream.feed.name, id: stream.id })));
+    res.json(streams.map(stream => ({ name: stream.feed.name, id: stream.feed.id })));
 });
 
 router.get('/stream/:id', (req: any, res: any, next: () => void) => {
@@ -30,24 +30,15 @@ router.get('/stream/:id', (req: any, res: any, next: () => void) => {
         'Content-Type': 'multipart/x-mixed-replace;boundary=' + MJPEG_BOUNDARY
     });
 
-    const jpgListener = (data: StreamEvent) => {
-        const jpgData = data.data!;
-        
+    const off = stream.onFrame(jpgData => {
         res.write(Buffer.from(`\r\n--${MJPEG_BOUNDARY}`));
         res.write(Buffer.from(`\r\nContent-Type: image/jpeg`));
         res.write(Buffer.from(`\r\nContent-length: ${jpgData.length}\r\n\r\n`));
         res.write(jpgData);
-    };
-
-    stream.on(StreamEventType.JpgComplete, jpgListener);
-
-    stream.once(StreamEventType.FeedClose, () => {
-        res.end();
     });
-    
-    res.socket!.on('close', () => {
-        stream.off(StreamEventType.JpgComplete, jpgListener);
-    });
+
+    stream.onEnd(() => res.end());
+    res.socket!.on('close', off);
 });
 
 router.get('/still/:id', (req: any, res: any, next: () => void) => {
