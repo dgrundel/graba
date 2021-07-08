@@ -7,12 +7,12 @@ export const router = express.Router();
 
 const MJPEG_BOUNDARY = 'mjpegBoundary';
 
-router.get('/list', function(req: any, res: any, next: () => void) {
+router.get('/list', (req: any, res: any, next: () => void) => {
     const streams = getAllStreams();
     res.json(streams.map(stream => ({ name: stream.feed.name, id: stream.id })));
 });
 
-router.get('/stream/:id', function(req: any, res: any, next: () => void) {
+router.get('/stream/:id', (req: any, res: any, next: () => void) => {
     const id = req.params.id;
 
     const stream = getStream(id);
@@ -50,7 +50,7 @@ router.get('/stream/:id', function(req: any, res: any, next: () => void) {
     });
 });
 
-router.get('/still/:id', function(req: any, res: any, next: () => void) {
+router.get('/still/:id', (req: any, res: any, next: () => void) => {
     const id = req.params.id;
 
     const stream = getStream(id);
@@ -60,9 +60,7 @@ router.get('/still/:id', function(req: any, res: any, next: () => void) {
         return;
     }
 
-    const jpgListener = (data: StreamEvent) => {
-        const jpgData = data.data!;
-        
+    stream.getFrame().then(jpgData => {
         res.writeHead(200, {
             'Expires': 'Mon, 01 Jul 1980 00:00:00 GMT',
             'Cache-Control': 'no-cache, no-store, must-revalidate',
@@ -72,12 +70,10 @@ router.get('/still/:id', function(req: any, res: any, next: () => void) {
         });
         res.write(jpgData);
         res.end();
-    };
-
-    stream.once(StreamEventType.JpgComplete, jpgListener);
+    })
 });
 
-router.post('/', function(req: any, res: any, next: () => void) {
+router.post('/', (req: any, res: any, next: () => void) => {
     const feed = req.body;
         
     const errors = validateFeed(feed);

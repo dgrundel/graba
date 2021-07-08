@@ -178,6 +178,12 @@ class Stream extends EventEmitter {
             // });
         }
     }
+
+    async getFrame() {
+        return new Promise<Buffer>(resolve => {
+            this.once(StreamEventType.JpgComplete, event => resolve(event.data));
+        });
+    }
 }
 
 export const getStream = (id: string): Stream | undefined => {
