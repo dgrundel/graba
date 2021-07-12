@@ -89,7 +89,7 @@ router.get('/motion/:id', (req: any, res: any, next: () => void) => {
                 includeAA: true,
             });
 
-            const jpg = await sharp(diff, { 
+            const jpg = await sharp(diff, {
                 raw: {
                     width,
                     height,

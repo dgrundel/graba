@@ -14,11 +14,11 @@ export class MotionDetector extends FeedConsumer {
     }
 
     onFeedUpdate(next: Feed, prev: Feed): void {
-        // no op
+        // update settings from feed
     }
 
     onFeedEnd(feed: Feed): void {
-        // no op
+        // clean up here
     }
     
     onFrame(buffer: Buffer) {
