@@ -51,7 +51,7 @@ export const frameDiff = (img1: Pixels, img2: Pixels, width: number, height: num
 
     let output: Buffer | undefined;
     if (options.generateOutput) {
-        output = Buffer.alloc(img1.length);
+        output = Buffer.from(img2);
     }
 
     // maximum acceptable square distance between two colors;
@@ -76,9 +76,11 @@ export const frameDiff = (img1: Pixels, img2: Pixels, width: number, height: num
                 }
                 diffCount++;
 
-            } else if (output) {
+            // } else if (output && options.diffMask !== true) {
                 // pixels are similar; draw background as grayscale image blended with white
-                if (!options.diffMask) drawGrayPixel(img1, pos, options.alpha, output);
+                // since a diff mask was not requested, we draw the non-diff px
+                // drawGrayPixel(img1, pos, options.alpha, output);
+                // copyPixel(img1, pos, output);
             }
         }
     }
@@ -120,21 +122,21 @@ function rgb2y(r: number, g: number, b: number) { return r * 0.29889531 + g * 0.
 function rgb2i(r: number, g: number, b: number) { return r * 0.59597799 - g * 0.27417610 - b * 0.32180189; }
 function rgb2q(r: number, g: number, b: number) { return r * 0.21147017 - g * 0.52261711 + b * 0.31114694; }
 
-// blend semi-transparent color with white
-function blend(color: number, alpha: number) {
-    return 255 + (color - 255) * alpha;
-}
-
 function drawPixel(output: Pixels, pos: number, r: number, g: number, b: number) {
     output[pos + 0] = r;
     output[pos + 1] = g;
     output[pos + 2] = b;
 }
 
-function drawGrayPixel(img: Pixels, i: number, alpha: number, output: Pixels) {
-    const r = img[i + 0];
-    const g = img[i + 1];
-    const b = img[i + 2];
-    const val = blend(rgb2y(r, g, b), alpha * img[i + 3] / 255);
-    drawPixel(output, i, val, val, val);
-}
+// blend semi-transparent color with white
+// function blend(color: number, alpha: number) {
+//     return 255 + (color - 255) * alpha;
+// }
+
+// function drawGrayPixel(img: Pixels, i: number, alpha: number, output: Pixels) {
+//     const r = img[i + 0];
+//     const g = img[i + 1];
+//     const b = img[i + 2];
+//     const val = blend(rgb2y(r, g, b), alpha * img[i + 3] / 255);
+//     drawPixel(output, i, val, val, val);
+// }
