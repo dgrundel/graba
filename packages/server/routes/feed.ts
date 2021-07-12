@@ -3,7 +3,7 @@ import { validateFeed } from 'hastycam.interface';
 import { config } from '../background/config';
 import { getAllStreams, getStream, addStream } from '../background/feed/streams';
 import sharp from 'sharp';
-import pixelmatch from 'pixelmatch';
+import { frameDiff } from '../background/feed/frameDiff';
 
 export const router = express.Router();
 
@@ -80,16 +80,13 @@ router.get('/motion/:id', (req: any, res: any, next: () => void) => {
         const px = new Uint8ClampedArray(img.data);
     
         if (prev) {
-            // for diff.data, should be able to use Buffer.alloc(px.length) instead of PNG 
-            // to avoid size mismatch and remove need to ensureAlpha
-            const diff = Buffer.alloc(px.length);
-            const diffValue = pixelmatch(prev, px, diff, width, height, {
+            const diff = frameDiff(prev, px, width, height, {
                 threshold: 0.1,
                 alpha: 0.8,
-                includeAA: true,
+                generateOutput: true,
             });
 
-            const jpg = await sharp(diff, {
+            const jpg = await sharp(diff.diffImage!, {
                 raw: {
                     width,
                     height,

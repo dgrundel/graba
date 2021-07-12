@@ -3,43 +3,56 @@
  * https://github.com/mapbox/pixelmatch
  */
 
-const defaultOptions: Options = {
-    threshold: 0.1,         // matching threshold (0 to 1); smaller is more sensitive
-    includeAA: false,       // whether to skip anti-aliasing detection
-    alpha: 0.1,             // opacity of original image in diff output
-    aaColor: [255, 255, 0], // color of anti-aliased pixels in diff output
-    diffColor: [255, 0, 0], // color of different pixels in diff output
-    diffColorAlt: null,     // whether to detect dark on light differences between img1 and img2 and set an alternative color to differentiate between the two
-    diffMask: false         // draw the diff over a transparent background (a mask)
-};
-
-interface ImageInput extends Array<number> {
-    length: number;
-    buffer: ArrayBufferLike;
-    byteOffset?: number;
-}
+type Pixels = Uint8ClampedArray | Buffer;
 
 interface Options {
-    threshold: number;
-    includeAA: boolean;
-    alpha: number;
-    aaColor: [number, number, number];
-    diffColor: [number, number, number];
-    diffColorAlt?: [number, number, number] | null;
-    diffMask: boolean;
+    // matching threshold (0 to 1); smaller is more sensitive
+    threshold?: number; 
+    // opacity of original image in diff output
+    alpha?: number; 
+    // color of anti-aliased pixels in diff output
+    aaColor?: [number, number, number]; 
+    // color of different pixels in diff output
+    diffColor?: [number, number, number]; 
+    // whether to detect dark on light differences between img1 and img2 and set an alternative color to differentiate between the two
+    diffColorAlt?: [number, number, number] | null; 
+    // draw the diff over a transparent background (a mask)
+    diffMask?: boolean; 
+    // generate an output image
+    generateOutput?: boolean;
 }
 
-function pixelmatch(img1: ImageInput, img2: ImageInput, output: any, width: number, height: number, options: Options) {
+interface Result {
+    diffCount: number;
+    diffImage?: Buffer;
+}
 
-    if (!isPixelData(img1) || !isPixelData(img2) || (output && !isPixelData(output)))
-        throw new Error('Image data: Uint8Array, Uint8ClampedArray or Buffer expected.');
+const defaultOptions: Options = {
+    threshold: 0.1,
+    alpha: 0.1,
+    aaColor: [255, 255, 0],
+    diffColor: [255, 0, 0],
+    diffColorAlt: null,
+    diffMask: false,
+    generateOutput: false,
+};
 
-    if (img1.length !== img2.length || (output && output.length !== img1.length))
+export const frameDiff = (img1: Pixels, img2: Pixels, width: number, height: number, userOptions: Options): Result => {
+
+    if (img1.length !== img2.length) {
         throw new Error('Image sizes do not match.');
+    }
 
-    if (img1.length !== width * height * 4) throw new Error('Image data size does not match width/height.');
+    if (img1.length !== width * height * 4) {
+        throw new Error('Image data size does not match width/height.');
+    } 
 
-    options = Object.assign({}, defaultOptions, options);
+    const options = Object.assign({}, defaultOptions, userOptions) as Required<Options>;
+
+    let output: Buffer | undefined;
+    if (options.generateOutput) {
+        output = Buffer.alloc(img1.length);
+    }
 
     // check if images are identical
     const len = width * height;
@@ -54,13 +67,13 @@ function pixelmatch(img1: ImageInput, img2: ImageInput, output: any, width: numb
         if (output && !options.diffMask) {
             for (let i = 0; i < len; i++) drawGrayPixel(img1, 4 * i, options.alpha, output);
         }
-        return 0;
+        return { diffCount: 0 };
     }
 
     // maximum acceptable square distance between two colors;
     // 35215 is the maximum possible value for the YIQ difference metric
     const maxDelta = 35215 * options.threshold * options.threshold;
-    let diff = 0;
+    let diffCount = 0;
 
     // compare each pixel of one image against the other one
     for (let y = 0; y < height; y++) {
@@ -73,20 +86,11 @@ function pixelmatch(img1: ImageInput, img2: ImageInput, output: any, width: numb
 
             // the color difference is above the threshold
             if (Math.abs(delta) > maxDelta) {
-                // check it's a real rendering difference or just anti-aliasing
-                if (!options.includeAA && (antialiased(img1, x, y, width, height, img2) ||
-                                           antialiased(img2, x, y, width, height, img1))) {
-                    // one of the pixels is anti-aliasing; draw as yellow and do not count as difference
-                    // note that we do not include such pixels in a mask
-                    if (output && !options.diffMask) drawPixel(output, pos, ...options.aaColor);
-
-                } else {
-                    // found substantial difference not caused by anti-aliasing; draw it as such
-                    if (output) {
-                        drawPixel(output, pos, ...(delta < 0 && options.diffColorAlt || options.diffColor));
-                    }
-                    diff++;
+                // found substantial difference not caused by anti-aliasing; draw it as such
+                if (output) {
+                    drawPixel(output, pos, ...(delta < 0 && options.diffColorAlt || options.diffColor));
                 }
+                diffCount++;
 
             } else if (output) {
                 // pixels are similar; draw background as grayscale image blended with white
@@ -96,100 +100,16 @@ function pixelmatch(img1: ImageInput, img2: ImageInput, output: any, width: numb
     }
 
     // return the number of different pixels
-    return diff;
-}
-
-function isPixelData(arr: any) {
-    // work around instanceof Uint8Array not working properly in some Jest environments
-    return ArrayBuffer.isView(arr) && (arr.constructor as any).BYTES_PER_ELEMENT === 1;
-}
-
-// check if a pixel is likely a part of anti-aliasing;
-// based on "Anti-aliased Pixel and Intensity Slope Detector" paper by V. Vysniauskas, 2009
-
-function antialiased(img: ImageInput, x1: number, y1: number, width: number, height: number, img2: ImageInput) {
-    const x0 = Math.max(x1 - 1, 0);
-    const y0 = Math.max(y1 - 1, 0);
-    const x2 = Math.min(x1 + 1, width - 1);
-    const y2 = Math.min(y1 + 1, height - 1);
-    const pos = (y1 * width + x1) * 4;
-    let zeroes = x1 === x0 || x1 === x2 || y1 === y0 || y1 === y2 ? 1 : 0;
-    let min = 0;
-    let max = 0;
-    let minX, minY, maxX, maxY;
-
-    // go through 8 adjacent pixels
-    for (let x = x0; x <= x2; x++) {
-        for (let y = y0; y <= y2; y++) {
-            if (x === x1 && y === y1) continue;
-
-            // brightness delta between the center pixel and adjacent one
-            const delta = colorDelta(img, img, pos, (y * width + x) * 4, true);
-
-            // count the number of equal, darker and brighter adjacent pixels
-            if (delta === 0) {
-                zeroes++;
-                // if found more than 2 equal siblings, it's definitely not anti-aliasing
-                if (zeroes > 2) return false;
-
-            // remember the darkest pixel
-            } else if (delta < min) {
-                min = delta;
-                minX = x;
-                minY = y;
-
-            // remember the brightest pixel
-            } else if (delta > max) {
-                max = delta;
-                maxX = x;
-                maxY = y;
-            }
-        }
-    }
-
-    // if there are no both darker and brighter pixels among siblings, it's not anti-aliasing
-    if (min === 0 || max === 0) return false;
-
-    // if either the darkest or the brightest pixel has 3+ equal siblings in both images
-    // (definitely not anti-aliased), this pixel is anti-aliased
-    return (hasManySiblings(img, minX, minY, width, height) && hasManySiblings(img2, minX, minY, width, height)) ||
-           (hasManySiblings(img, maxX, maxY, width, height) && hasManySiblings(img2, maxX, maxY, width, height));
-}
-
-// check if a pixel has 3+ adjacent pixels of the same color.
-function hasManySiblings(img: ImageInput, x1: number | undefined, y1: number | undefined, width: number, height: number) {
-    x1 = x1 || 0;
-    y1 = y1 || 0;
-    
-    const x0 = Math.max(x1 - 1, 0);
-    const y0 = Math.max(y1 - 1, 0);
-    const x2 = Math.min(x1 + 1, width - 1);
-    const y2 = Math.min(y1 + 1, height - 1);
-    const pos = (y1 * width + x1) * 4;
-    let zeroes = x1 === x0 || x1 === x2 || y1 === y0 || y1 === y2 ? 1 : 0;
-
-    // go through 8 adjacent pixels
-    for (let x = x0; x <= x2; x++) {
-        for (let y = y0; y <= y2; y++) {
-            if (x === x1 && y === y1) continue;
-
-            const pos2 = (y * width + x) * 4;
-            if (img[pos] === img[pos2] &&
-                img[pos + 1] === img[pos2 + 1] &&
-                img[pos + 2] === img[pos2 + 2] &&
-                img[pos + 3] === img[pos2 + 3]) zeroes++;
-
-            if (zeroes > 2) return true;
-        }
-    }
-
-    return false;
+    return {
+        diffCount: diffCount,
+        diffImage: output
+    };
 }
 
 // calculate color difference according to the paper "Measuring perceived color difference
 // using YIQ NTSC transmission color space in mobile applications" by Y. Kotsarenko and F. Ramos
 
-function colorDelta(img1: ImageInput, img2: ImageInput, k: number, m: number, yOnly?: boolean) {
+function colorDelta(img1: Pixels, img2: Pixels, k: number, m: number, yOnly?: boolean) {
     let r1 = img1[k + 0];
     let g1 = img1[k + 1];
     let b1 = img1[k + 2];
@@ -240,14 +160,14 @@ function blend(color: number, alpha: number) {
     return 255 + (color - 255) * alpha;
 }
 
-function drawPixel(output: number[], pos: number, r: number, g: number, b: number) {
+function drawPixel(output: Pixels, pos: number, r: number, g: number, b: number) {
     output[pos + 0] = r;
     output[pos + 1] = g;
     output[pos + 2] = b;
     output[pos + 3] = 255;
 }
 
-function drawGrayPixel(img: number[], i: number, alpha: number, output: number[]) {
+function drawGrayPixel(img: Pixels, i: number, alpha: number, output: Pixels) {
     const r = img[i + 0];
     const g = img[i + 1];
     const b = img[i + 2];
