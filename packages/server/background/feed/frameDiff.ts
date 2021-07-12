@@ -43,31 +43,15 @@ export const frameDiff = (img1: Pixels, img2: Pixels, width: number, height: num
         throw new Error('Image sizes do not match.');
     }
 
-    if (img1.length !== width * height * 4) {
-        throw new Error('Image data size does not match width/height.');
-    } 
-
     const options = Object.assign({}, defaultOptions, userOptions) as Required<Options>;
+
+    if (img1.length !== width * height * 3) {
+        throw new Error('Image data size does not match width/height.');
+    }
 
     let output: Buffer | undefined;
     if (options.generateOutput) {
         output = Buffer.alloc(img1.length);
-    }
-
-    // check if images are identical
-    const len = width * height;
-    const a32 = new Uint32Array(img1.buffer, img1.byteOffset, len);
-    const b32 = new Uint32Array(img2.buffer, img2.byteOffset, len);
-    let identical = true;
-
-    for (let i = 0; i < len; i++) {
-        if (a32[i] !== b32[i]) { identical = false; break; }
-    }
-    if (identical) { // fast path if identical
-        if (output && !options.diffMask) {
-            for (let i = 0; i < len; i++) drawGrayPixel(img1, 4 * i, options.alpha, output);
-        }
-        return { diffCount: 0 };
     }
 
     // maximum acceptable square distance between two colors;
@@ -79,14 +63,14 @@ export const frameDiff = (img1: Pixels, img2: Pixels, width: number, height: num
     for (let y = 0; y < height; y++) {
         for (let x = 0; x < width; x++) {
 
-            const pos = (y * width + x) * 4;
+            const pos = (y * width + x) * 3;
 
             // squared YUV distance between colors at this pixel position, negative if the img2 pixel is darker
             const delta = colorDelta(img1, img2, pos, pos);
 
             // the color difference is above the threshold
             if (Math.abs(delta) > maxDelta) {
-                // found substantial difference not caused by anti-aliasing; draw it as such
+                // found substantial difference; draw it as such
                 if (output) {
                     drawPixel(output, pos, ...(delta < 0 && options.diffColorAlt || options.diffColor));
                 }
@@ -108,39 +92,20 @@ export const frameDiff = (img1: Pixels, img2: Pixels, width: number, height: num
 
 // calculate color difference according to the paper "Measuring perceived color difference
 // using YIQ NTSC transmission color space in mobile applications" by Y. Kotsarenko and F. Ramos
-
-function colorDelta(img1: Pixels, img2: Pixels, k: number, m: number, yOnly?: boolean) {
+function colorDelta(img1: Pixels, img2: Pixels, k: number, m: number) {
     let r1 = img1[k + 0];
     let g1 = img1[k + 1];
     let b1 = img1[k + 2];
-    let a1 = img1[k + 3];
 
     let r2 = img2[m + 0];
     let g2 = img2[m + 1];
     let b2 = img2[m + 2];
-    let a2 = img2[m + 3];
 
-    if (a1 === a2 && r1 === r2 && g1 === g2 && b1 === b2) return 0;
-
-    if (a1 < 255) {
-        a1 /= 255;
-        r1 = blend(r1, a1);
-        g1 = blend(g1, a1);
-        b1 = blend(b1, a1);
-    }
-
-    if (a2 < 255) {
-        a2 /= 255;
-        r2 = blend(r2, a2);
-        g2 = blend(g2, a2);
-        b2 = blend(b2, a2);
-    }
+    if (r1 === r2 && g1 === g2 && b1 === b2) return 0;
 
     const y1 = rgb2y(r1, g1, b1);
     const y2 = rgb2y(r2, g2, b2);
     const y = y1 - y2;
-
-    if (yOnly) return y; // brightness difference only
 
     const i = rgb2i(r1, g1, b1) - rgb2i(r2, g2, b2);
     const q = rgb2q(r1, g1, b1) - rgb2q(r2, g2, b2);
@@ -164,7 +129,6 @@ function drawPixel(output: Pixels, pos: number, r: number, g: number, b: number)
     output[pos + 0] = r;
     output[pos + 1] = g;
     output[pos + 2] = b;
-    output[pos + 3] = 255;
 }
 
 function drawGrayPixel(img: Pixels, i: number, alpha: number, output: Pixels) {

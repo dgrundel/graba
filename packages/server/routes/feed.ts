@@ -72,7 +72,6 @@ router.get('/motion/:id', (req: any, res: any, next: () => void) => {
     const off = stream.onFrame(async (frame) => {
         
         const img = await sharp(frame)
-            .ensureAlpha()
             .raw()
             .toBuffer({ resolveWithObject: true });
         
@@ -90,7 +89,7 @@ router.get('/motion/:id', (req: any, res: any, next: () => void) => {
                 raw: {
                     width,
                     height,
-                    channels: 4,
+                    channels: 3,
                 }
             })
                 .jpeg()
