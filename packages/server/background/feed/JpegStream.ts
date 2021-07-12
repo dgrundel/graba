@@ -1,7 +1,7 @@
 import { ChildProcess, spawn } from 'child_process';
 import { EventEmitter } from 'stream';
 import { Feed } from 'hastycam.interface';
-import { config } from './config';
+import { FeedConsumer } from './FeedConsumer';
 
 // https://docs.fileformat.com/image/jpeg/
 const JPG_START = Buffer.from([0xff, 0xd8]);
@@ -9,20 +9,19 @@ const JPG_END = Buffer.from([0xff, 0xd9]);
 
 type FFmpegArgs = string[];
 
-export class JpegStream extends EventEmitter {
-    feed: Feed;
-    ffmpeg: ChildProcess;
-    buffer?: Buffer;
+export class JpegStream extends FeedConsumer {
+    private ffmpeg: ChildProcess;
+    private buffer?: Buffer;
+    private readonly emitter = new EventEmitter();
 
     constructor(feed: Feed) {
-        super();
+        super(feed);
 
         // bind handlers before using this in spawn
         this.ffmpegDataHandler = this.ffmpegDataHandler.bind(this);
         this.ffmpegCloseHandler = this.ffmpegCloseHandler.bind(this);
         this.ffmpegErrorHandler = this.ffmpegErrorHandler.bind(this);
 
-        this.feed = feed;
         this.ffmpeg = this.spawnFFmpeg(this.buildFFmpegArgs(feed));
     }
 
@@ -61,19 +60,12 @@ export class JpegStream extends EventEmitter {
         return ff;
     }
 
-    updateFeed(feed: Feed) {
-        if (feed.id !== this.feed.id) {
-            throw new Error(`Bad feed id. Current: ${this.feed.id}, Update: ${feed.id}`);
-        }
-
+    onFeedUpdate(next: Feed, prev: Feed): void {
         // build args for old feed
-        const prevArgs = this.buildFFmpegArgs(this.feed);
-
-        // update feed
-        this.feed = feed;
+        const prevArgs = this.buildFFmpegArgs(prev);
 
         // build args for new FFmpeg process
-        const newFFmpegArgs = this.buildFFmpegArgs(feed);
+        const newFFmpegArgs = this.buildFFmpegArgs(next);
 
         // check to see if we need to restart ffmpeg
         if (prevArgs.join(' ') === newFFmpegArgs.join(' ')) {
@@ -98,13 +90,22 @@ export class JpegStream extends EventEmitter {
         this.ffmpeg = this.spawnFFmpeg(newFFmpegArgs);
     }
 
+    onFeedEnd(feed: Feed): void {
+        // kill ffmpeg process
+        if (!this.ffmpeg.kill()) {
+            throw new Error('Error killing ffmpeg process');
+        }
+    }
+
     ffmpegCloseHandler(code: number) {
-        console.log(`ffmpeg for feed "${this.feed.name}" [${this.feed.id}] exited with code ${code}`);
-        this.emit(JpegStream.Events.StreamEnd);
+        const feed = this.getFeed();
+        console.log(`ffmpeg for feed "${feed.name}" [${feed.id}] exited with code ${code}`);
+        this.emitter.emit(JpegStream.Events.StreamEnd);
     }
 
     ffmpegErrorHandler(err: Error) {
-        console.error(`Error in ffmpeg for feed "${this.feed.name}" [${this.feed.id}].`, err);
+        const feed = this.getFeed();
+        console.error(`Error in ffmpeg for feed "${feed.name}" [${feed.id}].`, err);
     }
 
     ffmpegDataHandler(data: Buffer) {
@@ -121,7 +122,7 @@ export class JpegStream extends EventEmitter {
         }
             
         if (isEnd) {
-            this.emit(JpegStream.Events.JpegFrame, this.buffer);
+            this.emitter.emit(JpegStream.Events.JpegFrame, this.buffer);
 
             // new Promise(resolve => {
             //     fs.writeFile(`output-${this.name}-${+new Date()}.jpg`, this.buffer!, resolve);
@@ -131,19 +132,19 @@ export class JpegStream extends EventEmitter {
 
     async getFrame() {
         return new Promise<Buffer>(resolve => {
-            this.once(JpegStream.Events.JpegFrame, buffer => resolve(buffer));
+            this.emitter.once(JpegStream.Events.JpegFrame, buffer => resolve(buffer));
         });
     }
 
     onFrame(handler: (buffer: Buffer) => void): () => void {
-        this.on(JpegStream.Events.JpegFrame, handler);
+        this.emitter.on(JpegStream.Events.JpegFrame, handler);
 
         // return an unsubscribe fn
-        return () => this.off(JpegStream.Events.JpegFrame, handler);
+        return () => this.emitter.off(JpegStream.Events.JpegFrame, handler);
     }
 
     onEnd(handler: () => void) {
-        this.once(JpegStream.Events.StreamEnd, handler);
+        this.emitter.once(JpegStream.Events.StreamEnd, handler);
     }
 }
 

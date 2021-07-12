@@ -1,7 +1,9 @@
 import express from 'express';
 import { validateFeed } from 'hastycam.interface';
 import { config } from '../background/config';
-import { StreamEvent, StreamEventType, getAllStreams, getStream, addStream } from '../background/streams';
+import { getAllStreams, getStream, addStream } from '../background/feed/streams';
+import sharp from 'sharp';
+import pixelmatch from 'pixelmatch';
 
 export const router = express.Router();
 
@@ -9,7 +11,13 @@ const MJPEG_BOUNDARY = 'mjpegBoundary';
 
 router.get('/list', (req: any, res: any, next: () => void) => {
     const streams = getAllStreams();
-    res.json(streams.map(stream => ({ name: stream.feed.name, id: stream.feed.id })));
+    res.json(streams.map(stream => {
+        const feed = stream.getFeed();
+        return { 
+            id: feed.id,
+            name: feed.name,
+        };
+    }));
 });
 
 router.get('/stream/:id', (req: any, res: any, next: () => void) => {
@@ -35,6 +43,70 @@ router.get('/stream/:id', (req: any, res: any, next: () => void) => {
         res.write(Buffer.from(`\r\nContent-Type: image/jpeg`));
         res.write(Buffer.from(`\r\nContent-length: ${jpgData.length}\r\n\r\n`));
         res.write(jpgData);
+    });
+
+    stream.onEnd(() => res.end());
+    res.socket!.on('close', off);
+});
+
+router.get('/motion/:id', (req: any, res: any, next: () => void) => {
+    const id = req.params.id;
+
+    const stream = getStream(id);
+    if (!stream) {
+        res.writeHead(404);
+        res.end('Not found.');
+        return;
+    }
+
+    res.writeHead(200, {
+        'Expires': 'Mon, 01 Jul 1980 00:00:00 GMT',
+        'Cache-Control': 'no-cache, no-store, must-revalidate',
+        'Pragma': 'no-cache',
+        'Connection': 'keep-alive',
+        'Content-Type': 'multipart/x-mixed-replace;boundary=' + MJPEG_BOUNDARY
+    });
+
+    let prev: Uint8ClampedArray;
+
+    const off = stream.onFrame(async (frame) => {
+        
+        const img = await sharp(frame)
+            .ensureAlpha()
+            .raw()
+            .toBuffer({ resolveWithObject: true });
+        
+        const { width, height } = img.info;
+        const px = new Uint8ClampedArray(img.data);
+    
+        if (prev) {
+            // for diff.data, should be able to use Buffer.alloc(px.length) instead of PNG 
+            // to avoid size mismatch and remove need to ensureAlpha
+            const diff = Buffer.alloc(px.length);
+            const diffValue = pixelmatch(prev, px, diff, width, height, {
+                threshold: 0.1,
+                alpha: 0.8,
+                includeAA: true,
+            });
+
+            const jpg = await sharp(diff, { 
+                raw: {
+                    width,
+                    height,
+                    channels: 4,
+                }
+            })
+                .jpeg()
+                .toBuffer();
+            
+            res.write(Buffer.from(`\r\n--${MJPEG_BOUNDARY}`));
+            res.write(Buffer.from(`\r\nContent-Type: image/jpeg`));
+            res.write(Buffer.from(`\r\nContent-length: ${jpg.length}\r\n\r\n`));
+            res.write(jpg);
+        }
+        
+        // update prev
+        prev = px;
     });
 
     stream.onEnd(() => res.end());

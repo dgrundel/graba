@@ -1,8 +1,6 @@
-import { ChildProcess, spawn } from 'child_process';
-import { EventEmitter } from 'stream';
 import { Feed } from 'hastycam.interface';
-import { config } from './config';
-import { JpegStream } from './jpegStream';
+import { config } from '../config';
+import { JpegStream } from './JpegStream';
 
 // https://docs.fileformat.com/image/jpeg/
 const JPG_START = Buffer.from([0xff, 0xd8]);
@@ -32,7 +30,7 @@ export const addStream = (feed: Feed): JpegStream => {
 
     if (existing) {
         // check to see if stream url was changed
-        if (existing.feed.streamUrl !== feed.streamUrl) {
+        if (existing.getFeed().streamUrl !== feed.streamUrl) {
             // url changed, do something
         }
 
@@ -48,8 +46,9 @@ export const getAllStreams = (): JpegStream[] => {
 };
 
 export const start = () => {
+    const feeds = config.get('feeds');
     // set up feeds
-    config.get('feeds').forEach(feed => {
+    feeds.forEach(feed => {
         addStream(feed);
     });
 };
