@@ -51,7 +51,7 @@ export const frameDiff = (img1: Pixels, img2: Pixels, width: number, height: num
 
     let output: Buffer | undefined;
     if (options.generateOutput) {
-        output = Buffer.from(img2);
+        output = Buffer.alloc(img1.length);
     }
 
     // maximum acceptable square distance between two colors;
@@ -76,11 +76,11 @@ export const frameDiff = (img1: Pixels, img2: Pixels, width: number, height: num
                 }
                 diffCount++;
 
-            // } else if (output && options.diffMask !== true) {
+            } else if (output && options.diffMask !== true) {
                 // pixels are similar; draw background as grayscale image blended with white
                 // since a diff mask was not requested, we draw the non-diff px
                 // drawGrayPixel(img1, pos, options.alpha, output);
-                // copyPixel(img1, pos, output);
+                copyPixel(img1, pos, output);
             }
         }
     }
@@ -140,3 +140,10 @@ function drawPixel(output: Pixels, pos: number, r: number, g: number, b: number)
 //     const val = blend(rgb2y(r, g, b), alpha * img[i + 3] / 255);
 //     drawPixel(output, i, val, val, val);
 // }
+
+function copyPixel(img: Pixels, i: number, output: Pixels) {
+    const r = img[i + 0];
+    const g = img[i + 1];
+    const b = img[i + 2];
+    drawPixel(output, i, r, g, b);
+}
