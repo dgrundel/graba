@@ -81,11 +81,9 @@ router.get('/motion/:id', (req: any, res: any, next: () => void) => {
         if (prev) {
             const diff = frameDiff(prev, px, width, height, {
                 threshold: 0.1,
-                alpha: 0.8,
-                generateOutput: true,
             });
 
-            const jpg = await sharp(diff.diffImage!, {
+            const jpg = await sharp(diff.pixels!, {
                 raw: {
                     width,
                     height,

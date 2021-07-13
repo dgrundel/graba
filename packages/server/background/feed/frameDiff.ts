@@ -8,100 +8,102 @@ type Pixels = Uint8ClampedArray | Buffer;
 interface Options {
     // matching threshold (0 to 1); smaller is more sensitive
     threshold?: number; 
-    // opacity of original image in diff output
-    alpha?: number; 
-    // color of anti-aliased pixels in diff output
-    aaColor?: [number, number, number]; 
     // color of different pixels in diff output
     diffColor?: [number, number, number]; 
     // whether to detect dark on light differences between img1 and img2 and set an alternative color to differentiate between the two
     diffColorAlt?: [number, number, number] | null; 
-    // draw the diff over a transparent background (a mask)
-    diffMask?: boolean; 
-    // generate an output image
-    generateOutput?: boolean;
 }
 
 interface Result {
-    diffCount: number;
-    diffImage?: Buffer;
+    count: number;
+    pixels: Buffer;
 }
 
 const defaultOptions: Options = {
     threshold: 0.1,
-    alpha: 0.1,
-    aaColor: [255, 255, 0],
     diffColor: [255, 0, 0],
     diffColorAlt: null,
-    diffMask: false,
-    generateOutput: false,
 };
 
-export const frameDiff = (img1: Pixels, img2: Pixels, width: number, height: number, userOptions: Options): Result => {
+const CHANNELS = 3;
 
+export const frameDiff = (img1: Pixels, img2: Pixels, width: number, height: number, userOptions: Options): Result => {
     if (img1.length !== img2.length) {
         throw new Error('Image sizes do not match.');
     }
-
-    const options = Object.assign({}, defaultOptions, userOptions) as Required<Options>;
-
     if (img1.length !== width * height * 3) {
         throw new Error('Image data size does not match width/height.');
     }
 
-    let output: Buffer | undefined;
-    if (options.generateOutput) {
-        output = Buffer.alloc(img1.length);
-    }
+    const options = Object.assign({}, defaultOptions, userOptions) as Required<Options>;
 
     // maximum acceptable square distance between two colors;
     // 35215 is the maximum possible value for the YIQ difference metric
     const maxDelta = 35215 * options.threshold * options.threshold;
-    let diffCount = 0;
+    
+    const diffBoxSize = 6;
+    const step = Math.floor(diffBoxSize / 2);
 
-    // compare each pixel of one image against the other one
-    for (let y = 0; y < height; y++) {
-        for (let x = 0; x < width; x++) {
+    let count = 0;
+    const output = Buffer.from(img2, img2.byteOffset, img2.length);
 
-            const pos = (y * width + x) * 3;
+    // sample pixels every ${step} pixels
+    for (let y = step; y < (height - step); y += step) {
+        for (let x = step; x < (width - step); x += step) {
+            const pos = (y * width + x) * CHANNELS;
 
             // squared YUV distance between colors at this pixel position, negative if the img2 pixel is darker
-            const delta = colorDelta(img1, img2, pos, pos);
+            const delta = colorDelta(img1, img2, pos);
 
-            // the color difference is above the threshold
+            // the color difference for sample pixel is above the threshold
             if (Math.abs(delta) > maxDelta) {
-                // found substantial difference; draw it as such
-                if (output) {
-                    drawPixel(output, pos, ...(delta < 0 && options.diffColorAlt || options.diffColor));
-                }
-                diffCount++;
 
-            } else if (output && options.diffMask !== true) {
-                // pixels are similar; draw background as grayscale image blended with white
-                // since a diff mask was not requested, we draw the non-diff px
-                // drawGrayPixel(img1, pos, options.alpha, output);
-                copyPixel(img1, pos, output);
+                // inner diff
+                for (let y2 = y - step + 1; y2 < (y + step); y2++) {
+                    for (let x2 = x - step + 1; x2 < (x + step); x2++) {
+                        if (y2 === y && x2 === x) {
+                            continue;
+                        }
+                        
+                        const pos2 = (y2 * width + x2) * CHANNELS;
+            
+                        // squared YUV distance between colors at this pixel position, negative if the img2 pixel is darker
+                        const delta2 = colorDelta(img1, img2, pos2);
+            
+                        // the color difference is above the threshold
+                        if (Math.abs(delta2) > maxDelta) {
+                            // found substantial difference; draw it as such
+                            drawPixel(output, pos2, ...(delta2 < 0 && options.diffColorAlt || options.diffColor));
+                            count++;
+                        }
+                    }
+                }
+
+
+                // found substantial difference; draw it as such
+                drawPixel(output, pos, ...(delta < 0 && options.diffColorAlt || options.diffColor));
+                count++;
             }
         }
     }
 
     // return the number of different pixels
     return {
-        diffCount: diffCount,
-        diffImage: output
+        count,
+        pixels: output
     };
 }
 
 // calculate color difference according to the paper "Measuring perceived color difference
 // using YIQ NTSC transmission color space in mobile applications" by Y. Kotsarenko and F. Ramos
-function colorDelta(img1: Pixels, img2: Pixels, k: number, m: number) {
-    let r1 = img1[k + 0];
-    let g1 = img1[k + 1];
-    let b1 = img1[k + 2];
+const colorDelta = (img1: Pixels, img2: Pixels, pos: number): number => {
+    let r1 = img1[pos + 0];
+    let g1 = img1[pos + 1];
+    let b1 = img1[pos + 2];
 
-    let r2 = img2[m + 0];
-    let g2 = img2[m + 1];
-    let b2 = img2[m + 2];
+    let r2 = img2[pos + 0];
+    let g2 = img2[pos + 1];
+    let b2 = img2[pos + 2];
 
     if (r1 === r2 && g1 === g2 && b1 === b2) return 0;
 
@@ -116,34 +118,14 @@ function colorDelta(img1: Pixels, img2: Pixels, k: number, m: number) {
 
     // encode whether the pixel lightens or darkens in the sign
     return y1 > y2 ? -delta : delta;
-}
+};
 
-function rgb2y(r: number, g: number, b: number) { return r * 0.29889531 + g * 0.58662247 + b * 0.11448223; }
-function rgb2i(r: number, g: number, b: number) { return r * 0.59597799 - g * 0.27417610 - b * 0.32180189; }
-function rgb2q(r: number, g: number, b: number) { return r * 0.21147017 - g * 0.52261711 + b * 0.31114694; }
+const rgb2y = (r: number, g: number, b: number): number => { return r * 0.29889531 + g * 0.58662247 + b * 0.11448223; };
+const rgb2i = (r: number, g: number, b: number): number => { return r * 0.59597799 - g * 0.27417610 - b * 0.32180189; };
+const rgb2q = (r: number, g: number, b: number): number => { return r * 0.21147017 - g * 0.52261711 + b * 0.31114694; };
 
-function drawPixel(output: Pixels, pos: number, r: number, g: number, b: number) {
+const drawPixel = (output: Pixels, pos: number, r: number, g: number, b: number): void => {
     output[pos + 0] = r;
     output[pos + 1] = g;
     output[pos + 2] = b;
-}
-
-// blend semi-transparent color with white
-// function blend(color: number, alpha: number) {
-//     return 255 + (color - 255) * alpha;
-// }
-
-// function drawGrayPixel(img: Pixels, i: number, alpha: number, output: Pixels) {
-//     const r = img[i + 0];
-//     const g = img[i + 1];
-//     const b = img[i + 2];
-//     const val = blend(rgb2y(r, g, b), alpha * img[i + 3] / 255);
-//     drawPixel(output, i, val, val, val);
-// }
-
-function copyPixel(img: Pixels, i: number, output: Pixels) {
-    const r = img[i + 0];
-    const g = img[i + 1];
-    const b = img[i + 2];
-    drawPixel(output, i, r, g, b);
-}
+};
