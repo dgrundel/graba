@@ -7,11 +7,11 @@ type Pixels = Uint8ClampedArray | Buffer;
 
 interface Options {
     // matching threshold (0 to 1); smaller is more sensitive
-    threshold?: number; 
+    threshold: number; 
     // color of different pixels in diff output
-    diffColor?: [number, number, number]; 
+    diffColor: [number, number, number]; 
     // whether to detect dark on light differences between img1 and img2 and set an alternative color to differentiate between the two
-    diffColorAlt?: [number, number, number] | null; 
+    diffColorAlt: [number, number, number]; 
 }
 
 interface Result {
@@ -22,12 +22,12 @@ interface Result {
 const defaultOptions: Options = {
     threshold: 0.1,
     diffColor: [255, 0, 0],
-    diffColorAlt: null,
+    diffColorAlt: [255, 0, 0],
 };
 
 const CHANNELS = 3;
 
-export const frameDiff = (img1: Pixels, img2: Pixels, width: number, height: number, userOptions: Options): Result => {
+export const frameDiff = (img1: Pixels, img2: Pixels, width: number, height: number, options: Partial<Options>): Result => {
     if (img1.length !== img2.length) {
         throw new Error('Image sizes do not match.');
     }
@@ -35,53 +35,35 @@ export const frameDiff = (img1: Pixels, img2: Pixels, width: number, height: num
         throw new Error('Image data size does not match width/height.');
     }
 
-    const options = Object.assign({}, defaultOptions, userOptions) as Required<Options>;
+    const {
+        threshold,
+        diffColor,
+        diffColorAlt,
+    } = Object.assign({}, defaultOptions, options) as Options;
 
     // maximum acceptable square distance between two colors;
     // 35215 is the maximum possible value for the YIQ difference metric
-    const maxDelta = 35215 * options.threshold * options.threshold;
+    const maxDelta = 35215 * threshold * threshold;
     
-    const diffBoxSize = 6;
-    const step = Math.floor(diffBoxSize / 2);
+    const step = 3;
 
     let count = 0;
     const output = Buffer.from(img2, img2.byteOffset, img2.length);
 
     // sample pixels every ${step} pixels
-    for (let y = step; y < (height - step); y += step) {
-        for (let x = step; x < (width - step); x += step) {
+    for (let y = 0; y < height; y += step) {
+        for (let x = y % step; x < width; x += step) {
             const pos = (y * width + x) * CHANNELS;
 
-            // squared YUV distance between colors at this pixel position, negative if the img2 pixel is darker
+            // squared YUV distance between colors at this pixel position,
+            // negative if the img2 pixel is darker
             const delta = colorDelta(img1, img2, pos);
 
             // the color difference for sample pixel is above the threshold
-            if (Math.abs(delta) > maxDelta) {
-
-                // inner diff
-                for (let y2 = y - step + 1; y2 < (y + step); y2++) {
-                    for (let x2 = x - step + 1; x2 < (x + step); x2++) {
-                        if (y2 === y && x2 === x) {
-                            continue;
-                        }
-                        
-                        const pos2 = (y2 * width + x2) * CHANNELS;
-            
-                        // squared YUV distance between colors at this pixel position, negative if the img2 pixel is darker
-                        const delta2 = colorDelta(img1, img2, pos2);
-            
-                        // the color difference is above the threshold
-                        if (Math.abs(delta2) > maxDelta) {
-                            // found substantial difference; draw it as such
-                            drawPixel(output, pos2, ...(delta2 < 0 && options.diffColorAlt || options.diffColor));
-                            count++;
-                        }
-                    }
-                }
-
-
+            if (abs(delta) > maxDelta) {
+                const color = delta < 0 ? diffColorAlt : diffColor;
                 // found substantial difference; draw it as such
-                drawPixel(output, pos, ...(delta < 0 && options.diffColorAlt || options.diffColor));
+                drawPixel(output, pos, ...color);
                 count++;
             }
         }
@@ -93,6 +75,8 @@ export const frameDiff = (img1: Pixels, img2: Pixels, width: number, height: num
         pixels: output
     };
 }
+
+const abs = (n: number): number => n < 0 ? -n : n;
 
 // calculate color difference according to the paper "Measuring perceived color difference
 // using YIQ NTSC transmission color space in mobile applications" by Y. Kotsarenko and F. Ramos
