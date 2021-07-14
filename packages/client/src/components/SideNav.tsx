@@ -30,7 +30,7 @@ export const SideNav = () => {
         url: '/watch',
         icon: 'PlayerPlay',
     },{
-        name: 'Settings',
+        name: 'Configure',
         url: '/config',
         icon: 'Settings',
     }].map(link => ({
