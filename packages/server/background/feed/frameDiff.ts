@@ -54,6 +54,8 @@ export const frameDiff = (img1: Pixels, img2: Pixels, width: number, height: num
 
     // sample pixels every ${step} pixels
     for (let y = 0; y < height; y += sampleInterval) {
+
+        // stagger the x start point using the current y value and sample interval
         for (let x = y % sampleInterval; x < width; x += sampleInterval) {
             const pos = (y * width + x) * CHANNELS;
 
