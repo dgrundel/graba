@@ -4,6 +4,7 @@ import { Feed } from 'hastycam.interface';
 import { theme } from '../theme';
 import { postJson } from '../fetch';
 import { nanoid } from 'nanoid';
+import { Grid } from './Grid';
 
 interface Props {
     feed: Feed;
@@ -112,7 +113,6 @@ export class FeedEditor extends React.Component<Props, State> {
 
     renderData() {
         return <Stack grow tokens={{ childrenGap: 's1', }}>
-            {this.renderDataField('Feed name', this.state.feed.name)}
             {this.renderDataField('Stream URL', this.state.feed.streamUrl)}
             {this.renderDataField(
                 'Max FPS', 
@@ -266,36 +266,38 @@ export class FeedEditor extends React.Component<Props, State> {
     }
 
     render() {
-        return <div>
-            <Stack tokens={{ childrenGap: 'm', }}>
-                <Stack horizontal>
+        return <Grid rows="auto 1fr auto" style={{ height: '100%' }}>
+            <Stack horizontal>
                     <Stack horizontal grow>
                         <Text variant="xLarge">{this.state.feed.name}</Text>
                     </Stack>
                     <Stack horizontal grow horizontalAlign="end">
                         <Text variant="small" style={{ color: theme.palette.neutralTertiary }}>id: {this.state.feed.id}</Text>
                     </Stack>
-                </Stack>
-                
+            </Stack>
 
+            <div>
                 {this.state.error ? <Text block style={{ color: theme.palette.redDark }}>{this.state.error}</Text> : ''}
                 
                 <Stack horizontal tokens={{ childrenGap: 'm', }}>
                     {this.state.editing ? this.renderForm() : this.renderData()}
 
-                    <img alt={this.state.feed.name} src={`http://localhost:4000/feed/still/${this.state.feed.id}`} style={{ maxWidth: '15vw', objectFit: 'contain' }}/>
+                    <Stack style={{ textAlign: 'center' }}>
+                        <img alt={this.state.feed.name} src={`http://localhost:4000/feed/still/${this.state.feed.id}`} style={{ maxWidth: '15vw', objectFit: 'contain' }}/>
+                    </Stack>
                 </Stack>
+            </div>    
                 
-                <Stack horizontal>
-                    <Stack horizontal grow>
-                        {this.renderEditButton()}
-                    </Stack>
-                    <Stack horizontal grow horizontalAlign="end">
-                        <ActionButton iconProps={{ iconName: 'Trash' }} text="Delete Feed" onClick={this.delete}/>
-                    </Stack>
+            <Stack horizontal>
+                <Stack horizontal grow>
+                    <ActionButton iconProps={{ iconName: 'Video' }} text="Watch Live" href={`http://localhost:4000/feed/stream/${this.state.feed.id}`} target="_blank" />
+                    {this.renderEditButton()}
+                </Stack>
+                <Stack horizontal grow horizontalAlign="end">
+                    <ActionButton iconProps={{ iconName: 'Trash' }} text="Delete Feed" onClick={this.delete}/>
                 </Stack>
             </Stack>
             
-        </div>;
+        </Grid>;
     }
 }

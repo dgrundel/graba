@@ -6,10 +6,13 @@ import { theme } from '../theme';
 import { FeedEditor } from './FeedEditor';
 import { nanoid } from 'nanoid';
 import { getJson } from '../fetch';
+import { Grid } from './Grid';
 
 interface State {
     config: Config;
 }
+
+const FEED_ID_LENGTH = 12;
 
 export class ConfigEditor extends React.Component<{}, State> {
     private readonly loader: Promise<Config>;
@@ -39,7 +42,7 @@ export class ConfigEditor extends React.Component<{}, State> {
 
     addFeed() {
         this.setState(prev => {
-            const feeds = prev.config.feeds.concat({ id: nanoid(), name: '', streamUrl: '' });
+            const feeds = prev.config.feeds.concat({ id: nanoid(FEED_ID_LENGTH), name: '', streamUrl: '' });
             return {
                 config: {
                     ...prev.config,
@@ -67,19 +70,24 @@ export class ConfigEditor extends React.Component<{}, State> {
 
     render() {
         return <Spinner waitFor={this.loader}>
-            <Stack tokens={{ childrenGap: 's1', }}>
-            <Text block variant="xLarge">Feeds</Text>
-
-                {this.state.config.feeds.map(feed => {
-                    return <Stack key={feed.id} tokens={{ childrenGap: 's1', padding: 'm' }} style={{ backgroundColor: theme.palette.neutralLighter }}>
-                        <FeedEditor feed={feed} deleteFeed={this.deleteFeed}/>
-                    </Stack>;
-                })}
+            <Stack tokens={{ childrenGap: 'm', }}>
+                <Text block variant="xLarge">Feeds</Text>
 
                 <Stack horizontal horizontalAlign="start">
                     <PrimaryButton iconProps={{ iconName: 'Plus' }} text="Add Feed" onClick={this.addFeed}/>
                 </Stack>
 
+                <Grid columns={2}>
+                    {this.state.config.feeds.map(feed => {
+                        return <Stack key={feed.id} tokens={{ childrenGap: 's1', padding: 'm' }} style={{ backgroundColor: theme.palette.neutralLighter }}>
+                            <FeedEditor feed={feed} deleteFeed={this.deleteFeed}/>
+                        </Stack>;
+                    })}
+                </Grid>
+
+                {this.state.config.feeds.length > 0 ? <Stack horizontal horizontalAlign="start">
+                    <PrimaryButton iconProps={{ iconName: 'Plus' }} text="Add Feed" onClick={this.addFeed}/>
+                </Stack> : ''}
             </Stack>
         </Spinner>;
     }
