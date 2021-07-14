@@ -14,6 +14,10 @@ export interface Feed {
     scaleFactor?: number; // multiplied by width and height of video to resize
     videoQuality?: number; // range 2-31, 31 is worst
 
+    // storage
+    saveVideo?: boolean;
+    savePath?: string;
+
     // motion detection
     detectMotion?: boolean;
     motionDetectionSettings?: MotionDetectionSettings;
@@ -39,6 +43,12 @@ export const validateFeed = (feed: Partial<Feed>): ErrorMessage[] => {
             ]
         ),
         ...validateIf(
+            feed.saveVideo === true,
+            [
+                validateNotEmpty(feed, 'savePath', 'Storage path'),
+            ]
+        ),
+        ...validateIf(
             feed.detectMotion === true,
             validateIf(
                 validateNotEmpty(feed, 'motionDetectionSettings', 'Motion detection settings'),
@@ -48,7 +58,7 @@ export const validateFeed = (feed: Partial<Feed>): ErrorMessage[] => {
                     validateNumberGreaterThanOrEqual(feed.motionDetectionSettings!, 'diffThreshold', 0, 'Threshold'),
                 ]
             )
-        )
+        ),
     );
 }
 

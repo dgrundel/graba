@@ -9,6 +9,8 @@ export interface Feed {
     maxFps?: number;
     scaleFactor?: number;
     videoQuality?: number;
+    saveVideo?: boolean;
+    savePath?: string;
     detectMotion?: boolean;
     motionDetectionSettings?: MotionDetectionSettings;
 }

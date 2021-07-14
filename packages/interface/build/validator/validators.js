@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.validateNumberLessThanOrEqual = exports.validateNumberGreaterThanOrEqual = exports.validateNumeric = exports.validateNotEmpty = exports.validateIf = exports.mergeErrors = void 0;
+exports.validateNumberLessThanOrEqual = exports.validateNumberGreaterThanOrEqual = exports.validateNumeric = exports.validateNotEmpty = exports.createValidator = exports.validateIf = exports.mergeErrors = void 0;
 const isEmptyString = (value) => {
     return (typeof value === 'string' && value.length === 0);
 };
@@ -23,11 +23,15 @@ const validateIf = (result, dependents) => {
     return condition ? exports.mergeErrors(...dependents) : onConditionFalse;
 };
 exports.validateIf = validateIf;
+const createValidator = (condition, field, message) => {
+    return (...args) => validate(condition(...args), field, message);
+};
+exports.createValidator = createValidator;
 /**
  * Validators
  */
 const validateNotEmpty = (obj, field, label) => {
-    const condition = obj[field];
+    const condition = !!obj[field];
     return validate(condition, field, `${label || field} cannot be empty.`);
 };
 exports.validateNotEmpty = validateNotEmpty;

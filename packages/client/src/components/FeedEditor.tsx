@@ -139,6 +139,18 @@ export class FeedEditor extends React.Component<Props, State> {
             <Separator styles={separatorStyles} />
             
             {this.renderDataField(
+                'Save video', 
+                this.state.feed.saveVideo ? 'Enabled' : 'Disabled'
+            )}
+
+            {this.state.feed.saveVideo ? this.renderDataField(
+                'Save path',
+                this.state.feed.savePath
+            ) : ''}
+
+            <Separator styles={separatorStyles} />
+            
+            {this.renderDataField(
                 'Motion detection', 
                 this.state.feed.detectMotion ? 'Enabled' : 'Disabled'
             )}
@@ -194,6 +206,21 @@ export class FeedEditor extends React.Component<Props, State> {
                 showValue
                 onChange={(videoQuality) => { this.setFeedData({ videoQuality: videoQuality * -1 }) }}
                 valueFormat={(n) => (n * -1).toString()}
+            />
+
+            <Separator styles={separatorStyles} />
+
+            <Toggle 
+                label="Save video" 
+                inlineLabel
+                defaultChecked={this.state.feed.saveVideo === true}
+                onChange={(e, saveVideo) => this.setFeedData({ saveVideo })}
+            />
+
+            <TextField
+                label="Save Path"
+                value={this.state.feed.savePath}
+                onChange={(e, savePath) => { this.setFeedData({ savePath }) }}
             />
 
             <Separator styles={separatorStyles} />

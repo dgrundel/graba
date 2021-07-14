@@ -36,30 +36,30 @@ export const validateIf = (result: ValidationResult | boolean, dependents: Valid
  * Validators
  */
 
-export const validateNotEmpty = (obj: Record<string, any>, field: string, label?: string): ValidationResult => {
-    const condition = obj[field];
-    return validate(condition, field, `${label || field} cannot be empty.`);
+export const validateNotEmpty = <T>(obj: T, field: keyof T, label?: string): ValidationResult => {
+    const condition = !!obj[field];
+    return validate(condition, field as string, `${label || field as string} cannot be empty.`);
 };
 
-export const validateNumeric = (obj: Record<string, any>, field: string, label?: string): ValidationResult => {
+export const validateNumeric = <T>(obj: T, field: keyof T, label?: string): ValidationResult => {
     const value = obj[field];
     if (typeof value !== 'undefined' && !isEmptyString(value)) {
         const condition = !isNaN(+value); // passes for empty string
-        return validate(condition, field, `${label || field} must be a number.`);
+        return validate(condition, field as string, `${label || field as string} must be a number.`);
     }
 };
 
-export const validateNumberGreaterThanOrEqual = (obj: Record<string, any>, field: string, min: number, label?: string): ValidationResult => {
+export const validateNumberGreaterThanOrEqual = <T>(obj: T, field: keyof T, min: number, label?: string): ValidationResult => {
     const value = +(obj[field]);
     const condition = value >= min;
     
-    return validate(condition, field, `${label || field} must be greater than or equal to ${min}.`);
+    return validate(condition, field as string, `${label || field as string} must be greater than or equal to ${min}.`);
 };
 
-export const validateNumberLessThanOrEqual = (obj: Record<string, any>, field: string, max: number, label?: string): ValidationResult => {
+export const validateNumberLessThanOrEqual = <T>(obj: T, field: keyof T, max: number, label?: string): ValidationResult => {
     const value = +(obj[field]);
     const condition = value <= max;
     
-    return validate(condition, field, `${label || field} must be less than or equal to ${max}`);
+    return validate(condition, field as string, `${label || field as string} must be less than or equal to ${max}`);
 };
 

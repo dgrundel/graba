@@ -20,6 +20,7 @@ Emphasis on limiting resource usage.
 
 - [Fluent UI](https://developer.microsoft.com/en-us/fluentui#/)
 - [Tabler Icons](https://tabler-icons.io)
+- [Aileron font](https://fontlibrary.org/en/font/aileron)
 
 ### Other stuff
 

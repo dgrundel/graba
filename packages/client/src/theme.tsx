@@ -59,10 +59,10 @@ const generated = {
 export const theme = createTheme({
     ...generated,
     defaultFontStyle: { 
-        fontFamily: "'BrisaSansThin', sans-serif",
+        fontFamily: "'AileronLight', sans-serif",
         fontWeight: 'regular',
         fontSize: '15px',
-        letterSpacing: '0.03rem',
+        // letterSpacing: '0.03rem',
     },
     fonts: {
         xSmall: {
