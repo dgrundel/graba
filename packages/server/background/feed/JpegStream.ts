@@ -3,6 +3,7 @@ import { EventEmitter } from 'stream';
 import { Feed } from 'hastycam.interface';
 import { FeedConsumer } from './FeedConsumer';
 import { MotionDetector } from './MotionDetector';
+import { Chain } from '../Chain';
 
 // https://docs.fileformat.com/image/jpeg/
 const JPG_START = Buffer.from([0xff, 0xd8]);
@@ -11,21 +12,22 @@ const JPG_END = Buffer.from([0xff, 0xd9]);
 type FFmpegArgs = string[];
 
 export class JpegStream extends FeedConsumer {
-    private ffmpeg: ChildProcess;
-    private readonly motionDetector: MotionDetector;
     private readonly emitter = new EventEmitter();
+    private readonly motionDetector: MotionDetector;
+    private readonly frameChain: Chain<Buffer>;
+    private ffmpeg: ChildProcess;
     private buffer?: Buffer;
 
     constructor(feed: Feed) {
         super(feed);
 
         // bind handlers before using this in spawn
-        this.ffmpegDataHandler = this.ffmpegDataHandler.bind(this);
         this.ffmpegCloseHandler = this.ffmpegCloseHandler.bind(this);
         this.ffmpegErrorHandler = this.ffmpegErrorHandler.bind(this);
 
-        this.ffmpeg = this.spawnFFmpeg(this.buildFFmpegArgs(feed));
         this.motionDetector = new MotionDetector(feed);
+        this.frameChain = new Chain(this.chainProcessor.bind(this));
+        this.ffmpeg = this.spawnFFmpeg(this.buildFFmpegArgs(feed));
     }
 
     buildFFmpegArgs(feed: Feed): FFmpegArgs {
@@ -56,7 +58,7 @@ export class JpegStream extends FeedConsumer {
 
     spawnFFmpeg(ffmpegArgs: FFmpegArgs): ChildProcess {
         const ff = spawn('ffmpeg', ffmpegArgs);
-        ff.stdout.on('data', this.ffmpegDataHandler);
+        ff.stdout.on('data', this.frameChain.put);
         ff.on('close', this.ffmpegCloseHandler);
         ff.on('error', this.ffmpegErrorHandler);
 
@@ -79,7 +81,7 @@ export class JpegStream extends FeedConsumer {
         }
 
         // unbind handlers
-        this.ffmpeg.stdout!.off('data', this.ffmpegDataHandler);
+        this.ffmpeg.stdout!.off('data', this.frameChain.put);
         this.ffmpeg.off('close', this.ffmpegCloseHandler);
         this.ffmpeg.off('error', this.ffmpegErrorHandler);
 
@@ -115,27 +117,20 @@ export class JpegStream extends FeedConsumer {
         console.error(`Error in ffmpeg for feed "${feed.name}" [${feed.id}].`, err);
     }
 
-    async ffmpegDataHandler(data: Buffer) {
+    async chainProcessor(data: Buffer, prev?: Buffer) {
         const isStart = Buffer.compare(data.slice(0, 2), JPG_START) === 0;
         const isEnd = Buffer.compare(data.slice(-2), JPG_END) === 0;
+        
+        const buffer = isStart
+            ? data
+            : Buffer.concat([ prev!, data ])
 
-        if (isStart) {
-            this.buffer = data;
-        } else {
-            this.buffer = Buffer.concat([
-                this.buffer!,
-                data,
-            ]);
-        }
-            
         if (isEnd) {
-            const frame = await this.motionDetector.processFrame(this.buffer);
-            
+            const frame = await this.motionDetector.processFrame(buffer);
             this.emitter.emit(JpegStream.Events.JpegFrame, frame);
-
-            // new Promise(resolve => {
-            //     fs.writeFile(`output-${this.name}-${+new Date()}.jpg`, this.buffer!, resolve);
-            // });
+            return frame;
+        } else {
+            return buffer;
         }
     }
 
