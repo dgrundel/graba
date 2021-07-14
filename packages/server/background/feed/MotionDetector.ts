@@ -1,27 +1,71 @@
 import { Feed } from 'hastycam.interface';
 import { FeedConsumer } from './FeedConsumer';
-import { JpegStream } from './jpegStream';
+import sharp from 'sharp';
+import { frameDiff } from './frameDiff';
+
+const SAMPLE_INTERVAL = 3;
 
 export class MotionDetector extends FeedConsumer {
-    private readonly stream: JpegStream
+    private prevPixels?: Buffer;
+    private enabled: boolean;
+    private diffThreshold: number;
 
-    constructor(feed: Feed, stream: JpegStream) {
+    constructor(feed: Feed) {
         super(feed);
 
-        this.stream = stream;
-
-        stream.onFrame(this.onFrame.bind(this));
+        this.enabled = feed.detectMotion === true;
+        this.diffThreshold = feed.motionDetectionSettings?.diffThreshold || 0;
     }
 
-    onFeedUpdate(next: Feed, prev: Feed): void {
+    handleFeedUpdate(feed: Feed, prev: Feed): void {
         // update settings from feed
+        this.enabled = feed.detectMotion === true;
+        this.diffThreshold = feed.motionDetectionSettings?.diffThreshold || 0;
     }
 
-    onFeedEnd(feed: Feed): void {
+    handleFeedEnd(feed: Feed): void {
         // clean up here
+        this.prevPixels = undefined;
     }
     
-    onFrame(buffer: Buffer) {
+    async processFrame(jpg: Buffer): Promise<Buffer> {
+        if (!this.enabled) {
+            return jpg;
+        }
+
+        const raw = await sharp(jpg)
+            .raw()
+            .toBuffer({ resolveWithObject: true });
         
+        const { width, height } = raw.info;
+        const pixels = raw.data;
+    
+        const prevPixels = this.prevPixels;
+        this.prevPixels = pixels; // set prev for next iteration
+
+        if (prevPixels) {
+            const diff = frameDiff(prevPixels, pixels, width, height, {
+                colorThreshold: 0.1,
+                sampleInterval: SAMPLE_INTERVAL,
+            });
+
+            const maxDiffPixels = Math.floor(width * height / SAMPLE_INTERVAL);
+            const diffPercent = diff.count / maxDiffPixels;
+
+            if (diffPercent >= this.diffThreshold) {
+                return await sharp(diff.pixels, {
+                    raw: {
+                        width,
+                        height,
+                        channels: 3,
+                    }
+                })
+                    .jpeg()
+                    .toBuffer();
+            }
+        }
+
+        // no diff, just return original data
+        return jpg;
     }
 }

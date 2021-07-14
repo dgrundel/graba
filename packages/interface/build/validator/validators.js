@@ -17,8 +17,10 @@ const mergeErrors = (...args) => {
     return args.filter(e => typeof e !== 'undefined');
 };
 exports.mergeErrors = mergeErrors;
-const validateIf = (result, ...dependents) => {
-    return isSuccess(result) ? exports.mergeErrors(...dependents) : exports.mergeErrors(result);
+const validateIf = (result, dependents) => {
+    const condition = typeof result === 'boolean' ? result : isSuccess(result);
+    const onConditionFalse = typeof result === 'boolean' ? [] : exports.mergeErrors(result);
+    return condition ? exports.mergeErrors(...dependents) : onConditionFalse;
 };
 exports.validateIf = validateIf;
 /**

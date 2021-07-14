@@ -2,6 +2,7 @@ import { ChildProcess, spawn } from 'child_process';
 import { EventEmitter } from 'stream';
 import { Feed } from 'hastycam.interface';
 import { FeedConsumer } from './FeedConsumer';
+import { MotionDetector } from './MotionDetector';
 
 // https://docs.fileformat.com/image/jpeg/
 const JPG_START = Buffer.from([0xff, 0xd8]);
@@ -11,8 +12,9 @@ type FFmpegArgs = string[];
 
 export class JpegStream extends FeedConsumer {
     private ffmpeg: ChildProcess;
-    private buffer?: Buffer;
+    private readonly motionDetector: MotionDetector;
     private readonly emitter = new EventEmitter();
+    private buffer?: Buffer;
 
     constructor(feed: Feed) {
         super(feed);
@@ -23,6 +25,7 @@ export class JpegStream extends FeedConsumer {
         this.ffmpegErrorHandler = this.ffmpegErrorHandler.bind(this);
 
         this.ffmpeg = this.spawnFFmpeg(this.buildFFmpegArgs(feed));
+        this.motionDetector = new MotionDetector(feed);
     }
 
     buildFFmpegArgs(feed: Feed): FFmpegArgs {
@@ -60,7 +63,9 @@ export class JpegStream extends FeedConsumer {
         return ff;
     }
 
-    onFeedUpdate(next: Feed, prev: Feed): void {
+    handleFeedUpdate(next: Feed, prev: Feed): void {
+        this.motionDetector.handleFeedUpdate(next, prev);
+
         // build args for old feed
         const prevArgs = this.buildFFmpegArgs(prev);
 
@@ -90,7 +95,9 @@ export class JpegStream extends FeedConsumer {
         this.ffmpeg = this.spawnFFmpeg(newFFmpegArgs);
     }
 
-    onFeedEnd(feed: Feed): void {
+    handleFeedEnd(feed: Feed): void {
+        this.motionDetector.handleFeedEnd(feed);
+
         // kill ffmpeg process
         if (!this.ffmpeg.kill()) {
             throw new Error('Error killing ffmpeg process');
@@ -108,7 +115,7 @@ export class JpegStream extends FeedConsumer {
         console.error(`Error in ffmpeg for feed "${feed.name}" [${feed.id}].`, err);
     }
 
-    ffmpegDataHandler(data: Buffer) {
+    async ffmpegDataHandler(data: Buffer) {
         const isStart = Buffer.compare(data.slice(0, 2), JPG_START) === 0;
         const isEnd = Buffer.compare(data.slice(-2), JPG_END) === 0;
 
@@ -122,7 +129,9 @@ export class JpegStream extends FeedConsumer {
         }
             
         if (isEnd) {
-            this.emitter.emit(JpegStream.Events.JpegFrame, this.buffer);
+            const frame = await this.motionDetector.processFrame(this.buffer);
+            
+            this.emitter.emit(JpegStream.Events.JpegFrame, frame);
 
             // new Promise(resolve => {
             //     fs.writeFile(`output-${this.name}-${+new Date()}.jpg`, this.buffer!, resolve);

@@ -1,4 +1,7 @@
 import { ErrorMessage } from '../validator/validators';
+export interface MotionDetectionSettings {
+    diffThreshold?: number;
+}
 export interface Feed {
     id: string;
     name: string;
@@ -7,6 +10,7 @@ export interface Feed {
     scaleFactor?: number;
     videoQuality?: number;
     detectMotion?: boolean;
+    motionDetectionSettings?: MotionDetectionSettings;
 }
 export declare namespace Feed {
     const DEFAULT_VIDEO_QUALITY = 24;

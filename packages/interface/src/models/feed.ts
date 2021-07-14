@@ -1,5 +1,9 @@
 import { ErrorMessage, mergeErrors, validateIf, validateNotEmpty, validateNumberGreaterThanOrEqual, validateNumberLessThanOrEqual, validateNumeric } from '../validator/validators';
 
+export interface MotionDetectionSettings {
+    diffThreshold?: number;
+}
+
 export interface Feed {
     id: string;
     name: string;
@@ -12,6 +16,7 @@ export interface Feed {
 
     // motion detection
     detectMotion?: boolean;
+    motionDetectionSettings?: MotionDetectionSettings;
 }
 
 export namespace Feed {
@@ -28,9 +33,22 @@ export const validateFeed = (feed: Partial<Feed>): ErrorMessage[] => {
         validateNumeric(feed, 'scaleFactor', 'Scale factor'),
         ...validateIf(
             validateNumeric(feed, 'videoQuality', 'Video quality'),
-            validateNumberGreaterThanOrEqual(feed, 'videoQuality', 2, 'Video quality'),
-            validateNumberLessThanOrEqual(feed, 'videoQuality', 31, 'Video quality'),
+            [
+                validateNumberGreaterThanOrEqual(feed, 'videoQuality', 2, 'Video quality'),
+                validateNumberLessThanOrEqual(feed, 'videoQuality', 31, 'Video quality'),
+            ]
         ),
+        ...validateIf(
+            feed.detectMotion === true,
+            validateIf(
+                validateNotEmpty(feed, 'motionDetectionSettings', 'Motion detection settings'),
+                [
+                    validateNumeric(feed.motionDetectionSettings!, 'diffThreshold', 'Threshold'),
+                    validateNumberLessThanOrEqual(feed.motionDetectionSettings!, 'diffThreshold', 1, 'Threshold'),
+                    validateNumberGreaterThanOrEqual(feed.motionDetectionSettings!, 'diffThreshold', 0, 'Threshold'),
+                ]
+            )
+        )
     );
 }
 

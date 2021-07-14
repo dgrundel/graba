@@ -17,6 +17,14 @@ interface State {
     error?: string;
 }
 
+const separatorStyles = {
+    root: {
+        '::before': { 
+            background: theme.palette.neutralQuaternaryAlt,
+        }
+    }
+};
+
 export class FeedEditor extends React.Component<Props, State> {
     constructor(props: Props) {
         super(props);
@@ -94,7 +102,7 @@ export class FeedEditor extends React.Component<Props, State> {
             </div>;
         }
         
-        return <Stack>
+        return <Stack horizontal>
             {labelElement}
             <Text>
                 {value}
@@ -127,18 +135,22 @@ export class FeedEditor extends React.Component<Props, State> {
                 this.state.feed.videoQuality ? this.state.feed.videoQuality.toString() : '',
                 <span>Quality level of the video output. Range is 2-31 where <em>a lower number represents better quality</em>.</span>
             )}
+
+            <Separator styles={separatorStyles} />
+            
+            {this.renderDataField(
+                'Motion detection', 
+                this.state.feed.detectMotion ? 'Enabled' : 'Disabled'
+            )}
+
+            {this.state.feed.detectMotion ? this.renderDataField(
+                'Threshold',
+                this.state.feed.motionDetectionSettings?.diffThreshold?.toFixed(2) || ''
+            ) : ''}
         </Stack>;
     }
 
     renderForm() {
-        const separatorStyles = {
-            root: {
-                '::before': { 
-                    background: theme.palette.neutralQuaternaryAlt,
-                }
-            }
-        };
-
         return <Stack grow tokens={{ childrenGap: 's1', }}>
             <TextField
                 label="Feed name"
@@ -191,6 +203,22 @@ export class FeedEditor extends React.Component<Props, State> {
                 inlineLabel
                 defaultChecked={this.state.feed.detectMotion === true}
                 onChange={(e, detectMotion) => this.setFeedData({ detectMotion })}
+            />
+
+            <Slider
+                label="Motion detection threshold"
+                min={0}
+                step={0.01}
+                max={1}
+                value={this.state.feed.motionDetectionSettings ? this.state.feed.motionDetectionSettings.diffThreshold : 0}
+                showValue
+                onChange={(diffThreshold) => { this.setFeedData({ 
+                    motionDetectionSettings: {
+                        ...this.state.feed.motionDetectionSettings,
+                        diffThreshold
+                    }
+                }) }}
+                valueFormat={(n) => n.toFixed(2)}
             />
         </Stack>;
     }

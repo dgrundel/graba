@@ -25,8 +25,11 @@ export const mergeErrors = (...args: ValidationResult[]): ErrorMessage[] => {
     return args.filter(e => typeof e !== 'undefined') as ErrorMessage[];
 };
 
-export const validateIf = (result: ValidationResult, ...dependents: ValidationResult[]): ErrorMessage[] => {
-    return isSuccess(result) ? mergeErrors(...dependents) : mergeErrors(result);
+export const validateIf = (result: ValidationResult | boolean, dependents: ValidationResult[]): ErrorMessage[] => {
+    const condition = typeof result === 'boolean' ? result : isSuccess(result);
+    const onConditionFalse = typeof result === 'boolean' ? [] : mergeErrors(result);
+    
+    return condition ? mergeErrors(...dependents) : onConditionFalse;
 };
 
 /**

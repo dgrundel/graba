@@ -5,54 +5,56 @@
 
 type Pixels = Uint8ClampedArray | Buffer;
 
-interface Options {
+export interface FrameDiffOptions {
     // matching threshold (0 to 1); smaller is more sensitive
-    threshold: number; 
+    colorThreshold: number;
     // color of different pixels in diff output
-    diffColor: [number, number, number]; 
+    diffColor: [number, number, number];
     // whether to detect dark on light differences between img1 and img2 and set an alternative color to differentiate between the two
-    diffColorAlt: [number, number, number]; 
+    diffColorAlt: [number, number, number];
+    // check for diff every {n} pixels. A value of 1 checks every pixel. Applied to x and y directions.
+    sampleInterval: number;
 }
 
-interface Result {
+export interface FrameDiffResult {
     count: number;
     pixels: Buffer;
 }
 
-const defaultOptions: Options = {
-    threshold: 0.1,
+const defaultOptions: FrameDiffOptions = {
+    colorThreshold: 0.1,
     diffColor: [255, 0, 0],
     diffColorAlt: [255, 0, 0],
+    sampleInterval: 1,
 };
 
 const CHANNELS = 3;
 
-export const frameDiff = (img1: Pixels, img2: Pixels, width: number, height: number, options: Partial<Options>): Result => {
+export const frameDiff = (img1: Pixels, img2: Pixels, width: number, height: number, options: Partial<FrameDiffOptions>): FrameDiffResult => {
     if (img1.length !== img2.length) {
         throw new Error('Image sizes do not match.');
     }
-    if (img1.length !== width * height * 3) {
+    if (img1.length !== width * height * CHANNELS) {
         throw new Error('Image data size does not match width/height.');
     }
 
     const {
-        threshold,
+        colorThreshold,
         diffColor,
         diffColorAlt,
-    } = Object.assign({}, defaultOptions, options) as Options;
+        sampleInterval,
+    } = Object.assign({}, defaultOptions, options) as FrameDiffOptions;
 
     // maximum acceptable square distance between two colors;
     // 35215 is the maximum possible value for the YIQ difference metric
-    const maxDelta = 35215 * threshold * threshold;
+    const maxDelta = 35215 * colorThreshold * colorThreshold;
     
-    const step = 3;
-
     let count = 0;
     const output = Buffer.from(img2, img2.byteOffset, img2.length);
 
     // sample pixels every ${step} pixels
-    for (let y = 0; y < height; y += step) {
-        for (let x = y % step; x < width; x += step) {
+    for (let y = 0; y < height; y += sampleInterval) {
+        for (let x = y % sampleInterval; x < width; x += sampleInterval) {
             const pos = (y * width + x) * CHANNELS;
 
             // squared YUV distance between colors at this pixel position,

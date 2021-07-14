@@ -7,7 +7,7 @@ declare type ValidationResult = ErrorMessage | undefined;
  * Exported Utils
  */
 export declare const mergeErrors: (...args: ValidationResult[]) => ErrorMessage[];
-export declare const validateIf: (result: ValidationResult, ...dependents: ValidationResult[]) => ErrorMessage[];
+export declare const validateIf: (result: ValidationResult | boolean, dependents: ValidationResult[]) => ErrorMessage[];
 /**
  * Validators
  */

@@ -19,13 +19,13 @@ export abstract class FeedConsumer {
         }
 
         this.feed = next;
-        this.onFeedUpdate(next, prev);
+        this.handleFeedUpdate(next, prev);
     }
 
     endFeed() {
-        this.onFeedEnd(this.feed);
+        this.handleFeedEnd(this.feed);
     }
 
-    abstract onFeedUpdate(next: Feed, prev: Feed): void;
-    abstract onFeedEnd(feed: Feed): void;
+    abstract handleFeedUpdate(next: Feed, prev: Feed): void;
+    abstract handleFeedEnd(feed: Feed): void;
 }
