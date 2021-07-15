@@ -282,18 +282,16 @@ export class FeedEditor extends React.Component<Props, State> {
                 <Stack horizontal tokens={{ childrenGap: 'm', }}>
                     {this.state.editing ? this.renderForm() : this.renderData()}
 
-                    <Stack style={{ textAlign: 'center' }}>
-                        <img alt={this.state.feed.name} src={`http://localhost:4000/feed/still/${this.state.feed.id}`} style={{ maxWidth: '15vw', objectFit: 'contain' }}/>
-                    </Stack>
+                    <img alt={this.state.feed.name} src={`http://localhost:4000/feed/still/${this.state.feed.id}`} style={{ maxWidth: '15vw', objectFit: 'contain' }}/>
                 </Stack>
             </div>    
                 
             <Stack horizontal>
                 <Stack horizontal grow>
-                    <ActionButton iconProps={{ iconName: 'Video' }} text="Watch Live" href={`http://localhost:4000/feed/stream/${this.state.feed.id}`} target="_blank" />
                     {this.renderEditButton()}
                 </Stack>
                 <Stack horizontal grow horizontalAlign="end">
+                    <ActionButton iconProps={{ iconName: 'Video' }} text="Watch Live" href={`http://localhost:4000/feed/stream/${this.state.feed.id}`} target="_blank" />
                     <ActionButton iconProps={{ iconName: 'Trash' }} text="Delete Feed" onClick={this.delete}/>
                 </Stack>
             </Stack>
