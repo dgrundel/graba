@@ -3,7 +3,7 @@
   "private": true,
   "scripts": {
     "start": "lerna run start --stream",
-    "build": "lerna run build --stream && lerna bootstrap",
+    "build": "lerna bootstrap && lerna run build --stream",
     "test": "lerna run test --stream"
   },
   "devDependencies": {

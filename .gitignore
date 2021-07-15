@@ -140,3 +140,4 @@ sketch
 **/app.config.json
 **/secrets.json
 output
+**/build/
