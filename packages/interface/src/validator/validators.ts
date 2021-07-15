@@ -5,6 +5,12 @@ export interface ErrorMessage {
 
 type ValidationResult = ErrorMessage | undefined;
 
+const getProp = <T>(obj: T, field: keyof T): any => {
+    return typeof obj !== 'undefined'
+        ? obj[field]
+        : undefined;
+}
+
 const isEmptyString = (value?: any): boolean => {
     return (typeof value === 'string' && value.length === 0);
 }
@@ -37,12 +43,12 @@ export const validateIf = (result: ValidationResult | boolean, dependents: Valid
  */
 
 export const validateNotEmpty = <T>(obj: T, field: keyof T, label?: string): ValidationResult => {
-    const condition = !!obj[field];
+    const condition = !!getProp(obj, field);
     return validate(condition, field as string, `${label || field as string} cannot be empty.`);
 };
 
 export const validateNumeric = <T>(obj: T, field: keyof T, label?: string): ValidationResult => {
-    const value = obj[field];
+    const value = getProp(obj, field);
     if (typeof value !== 'undefined' && !isEmptyString(value)) {
         const condition = !isNaN(+value); // passes for empty string
         return validate(condition, field as string, `${label || field as string} must be a number.`);
@@ -50,14 +56,14 @@ export const validateNumeric = <T>(obj: T, field: keyof T, label?: string): Vali
 };
 
 export const validateNumberGreaterThanOrEqual = <T>(obj: T, field: keyof T, min: number, label?: string): ValidationResult => {
-    const value = +(obj[field]);
+    const value = +(getProp(obj, field));
     const condition = value >= min;
     
     return validate(condition, field as string, `${label || field as string} must be greater than or equal to ${min}.`);
 };
 
 export const validateNumberLessThanOrEqual = <T>(obj: T, field: keyof T, max: number, label?: string): ValidationResult => {
-    const value = +(obj[field]);
+    const value = +(getProp(obj, field));
     const condition = value <= max;
     
     return validate(condition, field as string, `${label || field as string} must be less than or equal to ${max}`);
