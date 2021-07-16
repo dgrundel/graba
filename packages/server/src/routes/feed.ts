@@ -2,7 +2,7 @@ import express from 'express';
 import { Feed, validateFeed } from 'hastycam.interface';
 import { config } from '../background/config';
 import { getAllStreams, getStream, addStream } from '../background/feed/streams';
-import { ErrorMessage, mergeErrors } from '../../interface/build/validator/validators';
+import { ErrorMessage, mergeErrors } from '../../../interface/build/validator/validators';
 import path from 'path';
 import fs from 'fs';
 

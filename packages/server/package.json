@@ -3,7 +3,8 @@
     "version": "0.0.0",
     "private": true,
     "scripts": {
-        "start": "nodemon server.ts"
+        "build": "tsc",
+        "dev": "nodemon src/index.ts"
     },
     "dependencies": {
         "@types/cookie-parser": "^1.4.2",

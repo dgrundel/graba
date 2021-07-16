@@ -2,7 +2,7 @@
   "name": "hastycam",
   "private": true,
   "scripts": {
-    "start": "lerna run start --stream",
+    "dev": "lerna run dev --stream",
     "build": "lerna bootstrap && lerna run build --stream",
     "test": "lerna run test --stream"
   },
