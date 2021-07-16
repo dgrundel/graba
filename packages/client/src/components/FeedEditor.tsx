@@ -268,12 +268,12 @@ export class FeedEditor extends React.Component<Props, State> {
     render() {
         return <Grid rows="auto 1fr auto" style={{ height: '100%' }}>
             <Stack horizontal>
-                    <Stack horizontal grow>
-                        <Text variant="xLarge">{this.state.feed.name}</Text>
-                    </Stack>
-                    <Stack horizontal grow horizontalAlign="end">
-                        <Text variant="small" style={{ color: theme.palette.neutralTertiary }}>id: {this.state.feed.id}</Text>
-                    </Stack>
+                <Stack horizontal grow>
+                    <Text variant="xLarge">{this.state.feed.name}</Text>
+                </Stack>
+                <Stack horizontal grow horizontalAlign="end">
+                    <Text variant="small" style={{ color: theme.palette.neutralTertiary }}>id: {this.state.feed.id}</Text>
+                </Stack>
             </Stack>
 
             <div>

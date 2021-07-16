@@ -3,7 +3,7 @@ import { FeedConsumer } from './FeedConsumer';
 import sharp from 'sharp';
 import { frameDiff } from './frameDiff';
 
-const SAMPLE_INTERVAL = 3;
+const SAMPLE_INTERVAL = 2;
 
 export class MotionDetector extends FeedConsumer {
     private prevPixels?: Buffer;
