@@ -3,6 +3,7 @@ import { EventEmitter } from 'stream';
 import { Feed } from 'hastycam.interface';
 import { FeedConsumer } from './FeedConsumer';
 import { MotionDetector } from './MotionDetector';
+import { VideoRecorder } from './VideoRecorder';
 import { Chain } from '../Chain';
 
 // https://docs.fileformat.com/image/jpeg/
@@ -14,9 +15,9 @@ type FFmpegArgs = string[];
 export class JpegStream extends FeedConsumer {
     private readonly emitter = new EventEmitter();
     private readonly motionDetector: MotionDetector;
+    private readonly videoRecorder: VideoRecorder;
     private readonly frameChain: Chain<Buffer>;
     private ffmpeg: ChildProcess;
-    private buffer?: Buffer;
 
     constructor(feed: Feed) {
         super(feed);
@@ -26,6 +27,11 @@ export class JpegStream extends FeedConsumer {
         this.ffmpegErrorHandler = this.ffmpegErrorHandler.bind(this);
 
         this.motionDetector = new MotionDetector(feed);
+
+        this.videoRecorder = new VideoRecorder(feed);
+        this.videoRecorder.start();
+        this.onFrame(this.videoRecorder.write);
+
         this.frameChain = new Chain(this.chainProcessor.bind(this));
         this.ffmpeg = this.spawnFFmpeg(this.buildFFmpegArgs(feed));
     }
@@ -66,7 +72,10 @@ export class JpegStream extends FeedConsumer {
     }
 
     handleFeedUpdate(next: Feed, prev: Feed): void {
-        this.motionDetector.handleFeedUpdate(next, prev);
+        this.videoRecorder.stop();
+        
+        this.motionDetector.updateFeed(next);
+        this.videoRecorder.updateFeed(next);
 
         // build args for old feed
         const prevArgs = this.buildFFmpegArgs(prev);
@@ -75,30 +84,27 @@ export class JpegStream extends FeedConsumer {
         const newFFmpegArgs = this.buildFFmpegArgs(next);
 
         // check to see if we need to restart ffmpeg
-        if (prevArgs.join(' ') === newFFmpegArgs.join(' ')) {
-            // args are same, no need to restart
-            return;
+        if (prevArgs.join(' ') !== newFFmpegArgs.join(' ')) {
+            // unbind handlers
+            this.ffmpeg.stdout!.off('data', this.frameChain.put);
+            this.ffmpeg.off('close', this.ffmpegCloseHandler);
+            this.ffmpeg.off('error', this.ffmpegErrorHandler);
+
+            // kill ffmpeg process
+            if (!this.ffmpeg.kill()) {
+                throw new Error('Error killing ffmpeg process');
+            }
+
+            // respawn ffmpeg
+            this.ffmpeg = this.spawnFFmpeg(newFFmpegArgs);
         }
 
-        // unbind handlers
-        this.ffmpeg.stdout!.off('data', this.frameChain.put);
-        this.ffmpeg.off('close', this.ffmpegCloseHandler);
-        this.ffmpeg.off('error', this.ffmpegErrorHandler);
-
-        // kill ffmpeg process
-        if (!this.ffmpeg.kill()) {
-            throw new Error('Error killing ffmpeg process');
-        }
-
-        // clear buffer
-        this.buffer = undefined;
-
-        // respawn ffmpeg
-        this.ffmpeg = this.spawnFFmpeg(newFFmpegArgs);
+        this.videoRecorder.start();
     }
 
     handleFeedEnd(feed: Feed): void {
         this.motionDetector.handleFeedEnd(feed);
+        this.videoRecorder.handleFeedEnd(feed);
 
         // kill ffmpeg process
         if (!this.ffmpeg.kill()) {
@@ -127,7 +133,9 @@ export class JpegStream extends FeedConsumer {
 
         if (isEnd) {
             const frame = await this.motionDetector.processFrame(buffer);
+
             this.emitter.emit(JpegStream.Events.JpegFrame, frame);
+
             return frame;
         } else {
             return buffer;

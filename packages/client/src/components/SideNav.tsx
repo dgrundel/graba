@@ -26,7 +26,7 @@ export const SideNav = () => {
         icon: 'Home',
         exact: true,
     },{
-        name: 'Watch',
+        name: 'Watch Live',
         url: '/watch',
         icon: 'PlayerPlay',
     },{
