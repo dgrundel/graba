@@ -7,6 +7,7 @@ import cors from 'cors';
 import { router as indexRouter } from './routes/index';
 import { router as configRouter } from './routes/config';
 import { router as feedRouter } from './routes/feed';
+import { router as playbackRouter } from './routes/playback';
 import { start as startFeeds } from './background/feed/streams';
 
 /**
@@ -32,6 +33,7 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/', indexRouter);
 app.use('/config', configRouter);
 app.use('/feed', feedRouter);
+app.use('/playback', playbackRouter);
 
 app.listen(PORT, () => {
     console.log(`Server is running at http://localhost:${PORT}`);

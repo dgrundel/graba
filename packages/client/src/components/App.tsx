@@ -10,6 +10,7 @@ import { Watch } from './Watch';
 import { ConfigEditor } from './ConfigEditor';
 import { SideNav } from './SideNav';
 import { theme } from '../theme';
+import { Playback } from './Playback';
 
 export class App extends React.Component<{}, {}> {
     render() {
@@ -28,6 +29,9 @@ export class App extends React.Component<{}, {}> {
                             </Route>
                             <Route path="/watch">
                                 <Watch />
+                            </Route>
+                            <Route path="/playback">
+                                <Playback />
                             </Route>
                             <Route path="/config">
                                 <ConfigEditor />

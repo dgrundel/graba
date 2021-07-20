@@ -28,6 +28,10 @@ export const SideNav = () => {
     },{
         name: 'Watch Live',
         url: '/watch',
+        icon: 'Video',
+    },{
+        name: 'Playback',
+        url: '/playback',
         icon: 'PlayerPlay',
     },{
         name: 'Configure',

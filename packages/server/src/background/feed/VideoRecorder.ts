@@ -1,7 +1,7 @@
 import { Feed } from 'hastycam.interface';
 import { FeedConsumer } from './FeedConsumer';
 import fs from 'fs';
-import { createFile } from './VideoStorage';
+import { createVideoRecord } from './VideoStorage';
 
 export class VideoRecorder extends FeedConsumer {
     private writeStream?: fs.WriteStream;
@@ -34,7 +34,7 @@ export class VideoRecorder extends FeedConsumer {
             throw new Error(`Save path is empty for feed ${feed.name} [${feed.id}]`);
         }
 
-        const filePath = createFile(this.getFeed());
+        const { path: filePath } = createVideoRecord(this.getFeed());
         this.writeStream = fs.createWriteStream(filePath);
     }
 
