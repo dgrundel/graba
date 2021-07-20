@@ -1,15 +1,19 @@
 import React from 'react';
-import { Text, PrimaryButton, Stack } from '@fluentui/react';
-import { Config, VideoRecord } from 'hastycam.interface';
+import { VideoRecord } from 'hastycam.interface';
 import { Spinner } from './Spinner';
-import { nanoid } from 'nanoid';
 import { getJson } from '../fetch';
-import { Grid } from './Grid';
+import { DetailsList, DetailsListLayoutMode, SelectionMode } from '@fluentui/react';
 
 interface State {
     records: VideoRecord[];
 }
 
+const detailListColumns = [
+    { key: 'c1', name: 'id', fieldName: 'id', minWidth: 75, maxWidth: 200, isResizable: true },
+    { key: 'c2', name: 'Feed id', fieldName: 'feedId', minWidth: 50, maxWidth: 200, isResizable: true },
+    { key: 'c3', name: 'Date', fieldName: 'date', minWidth: 50, maxWidth: 200, isResizable: true },
+    { key: 'c4', name: 'Path', fieldName: 'path', minWidth: 150, maxWidth: 300, isResizable: true },
+];
 
 export class Playback extends React.Component<{}, State> {
     private readonly loader: Promise<VideoRecord[]>;
@@ -32,18 +36,12 @@ export class Playback extends React.Component<{}, State> {
 
     render() {
         return <Spinner waitFor={this.loader}>
-            <table>
-                <tbody>
-                    {this.state.records.map(record => {
-                        return <tr>
-                            <td>{record.id}</td>
-                            <td>{record.feedId}</td>
-                            <td>{record.date}</td>
-                            <td>{record.path}</td>
-                        </tr>
-                    })}
-                </tbody>
-            </table>
+            <DetailsList
+                items={this.state.records}
+                columns={detailListColumns}
+                layoutMode={DetailsListLayoutMode.justified}
+                selectionMode={SelectionMode.none}
+            />
         </Spinner>;
     }
 }
