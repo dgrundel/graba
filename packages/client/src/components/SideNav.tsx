@@ -21,7 +21,7 @@ const CustomLink = (props: IComponentAsProps<INavButtonProps>) => {
 
 export const SideNav = () => {
     const links: INavLink[] = [{
-        name: 'Home',
+        name: 'Dashboard',
         url: '/',
         icon: 'Home',
         exact: true,

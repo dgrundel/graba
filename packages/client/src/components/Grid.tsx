@@ -9,7 +9,6 @@ interface Props {
 }
 
 interface State {
-    ready: boolean;
 }
 
 const DEFAULT_GAP = theme.spacing.m;

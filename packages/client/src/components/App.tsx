@@ -4,13 +4,13 @@ import {
     Switch,
     Route,
 } from "react-router-dom";
-import { Text } from '@fluentui/react';
 import './App.scss';
 import { Watch } from './Watch';
 import { ConfigEditor } from './ConfigEditor';
 import { SideNav } from './SideNav';
 import { theme } from '../theme';
 import { Playback } from './Playback';
+import { Dashboard } from './Dashboard';
 
 export class App extends React.Component<{}, {}> {
     render() {
@@ -25,7 +25,7 @@ export class App extends React.Component<{}, {}> {
                     <div className="main-content-container">
                         <Switch>
                             <Route exact path="/">
-                                <Home />
+                                <Dashboard />
                             </Route>
                             <Route path="/watch">
                                 <Watch />
@@ -42,12 +42,4 @@ export class App extends React.Component<{}, {}> {
             </Router>
         );
     }
-}
-
-function Home() {
-    return (
-        <div>
-            <h2><Text variant="xLarge">Home</Text></h2>
-        </div>
-    );
 }
