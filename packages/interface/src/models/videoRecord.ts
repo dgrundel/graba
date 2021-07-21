@@ -2,6 +2,7 @@
 export interface VideoRecord {
     id: string;
     feedId: string;
-    date: number;
     path: string;
+    start: number;
+    end: number;
 }

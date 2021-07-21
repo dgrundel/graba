@@ -44,6 +44,20 @@ export const getRecordById = (id: string): VideoRecord => {
     return records[id];
 };
 
+export const updateRecord = (updates: Omit<Partial<VideoRecord>, 'id'> & Pick<VideoRecord, 'id'>) => {
+    const records = store.get('records');
+    
+    const id = updates.id;
+    const existing = records[id];
+    
+    records[id] = {
+        ...existing,
+        ...updates,
+    };
+
+    store.set('records', records);
+};
+
 export const createVideoRecord = (feed: Feed): VideoRecord => {
     if (!feed.savePath) {
         throw new Error(`Save path is empty for feed ${feed.name} [${feed.id}]`);
@@ -53,11 +67,13 @@ export const createVideoRecord = (feed: Feed): VideoRecord => {
     const fileName = generateFileName(date, feed);
     const filePath = path.join(feed.savePath, fileName);
 
+    const now = Date.now();
     const record = {
         id: nanoid(),
         feedId: feed.id,
         path: filePath,
-        date: Date.now(),
+        start: now,
+        end: -1,
     };
 
     const records = store.get('records');

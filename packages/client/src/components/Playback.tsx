@@ -12,12 +12,23 @@ interface State {
     records: DisplayRecord[];
 }
 
+const col = (fieldName: keyof DisplayRecord, name: string, props?: Partial<IColumn>): IColumn => ({
+    name,
+    fieldName, 
+    key: fieldName, 
+    minWidth: 50, 
+    maxWidth: 200, 
+    isResizable: true,
+    ...props,
+});
+
 const detailListColumns: IColumn[] = [
-    { key: 'c0', name: 'image', fieldName: 'stillUrl', minWidth: 60, maxWidth: 60, isResizable: true },
-    { key: 'c1', name: 'id', fieldName: 'id', minWidth: 75, maxWidth: 200, isResizable: true },
-    { key: 'c2', name: 'Feed id', fieldName: 'feedId', minWidth: 50, maxWidth: 200, isResizable: true },
-    { key: 'c3', name: 'Date', fieldName: 'date', minWidth: 50, maxWidth: 200, isResizable: true },
-    { key: 'c4', name: 'Path', fieldName: 'path', minWidth: 150, maxWidth: 300, isResizable: true },
+    col('stillUrl', 'Preview', { minWidth: 60, maxWidth: 60 }),
+    col('id', 'id', { minWidth: 75, maxWidth: 200 }),
+    col('feedId', 'Feed'),
+    col('start', 'Start'),
+    col('end', 'End'),
+    col('path', 'Path', { minWidth: 150, maxWidth: 300 }),
 ];
 
 const thumbStyle: CSSProperties = {
@@ -30,6 +41,11 @@ const renderItemColumn = (item?: DisplayRecord, index?: number, column?: IColumn
     switch (prop) {
         case 'stillUrl':
             return <img src={item!.stillUrl} alt={item!.id} style={thumbStyle} />;
+
+        case 'start':
+        case 'end':
+            const n = item![prop] as number;
+            return n === -1 ? '-' : new Date(n).toLocaleString();
 
         default:
             return item![prop] as string;
