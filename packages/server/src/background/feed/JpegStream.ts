@@ -1,3 +1,4 @@
+import { performance } from 'perf_hooks';
 import { ChildProcess, spawn } from 'child_process';
 import { EventEmitter } from 'stream';
 import { Feed } from 'hastycam.interface';
@@ -6,17 +7,18 @@ import { MotionDetector } from './MotionDetector';
 import { VideoRecorder } from './VideoRecorder';
 import { Chain } from '../Chain';
 
-// https://docs.fileformat.com/image/jpeg/
-const JPG_START = Buffer.from([0xff, 0xd8]);
-const JPG_END = Buffer.from([0xff, 0xd9]);
-
 type FFmpegArgs = string[];
+
+interface FrameData {
+    data: Buffer;
+    time: number;
+}
 
 export class JpegStream extends FeedConsumer {
     private readonly emitter = new EventEmitter();
     private readonly motionDetector: MotionDetector;
     private readonly videoRecorder: VideoRecorder;
-    private readonly frameChain: Chain<Buffer>;
+    private readonly frameChain: Chain<FrameData>;
     private ffmpeg: ChildProcess;
 
     constructor(feed: Feed) {
@@ -25,12 +27,14 @@ export class JpegStream extends FeedConsumer {
         // bind handlers before using this in spawn
         this.ffmpegCloseHandler = this.ffmpegCloseHandler.bind(this);
         this.ffmpegErrorHandler = this.ffmpegErrorHandler.bind(this);
+        this.ffmpegMetadataHandler = this.ffmpegMetadataHandler.bind(this);
+        this.ffmpegDataHandler = this.ffmpegDataHandler.bind(this);
 
         this.motionDetector = new MotionDetector(feed);
 
         this.videoRecorder = new VideoRecorder(feed);
         this.videoRecorder.start();
-        this.onFrame(this.videoRecorder.write);
+        this.onFrame(this.videoRecorder.writeFrame);
 
         this.frameChain = new Chain(this.chainProcessor.bind(this));
         this.ffmpeg = this.spawnFFmpeg(this.buildFFmpegArgs(feed));
@@ -51,6 +55,7 @@ export class JpegStream extends FeedConsumer {
         const qualityLevel = feed.videoQuality || Feed.DEFAULT_VIDEO_QUALITY;
     
         return [
+            '-re', // read input at native frame rate, "good for live streams"
             '-i', feed.streamUrl, // input
             '-filter:v', filters.join(','), 
             '-f', 'image2', // use image processor
@@ -59,14 +64,16 @@ export class JpegStream extends FeedConsumer {
             // '-frames:v', '1', // output a single frame
             '-update', '1', // reuse the same output (stdout in this case)
             'pipe:1', // pipe to stdout
+            '-hide_banner', // don't output copyright notice, build options, library versions
         ];
     }
 
     spawnFFmpeg(ffmpegArgs: FFmpegArgs): ChildProcess {
         const ff = spawn('ffmpeg', ffmpegArgs);
-        ff.stdout.on('data', this.frameChain.put);
         ff.on('close', this.ffmpegCloseHandler);
         ff.on('error', this.ffmpegErrorHandler);
+        ff.stderr.on('data', this.ffmpegMetadataHandler);
+        ff.stdout.on('data', this.ffmpegDataHandler);
 
         return ff;
     }
@@ -86,9 +93,10 @@ export class JpegStream extends FeedConsumer {
         // check to see if we need to restart ffmpeg
         if (prevArgs.join(' ') !== newFFmpegArgs.join(' ')) {
             // unbind handlers
-            this.ffmpeg.stdout!.off('data', this.frameChain.put);
             this.ffmpeg.off('close', this.ffmpegCloseHandler);
             this.ffmpeg.off('error', this.ffmpegErrorHandler);
+            this.ffmpeg.stderr?.off('data', this.ffmpegMetadataHandler);
+            this.ffmpeg.stdout?.off('data', this.ffmpegDataHandler);
 
             // kill ffmpeg process
             if (!this.ffmpeg.kill()) {
@@ -123,22 +131,48 @@ export class JpegStream extends FeedConsumer {
         console.error(`Error in ffmpeg for feed "${feed.name}" [${feed.id}].`, err);
     }
 
-    async chainProcessor(data: Buffer, prev?: Buffer) {
-        const isStart = Buffer.compare(data.slice(0, 2), JPG_START) === 0;
-        const isEnd = Buffer.compare(data.slice(-2), JPG_END) === 0;
+    ffmpegMetadataHandler(buffer: Buffer) {
+        // frame=  188 fps= 11 q=24.0 size=N/A time=00:00:18.60 bitrate=N/A speed=1.06x
+        // const s = buffer.toString().trim();
+        // if (s.startsWith('frame=')) {
+        //     const props = s.replace(/\s*\=\s*/g, '=')
+        //         .split(/\s+/g)
+        //         .reduce((map: Record<string, string>, pair: string) => {
+        //             const [key, value] = pair.split('=');
+        //             map[key] = value;
+        //             return map;
+        //         }, {});
+
+        //     console.log({ props });
+        // } else {
+            console.error(`[ffmpeg][${this.getFeed().id}] ${buffer.toString()}`);
+        // }
+    }
+
+    ffmpegDataHandler(data: Buffer) {
+        this.frameChain.put({ data, time: performance.now() });
+    }
+
+    async chainProcessor(frameData: FrameData, prev?: FrameData) {
+        const data = frameData.data;
         
-        const buffer = isStart
-            ? data
-            : Buffer.concat([ prev!, data ])
+        // https://docs.fileformat.com/image/jpeg/
+        // first two bytes should be [ff d8]
+        const isStart = data[0] === 0xff && data[1] === 0xd8;
+        // last two bytes should be [ff d9]
+        const isEnd = data[data.length - 2] === 0xff && data[data.length - 1] === 0xd9;
+        
+        const buffer = isStart ? data : Buffer.concat([ prev!.data, data ]);
+        const time = isStart ? frameData.time : prev!.time;
 
         if (isEnd) {
             const frame = await this.motionDetector.processFrame(buffer);
 
-            this.emitter.emit(JpegStream.Events.JpegFrame, frame);
+            this.emitter.emit(JpegStream.Events.JpegFrame, frame, time);
 
-            return frame;
+            return { data: frame, time };
         } else {
-            return buffer;
+            return { data: buffer, time };
         }
     }
 
@@ -148,7 +182,7 @@ export class JpegStream extends FeedConsumer {
         });
     }
 
-    onFrame(handler: (buffer: Buffer) => void): () => void {
+    onFrame(handler: (buffer: Buffer, time: number) => void): () => void {
         this.emitter.on(JpegStream.Events.JpegFrame, handler);
 
         // return an unsubscribe fn
