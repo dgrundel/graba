@@ -1,17 +1,25 @@
 import React, { CSSProperties } from 'react';
-import { Text, Stack, Icon } from '@fluentui/react';
+import { Text, Stack } from '@fluentui/react';
 import { Config, Feed } from 'hastycam.interface';
 import { Spinner } from './Spinner';
 import { getJson } from '../fetch';
 import { Grid } from './Grid';
 import { Overlay } from './Overlay';
-import { theme } from '../theme';
 
 interface State {
     feeds: Feed[];
 }
 
-const FEED_ID_LENGTH = 12;
+const recIndicatorStyle: CSSProperties = {
+    backgroundColor: 'rgba(255, 0, 0, 0.5)',
+    color: '#fff',
+    padding: '0.1em',
+    display: 'inline-block',
+    lineHeight: 1,
+    fontSize: '12px',
+    textTransform: 'uppercase',
+    borderRadius: '0.2em',
+};
 
 export class Dashboard extends React.Component<{}, State> {
     private readonly loader: Promise<Config>;
@@ -35,10 +43,7 @@ export class Dashboard extends React.Component<{}, State> {
     }
 
     render() {
-        const recIndicator = <Text block variant="smallPlus" style={{ color: 'red' }}>
-            <Icon iconName="PlayerRecord"/>
-            Rec
-        </Text>;
+        const recIndicator = <Text block variant="smallPlus" style={recIndicatorStyle}>Rec</Text>;
 
         return <Spinner waitFor={this.loader}>
             <Stack tokens={{ childrenGap: 'm', }}>
