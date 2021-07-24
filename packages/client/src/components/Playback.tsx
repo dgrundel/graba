@@ -6,6 +6,7 @@ import { ActionButton, DetailsList, DetailsListLayoutMode, IColumn, IconButton, 
 import { Grid } from './Grid';
 import { theme } from '../theme';
 import { StreamImg } from './StreamImg';
+import { humanSize } from '../display';
 
 interface DisplayRecord extends VideoRecord {
     stillUrl: string;
@@ -54,9 +55,7 @@ const renderItemColumn = (item?: DisplayRecord, index?: number, column?: IColumn
             return n === -1 ? '-' : new Date(n).toLocaleString();
 
         case 'byteLength':
-            return item?.byteLength
-                ? (item.byteLength.toString() + ' bytes')
-                : '';
+            return item?.byteLength ? humanSize(item.byteLength, 1) : '';
 
         case 'actions':
             return item?.actions || '';
