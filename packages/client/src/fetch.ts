@@ -22,3 +22,23 @@ export const postJson = async <T>(url: string, data: any): Promise<T> => {
 
     return Promise.reject(responseData);
 }
+
+export const deleteRequest = async <T>(url: string, data?: any): Promise<T> => {
+    const options: RequestInit = {
+        method: 'DELETE',
+        body: data ? JSON.stringify(data) : undefined,
+        headers: {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        },
+    };
+
+    const response = await fetch(url, options);
+    const responseData = await response.json();
+
+    if (response.status === 200) {
+        return responseData;
+    }
+
+    return Promise.reject(responseData);
+}

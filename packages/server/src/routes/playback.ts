@@ -1,8 +1,7 @@
-import fs, { stat } from 'fs';
+import fs, { promises as fsPromises } from 'fs';
 import express from 'express';
-import { getAllVideoRecords, getRecordById } from '../background/feed/VideoStorage';
+import { deleteRecordById, getAllVideoRecords, getRecordById } from '../background/feed/VideoStorage';
 import { Chain } from '../background/Chain';
-import { nanoid } from 'nanoid';
 import sharp from 'sharp';
 
 const MJPEG_BOUNDARY = 'mjpegBoundary';
@@ -68,6 +67,22 @@ const getJpegComments = (data: Buffer): string[] => {
 
 router.get('/list', (req: any, res: any, next: () => void) => {
     res.json(getAllVideoRecords());
+});
+
+router.delete('/:id', (req: any, res: any, next: () => void) => {
+    const id = req.params.id;
+    const record = getRecordById(id);
+
+    if (!record) {
+        res.writeHead(404);
+        res.json('Not found.');
+        return;
+    }
+
+    fsPromises.unlink(record.path)
+        .then(() => deleteRecordById(id))
+        .then(() => res.json('OK!'))
+        .catch(err => res.status(500).json(err));
 });
 
 router.get('/stream/:id', (req: any, res: any, next: () => void) => {

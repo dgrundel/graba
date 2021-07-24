@@ -1,7 +1,7 @@
 import React, { CSSProperties, ReactNode } from 'react';
 import { VideoRecord } from 'hastycam.interface';
 import { Spinner } from './Spinner';
-import { getJson } from '../fetch';
+import { deleteRequest, getJson } from '../fetch';
 import { ActionButton, DetailsList, DetailsListLayoutMode, IColumn, IconButton, Modal, SelectionMode } from '@fluentui/react';
 import { Grid } from './Grid';
 import { theme } from '../theme';
@@ -76,20 +76,33 @@ export class Playback extends React.Component<{}, State> {
         };
 
         this.loader = getJson<VideoRecord[]>('http://localhost:4000/playback/list');
+
+        this.updateRecords = this.updateRecords.bind(this);
+        this.deleteItem = this.deleteItem.bind(this);
+    }
+
+    updateRecords(response: VideoRecord[]) {
+        const records: DisplayRecord[] = response.map(r => ({
+            ...r,
+            stillUrl: `http://localhost:4000/playback/still/${r.id}`,
+            actions: <span>
+                <ActionButton iconProps={{ iconName: 'PlayerPlay' }} onClick={() => this.setState({ playId: r.id })}>Play</ActionButton>
+                <ActionButton iconProps={{ iconName: 'Trash' }} onClick={() => this.deleteItem(r.id)}>Delete</ActionButton>
+            </span>
+        }));
+
+        this.setState({ records });
+    }
+
+    deleteItem(id: string) {
+        deleteRequest(`http://localhost:4000/playback/${id}`)
+            .then(() => getJson<VideoRecord[]>('http://localhost:4000/playback/list'))
+            .then(this.updateRecords)
+            .catch(err => console.error(err));
     }
 
     componentDidMount() {
-        this.loader.then((response) => {
-            const records: DisplayRecord[] = response.map(r => ({
-                ...r,
-                stillUrl: `http://localhost:4000/playback/still/${r.id}`,
-                actions: <span>
-                    <ActionButton iconProps={{ iconName: 'PlayerPlay' }} onClick={() => this.setState({ playId: r.id })}>Play</ActionButton>
-                </span>
-            }));
-
-            this.setState({ records });
-        });
+        this.loader.then(this.updateRecords);
     }
 
     render() {

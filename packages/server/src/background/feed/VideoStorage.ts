@@ -44,6 +44,14 @@ export const getRecordById = (id: string): VideoRecord => {
     return records[id];
 };
 
+export const deleteRecordById = (id: string) => {
+    const records = store.get('records');
+
+    delete records[id];
+
+    store.set('records', records);
+};
+
 export const updateRecord = (updates: Omit<Partial<VideoRecord>, 'id'> & Pick<VideoRecord, 'id'>) => {
     const records = store.get('records');
     
