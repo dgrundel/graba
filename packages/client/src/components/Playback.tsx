@@ -5,6 +5,7 @@ import { getJson } from '../fetch';
 import { ActionButton, DetailsList, DetailsListLayoutMode, IColumn, IconButton, Modal, SelectionMode } from '@fluentui/react';
 import { Grid } from './Grid';
 import { theme } from '../theme';
+import { StreamImg } from './StreamImg';
 
 interface DisplayRecord extends VideoRecord {
     stillUrl: string;
@@ -89,6 +90,13 @@ export class Playback extends React.Component<{}, State> {
 
     render() {
         const closeModal = () => this.setState({ playId: undefined });
+        const modalContent = this.state.playId === undefined
+            ? undefined
+            : <StreamImg
+                style={{ maxWidth: '80vw', maxHeight: '80vh' }}
+                alt={this.state.playId}
+                src={`http://localhost:4000/playback/stream/${encodeURIComponent(this.state.playId)}`}
+            />
 
         return <Spinner waitFor={this.loader}>
             <DetailsList
@@ -112,7 +120,7 @@ export class Playback extends React.Component<{}, State> {
                         />
                     </div>
                     <div>
-                        {this.state.playId}
+                        {modalContent}
                     </div>
                 </Grid>
             </Modal>
