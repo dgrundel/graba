@@ -3,6 +3,7 @@ import express from 'express';
 import { getAllVideoRecords, getRecordById } from '../background/feed/VideoStorage';
 import { Chain } from '../background/Chain';
 import { nanoid } from 'nanoid';
+import sharp from 'sharp';
 
 const MJPEG_BOUNDARY = 'mjpegBoundary';
 const JPG_START = Buffer.from([0xff, 0xd8]);
@@ -87,12 +88,24 @@ router.get('/stream/:id', (req: any, res: any, next: () => void) => {
         'Content-Type': 'multipart/x-mixed-replace;boundary=' + MJPEG_BOUNDARY
     });
 
-    const chainProcessor = (frame: Buffer) => new Promise<Buffer>(resolve => {
-        
-        if (Buffer.compare(frame, CHAIN_END_SIGNAL) === 0) {
-            res.end();
-            resolve(frame);
-            return;
+    const chainProcessor = async (data: Buffer, prev?: Buffer): Promise<Buffer> => {
+        let frame = data;
+
+        const isChainEnd = Buffer.compare(frame, CHAIN_END_SIGNAL) === 0;
+        if (isChainEnd) {
+            
+            // two end signals in a row means _really_ end
+            if (Buffer.compare(prev!, CHAIN_END_SIGNAL) === 0) {
+                return frame;
+            }
+
+            // send a copy of the last frame, darkened
+            frame = await sharp(prev)
+                .modulate({
+                    brightness: 0.25,
+                    saturation: 0.25,
+                })
+                .toBuffer();
         }
 
         res.write(Buffer.from(`\r\n--${MJPEG_BOUNDARY}`));
@@ -100,11 +113,19 @@ router.get('/stream/:id', (req: any, res: any, next: () => void) => {
         res.write(Buffer.from(`\r\nContent-length: ${frame.length}\r\n\r\n`));
         res.write(frame);
 
-        console.log('comments', getJpegComments(frame));
+        if (isChainEnd) {
+            res.end();
+            return frame;
 
-        // add delay
-        setTimeout(() => resolve(frame), 100);
-    });
+        } else {
+            console.log('comments', getJpegComments(frame));
+
+            // add delay
+            return new Promise(resolve => {
+                setTimeout(() => resolve(frame), 100);
+            });
+        }
+    };
 
     // data listener for FS read stream
     // breaks data into jpg frames
