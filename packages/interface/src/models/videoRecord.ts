@@ -5,4 +5,5 @@ export interface VideoRecord {
     path: string;
     start: number;
     end: number;
+    byteLength: number;
 }

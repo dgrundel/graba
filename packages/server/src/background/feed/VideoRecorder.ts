@@ -10,7 +10,9 @@ const COMMENT_LENGTH_FIELD_SIZE = 2; // 16 bit int === 2 bytes
 export class VideoRecorder extends FeedConsumer {
     private writeStream?: fs.WriteStream;
     private record?: VideoRecord;
+
     private prevTime?: number;
+    private byteLength: number = 0;
 
     constructor(feed: Feed) {
         super(feed);
@@ -54,15 +56,17 @@ export class VideoRecorder extends FeedConsumer {
         if (this.record) {
             updateRecord({
                 id: this.record.id,
-                end: Date.now()
+                end: Date.now(),
+                byteLength: this.byteLength,
             })
             this.record = undefined;
         }
 
         this.prevTime = undefined;
+        this.byteLength = 0;
     }
 
-    writeFrame(data: Buffer, time: number) {
+    write(data: Buffer) {
         if (!this.isEnabled()) {
             return;
         }
@@ -71,9 +75,18 @@ export class VideoRecorder extends FeedConsumer {
             return;
         }
 
+        this.writeStream.write(data);
+        this.byteLength += data.length;
+    }
+
+    writeFrame(data: Buffer, time: number) {
+        if (!this.isEnabled()) {
+            return;
+        }
+
         // write first two bytes, should be [ff d8]
         const start = data.slice(0, 2);
-        this.writeStream.write(start);
+        this.write(start);
 
         // compute metadata
         const metadata = {
@@ -93,7 +106,7 @@ export class VideoRecorder extends FeedConsumer {
             metaLength,
             metaBytes,
         ]);
-        this.writeStream.write(comment);
+        this.write(comment);
 
         // write the rest of the jpeg data
         // removing other comments in jpeg data
@@ -101,7 +114,7 @@ export class VideoRecorder extends FeedConsumer {
         let i = remainder.indexOf(COMMENT_MARKER);
         while (i !== -1) {
             // write the buffer up to the found comment
-            this.writeStream.write(remainder.slice(0, i));
+            this.write(remainder.slice(0, i));
             
             // get the length of the comment
             const commentLength = remainder.readInt16BE(i + COMMENT_MARKER.length);
@@ -112,7 +125,7 @@ export class VideoRecorder extends FeedConsumer {
         }
         
         // write whatever's left
-        this.writeStream.write(remainder);
+        this.write(remainder);
 
         // set up for next frame
         this.prevTime = time;

@@ -29,10 +29,10 @@ const col = (fieldName: keyof DisplayRecord, name: string, props?: Partial<IColu
 
 const detailListColumns: IColumn[] = [
     col('stillUrl', 'Preview', { minWidth: 60, maxWidth: 60 }),
-    col('id', 'id', { minWidth: 75, maxWidth: 200 }),
     col('feedId', 'Feed'),
     col('start', 'Start'),
     col('end', 'End'),
+    col('byteLength', 'Size', { minWidth: 80, maxWidth: 200 }),
     col('path', 'Path', { minWidth: 150, maxWidth: 300 }),
     col('actions', 'Actions'),
 ];
@@ -52,6 +52,11 @@ const renderItemColumn = (item?: DisplayRecord, index?: number, column?: IColumn
         case 'end':
             const n = item![prop] as number;
             return n === -1 ? '-' : new Date(n).toLocaleString();
+
+        case 'byteLength':
+            return item?.byteLength
+                ? (item.byteLength.toString() + ' bytes')
+                : '';
 
         case 'actions':
             return item?.actions || '';

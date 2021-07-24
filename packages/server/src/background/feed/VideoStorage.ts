@@ -74,6 +74,7 @@ export const createVideoRecord = (feed: Feed): VideoRecord => {
         path: filePath,
         start: now,
         end: -1,
+        byteLength: 0,
     };
 
     const records = store.get('records');
