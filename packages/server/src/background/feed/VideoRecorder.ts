@@ -97,7 +97,6 @@ export class VideoRecorder extends FeedConsumer {
 
         // write the rest of the jpeg data
         // removing other comments in jpeg data
-        
         let remainder = data.slice(2);
         let i = remainder.indexOf(COMMENT_MARKER);
         while (i !== -1) {

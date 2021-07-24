@@ -2,14 +2,18 @@ import React, { CSSProperties, ReactNode } from 'react';
 import { VideoRecord } from 'hastycam.interface';
 import { Spinner } from './Spinner';
 import { getJson } from '../fetch';
-import { DetailsList, DetailsListLayoutMode, IColumn, SelectionMode } from '@fluentui/react';
+import { ActionButton, DetailsList, DetailsListLayoutMode, IColumn, IconButton, Modal, SelectionMode } from '@fluentui/react';
+import { Grid } from './Grid';
+import { theme } from '../theme';
 
 interface DisplayRecord extends VideoRecord {
     stillUrl: string;
+    actions?: ReactNode;
 }
 
 interface State {
     records: DisplayRecord[];
+    playId?: string;
 }
 
 const col = (fieldName: keyof DisplayRecord, name: string, props?: Partial<IColumn>): IColumn => ({
@@ -29,6 +33,7 @@ const detailListColumns: IColumn[] = [
     col('start', 'Start'),
     col('end', 'End'),
     col('path', 'Path', { minWidth: 150, maxWidth: 300 }),
+    col('actions', 'Actions'),
 ];
 
 const thumbStyle: CSSProperties = {
@@ -46,6 +51,9 @@ const renderItemColumn = (item?: DisplayRecord, index?: number, column?: IColumn
         case 'end':
             const n = item![prop] as number;
             return n === -1 ? '-' : new Date(n).toLocaleString();
+
+        case 'actions':
+            return item?.actions || '';
 
         default:
             return item![prop] as string;
@@ -69,7 +77,10 @@ export class Playback extends React.Component<{}, State> {
         this.loader.then((response) => {
             const records: DisplayRecord[] = response.map(r => ({
                 ...r,
-                stillUrl: `http://localhost:4000/playback/still/${r.id}`
+                stillUrl: `http://localhost:4000/playback/still/${r.id}`,
+                actions: <span>
+                    <ActionButton iconProps={{ iconName: 'PlayerPlay' }} onClick={() => this.setState({ playId: r.id })}>Play</ActionButton>
+                </span>
             }));
 
             this.setState({ records });
@@ -77,6 +88,8 @@ export class Playback extends React.Component<{}, State> {
     }
 
     render() {
+        const closeModal = () => this.setState({ playId: undefined });
+
         return <Spinner waitFor={this.loader}>
             <DetailsList
                 items={this.state.records}
@@ -85,6 +98,24 @@ export class Playback extends React.Component<{}, State> {
                 selectionMode={SelectionMode.none}
                 onRenderItemColumn={renderItemColumn}
             />
+            <Modal
+                isOpen={this.state.playId !== undefined}
+                onDismiss={closeModal}
+                isBlocking={true}
+            >
+                <Grid rows="2rem 1fr" style={{ padding: theme.spacing.s1 }}>
+                    <div style={{ textAlign: 'right' }}>
+                        <IconButton
+                            iconProps={{ iconName: 'X' }}
+                            ariaLabel="Close modal"
+                            onClick={closeModal}
+                        />
+                    </div>
+                    <div>
+                        {this.state.playId}
+                    </div>
+                </Grid>
+            </Modal>
         </Spinner>;
     }
 }
