@@ -145,7 +145,7 @@ export class JpegStream extends FeedConsumer {
 
         //     console.log({ props });
         // } else {
-            console.error(`[ffmpeg][${this.getFeed().id}] ${buffer.toString()}`);
+            // console.error(`[ffmpeg][${this.getFeed().id}] ${buffer.toString()}`);
         // }
     }
 

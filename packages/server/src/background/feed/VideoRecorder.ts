@@ -4,6 +4,9 @@ import fs from 'fs';
 import { createVideoRecord, updateRecord } from './VideoStorage';
 import { onExit } from '../util';
 
+const COMMENT_MARKER = Buffer.from([0xff, 0xfe]);
+const COMMENT_LENGTH_FIELD_SIZE = 2; // 16 bit int === 2 bytes
+
 export class VideoRecorder extends FeedConsumer {
     private writeStream?: fs.WriteStream;
     private record?: VideoRecord;
@@ -79,27 +82,40 @@ export class VideoRecorder extends FeedConsumer {
         };
         
         // generate a buffer of some metadata as a json string
-        const metaBytes: Buffer = Buffer.from(JSON.stringify(metadata));
-
-        // get a two-byte buffer with the length of the json
-        const dataView = new DataView(new ArrayBuffer(2));
-        dataView.setInt16(0, metaBytes.length, false); // big endian
-        const metaLength = Buffer.from(dataView.buffer);
+        const metaBytes = Buffer.from(JSON.stringify(metadata));
+        const metaLength = Buffer.allocUnsafe(2);
+        metaLength.writeInt16BE(metaBytes.length + COMMENT_LENGTH_FIELD_SIZE);
 
         // put a jpg comment together and write it
         // jpg comment is [0xff, 0xfe, ...[{two byte length}], ...[{the comment bytes}]]
         const comment = Buffer.concat([
-            Buffer.from([0xff, 0xfe]),
+            COMMENT_MARKER,
             metaLength,
             metaBytes,
         ]);
         this.writeStream.write(comment);
 
         // write the rest of the jpeg data
-        const remainder = data.slice(2);
+        // removing other comments in jpeg data
+        
+        let remainder = data.slice(2);
+        let i = remainder.indexOf(COMMENT_MARKER);
+        while (i !== -1) {
+            // write the buffer up to the found comment
+            this.writeStream.write(remainder.slice(0, i));
+            
+            // get the length of the comment
+            const commentLength = remainder.readInt16BE(i + COMMENT_MARKER.length);
+            
+            // chop off the comment we found, look for another comment
+            remainder = remainder.slice(i + COMMENT_MARKER.length + commentLength);
+            i = remainder.indexOf(COMMENT_MARKER);
+        }
+        
+        // write whatever's left
         this.writeStream.write(remainder);
 
-        // set up for net frame
+        // set up for next frame
         this.prevTime = time;
     }
 
