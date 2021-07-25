@@ -33,9 +33,9 @@ const detailListColumns: IColumn[] = [
     col('feedId', 'Feed'),
     col('start', 'Start'),
     col('end', 'End'),
-    col('byteLength', 'Size', { minWidth: 80, maxWidth: 200 }),
+    col('byteLength', 'Size', { minWidth: 60, maxWidth: 100 }),
     col('path', 'Path', { minWidth: 150, maxWidth: 300 }),
-    col('actions', 'Actions'),
+    col('actions', ''),
 ];
 
 const thumbStyle: CSSProperties = {
