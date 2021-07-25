@@ -121,19 +121,19 @@ export class VideoRecorder extends FeedConsumer {
     }
     
     private ffmpegClose (code: number) {
-        console.log('[ffmpeg]', `Exited with code ${code}`);
+        // console.log('[ffmpeg]', `Exited with code ${code}`);
     }
     
     private ffmpegError (err: Error) {
-        console.error('[ffmpeg][ERROR]', err);
+        // console.error('[ffmpeg][ERROR]', err);
     }
     
     private ffmpegStderr (buffer: Buffer) {
-        console.error('[ffmpeg][stderr]', buffer.toString());
+        // console.error('[ffmpeg][stderr]', buffer.toString());
     }
 
     private ffmpegStdout (buffer: Buffer) {
-        console.error('[ffmpeg][stdout]', buffer.toString());
+        // console.error('[ffmpeg][stdout]', buffer.toString());
     }
 
     private writeThumbnail(buffer: Buffer) {
@@ -146,10 +146,7 @@ export class VideoRecorder extends FeedConsumer {
             return;
         }
 
-        // TODO: this should use the same name as the video file (diff ext)
-        const thumbnameFileName = `${this.record.id}-thumbnail.jpg`;
-
-        this.record.thumbnailPath = path.join(savePath, thumbnameFileName);
+        this.record.thumbnailPath = path.join(savePath, this.record.id + '.jpg');
 
         const out = fs.createWriteStream(this.record.thumbnailPath);
         out.write(buffer);

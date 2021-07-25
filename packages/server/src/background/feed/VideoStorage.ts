@@ -3,7 +3,7 @@ import path from 'path';
 import { nanoid } from 'nanoid';
 import { Feed, VideoRecord } from 'hastycam.interface';
 
-const MAX_FILE_NAME_LENGTH = 255;
+const MAX_FILE_NAME_LENGTH = 255 - 4; // 4 chars for file ext
 
 interface VideoStorage {
     records: {
@@ -18,18 +18,18 @@ const store = new conf<VideoStorage>({
     }
 });
 
-const generateFileName = (date: Date, feed: Feed, ext: string) => {
-    const randomId = nanoid(4);
-    const dateString = date.toISOString().replace(/\W+/g, '-');
-    const partialName = `_${feed.id}_${randomId}_${dateString}.${ext}`;
+const generateId = (feed: Feed, date: number) => {
+    const id = nanoid(6);
+    const dateString = new Date(date).toISOString().replace(/\W+/g, '-');
+    const partialId = `_${feed.id}_${dateString}_${id}`;
 
-    const maxChars = (MAX_FILE_NAME_LENGTH - partialName.length);
-    let feedNameString = feed.name.replace(/\W+/g, '-');
-    if (feedNameString.length > maxChars) {
-        feedNameString = feedNameString.slice(0, maxChars);
+    const maxChars = (MAX_FILE_NAME_LENGTH - partialId.length);
+    let feedStr = feed.name.replace(/\W+/g, '-');
+    if (feedStr.length > maxChars) {
+        feedStr = feedStr.slice(0, maxChars);
     }
 
-    return feedNameString + partialName;
+    return feedStr + partialId;
 }
 
 export const getAllVideoRecords = (): VideoRecord[] => {
@@ -71,13 +71,13 @@ export const createVideoRecord = (feed: Feed): VideoRecord => {
         throw new Error(`Save path is empty for feed ${feed.name} [${feed.id}]`);
     }
 
-    const date = new Date();
-    const fileName = generateFileName(date, feed, 'mkv');
-    const filePath = path.join(feed.savePath, fileName);
-
     const now = Date.now();
+
+    const id = generateId(feed, now);
+    const filePath = path.join(feed.savePath, id + '.mkv');
+    
     const record: VideoRecord = {
-        id: nanoid(),
+        id,
         feedId: feed.id,
         path: filePath,
         startTime: now,
