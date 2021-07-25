@@ -1,5 +1,5 @@
 import React from 'react';
-import { IconButton, Modal as FluentModal } from '@fluentui/react';
+import { IconButton, Modal as FluentModal, Stack } from '@fluentui/react';
 import { Grid } from './Grid';
 import { theme } from '../theme';
 
@@ -31,17 +31,18 @@ export class Modal extends React.Component<Props, State> {
             </div>
             : undefined;
         const footer = this.props.buttons
-            ? <div style={{ textAlign: 'right' }}>
+            ? <Stack horizontal horizontalAlign="end" tokens={{ childrenGap: 's1', }}>
                 {this.props.buttons}
-            </div>
+            </Stack>
             : undefined;
 
         return <FluentModal
             isOpen={this.props.open}
             onDismiss={this.props.onCancel}
             isBlocking={true}
+            containerClassName="foo"
         >
-            <Grid rows={rows} style={{ padding: theme.spacing.s1 }}>
+            <Grid rows={rows} style={{ minHeight: '180px', padding: theme.spacing.s1 }}>
                 {header}
                 <div>{this.props.children}</div>
                 {footer}
