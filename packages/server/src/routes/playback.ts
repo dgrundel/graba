@@ -8,62 +8,30 @@ const MJPEG_BOUNDARY = 'mjpegBoundary';
 const JPG_START = Buffer.from([0xff, 0xd8]);
 const JPG_END = Buffer.from([0xff, 0xd9]);
 const CHAIN_END_SIGNAL = Buffer.from([0xff, 0xd9, 0xff, 0xd9]);
-const COMMENT_MARKER = Buffer.from([0xff, 0xfe]);
-/* 
- * JPEG comment is composed of:
- *   - 2 byte marker [0xff, 0xfe]
- *   - 16 bit (2 bytes) length field (length in bytes)
- *   - the comment itself
- * 
- * Note that the length includes the size of the length field (pretty sure)
- * So, the comment "foo" looks something like:
- * [ 0xff, 0xfe, 0x00, 0x05, 'f', 'o', 'o' ]
- */
-const COMMENT_LENGTH_FIELD_SIZE = 2; // 16 bit int === 2 bytes
 
 export const router = express.Router();
 
 const getFirstFrame = async (filePath: string): Promise<Buffer> => {
-    return new Promise((resolve, reject) => {
-        const stream = fs.createReadStream(filePath);
-        let buf: Buffer = Buffer.alloc(0);
+    return Buffer.alloc(0);
+    // return new Promise((resolve, reject) => {
+    //     const stream = fs.createReadStream(filePath);
+    //     let buf: Buffer = Buffer.alloc(0);
 
-        stream.on('data', (chunk: Buffer) => {
-            const endMarker = chunk.indexOf(JPG_END);
-            if (endMarker === -1) {
-                buf = Buffer.concat([ buf, chunk ]);
-            } else {
-                buf = Buffer.concat([buf, chunk.slice(0, endMarker + JPG_END.length)]);
-                resolve(buf);
-                stream.destroy();
-            }
-        });
+    //     stream.on('data', (chunk: Buffer) => {
+    //         const endMarker = chunk.indexOf(JPG_END);
+    //         if (endMarker === -1) {
+    //             buf = Buffer.concat([ buf, chunk ]);
+    //         } else {
+    //             buf = Buffer.concat([buf, chunk.slice(0, endMarker + JPG_END.length)]);
+    //             resolve(buf);
+    //             stream.destroy();
+    //         }
+    //     });
 
-        stream.on('error', err => reject(err));
-        stream.on('end', () => resolve(buf));
-    });
+    //     stream.on('error', err => reject(err));
+    //     stream.on('end', () => resolve(buf));
+    // });
 }
-
-const getJpegComments = (data: Buffer): string[] => {
-    const comments: string[] = [];
-    let i = data.indexOf(COMMENT_MARKER);
-    while (i !== -1) {
-        // get the length of the comment
-        const len = data.readInt16BE(i + COMMENT_MARKER.length);
-        
-        const start = i + COMMENT_MARKER.length;
-        const commentTextStart = start + COMMENT_LENGTH_FIELD_SIZE;
-        const end = start + len;
-        // grab the comment we found
-        const buf = data.slice(commentTextStart, end);
-        comments.push(buf.toString('utf-8'));
-
-        // look for another comment
-        i = data.indexOf(COMMENT_MARKER, end);
-    }
-
-    return comments;
-};
 
 router.get('/list', (req: any, res: any, next: () => void) => {
     res.json(getAllVideoRecords());
@@ -133,8 +101,6 @@ router.get('/stream/:id', (req: any, res: any, next: () => void) => {
             return frame;
 
         } else {
-            console.log('comments', getJpegComments(frame));
-
             // add delay
             return new Promise(resolve => {
                 setTimeout(() => resolve(frame), 100);

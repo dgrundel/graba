@@ -1,4 +1,3 @@
-import { performance } from 'perf_hooks';
 import { ChildProcess, spawn } from 'child_process';
 import { EventEmitter } from 'stream';
 import { Feed } from 'hastycam.interface';
@@ -6,23 +5,15 @@ import { FeedConsumer } from './FeedConsumer';
 import { MotionDetector } from './MotionDetector';
 import { VideoRecorder } from './VideoRecorder';
 import { Chain } from '../Chain';
-import { AltRecorder } from './AltRecorder';
 
 type FFmpegArgs = string[];
-
-interface FrameData {
-    data: Buffer;
-    time: number;
-}
 
 export class JpegStream extends FeedConsumer {
     private readonly emitter = new EventEmitter();
     private readonly motionDetector: MotionDetector;
     private readonly videoRecorder: VideoRecorder;
-    private readonly frameChain: Chain<FrameData>;
+    private readonly frameChain: Chain<Buffer>;
     private ffmpeg: ChildProcess;
-
-    private altRec?: AltRecorder;
 
     constructor(feed: Feed) {
         super(feed);
@@ -30,19 +21,13 @@ export class JpegStream extends FeedConsumer {
         // bind handlers before using this in spawn
         this.ffmpegCloseHandler = this.ffmpegCloseHandler.bind(this);
         this.ffmpegErrorHandler = this.ffmpegErrorHandler.bind(this);
-        this.ffmpegMetadataHandler = this.ffmpegMetadataHandler.bind(this);
-        this.ffmpegDataHandler = this.ffmpegDataHandler.bind(this);
+        this.ffmpegStderrHandler = this.ffmpegStderrHandler.bind(this);
 
         this.motionDetector = new MotionDetector(feed);
 
         this.videoRecorder = new VideoRecorder(feed);
         this.videoRecorder.start();
         this.onFrame(this.videoRecorder.writeFrame);
-
-        if (feed.saveVideo) {
-            this.altRec = new AltRecorder();
-            this.onFrame(this.altRec.frame);
-        }
 
         this.frameChain = new Chain(this.chainProcessor.bind(this));
         this.ffmpeg = this.spawnFFmpeg(this.buildFFmpegArgs(feed));
@@ -80,8 +65,8 @@ export class JpegStream extends FeedConsumer {
         const ff = spawn('ffmpeg', ffmpegArgs);
         ff.on('close', this.ffmpegCloseHandler);
         ff.on('error', this.ffmpegErrorHandler);
-        ff.stderr.on('data', this.ffmpegMetadataHandler);
-        ff.stdout.on('data', this.ffmpegDataHandler);
+        ff.stderr.on('data', this.ffmpegStderrHandler);
+        ff.stdout.on('data', this.frameChain.put);
 
         return ff;
     }
@@ -103,8 +88,8 @@ export class JpegStream extends FeedConsumer {
             // unbind handlers
             this.ffmpeg.off('close', this.ffmpegCloseHandler);
             this.ffmpeg.off('error', this.ffmpegErrorHandler);
-            this.ffmpeg.stderr?.off('data', this.ffmpegMetadataHandler);
-            this.ffmpeg.stdout?.off('data', this.ffmpegDataHandler);
+            this.ffmpeg.stderr?.off('data', this.ffmpegStderrHandler);
+            this.ffmpeg.stdout?.off('data', this.frameChain.put);
 
             // kill ffmpeg process
             if (!this.ffmpeg.kill()) {
@@ -139,30 +124,11 @@ export class JpegStream extends FeedConsumer {
         console.error(`Error in ffmpeg for feed "${feed.name}" [${feed.id}].`, err);
     }
 
-    ffmpegMetadataHandler(buffer: Buffer) {
-        // frame=  188 fps= 11 q=24.0 size=N/A time=00:00:18.60 bitrate=N/A speed=1.06x
-        // const s = buffer.toString().trim();
-        // if (s.startsWith('frame=')) {
-        //     const props = s.replace(/\s*\=\s*/g, '=')
-        //         .split(/\s+/g)
-        //         .reduce((map: Record<string, string>, pair: string) => {
-        //             const [key, value] = pair.split('=');
-        //             map[key] = value;
-        //             return map;
-        //         }, {});
-
-        //     console.log({ props });
-        // } else {
-            // console.error(`[ffmpeg][${this.getFeed().id}] ${buffer.toString()}`);
-        // }
+    ffmpegStderrHandler(buffer: Buffer) {
+        // console.error(`[ffmpeg][${this.getFeed().id}] ${buffer.toString()}`);
     }
 
-    ffmpegDataHandler(data: Buffer) {
-        this.frameChain.put({ data, time: performance.now() });
-    }
-
-    async chainProcessor(frameData: FrameData, prev?: FrameData) {
-        const data = frameData.data;
+    async chainProcessor(data: Buffer, prev?: Buffer) {
         
         // https://docs.fileformat.com/image/jpeg/
         // first two bytes should be [ff d8]
@@ -170,17 +136,16 @@ export class JpegStream extends FeedConsumer {
         // last two bytes should be [ff d9]
         const isEnd = data[data.length - 2] === 0xff && data[data.length - 1] === 0xd9;
         
-        const buffer = isStart ? data : Buffer.concat([ prev!.data, data ]);
-        const time = isStart ? frameData.time : prev!.time;
+        const buffer = isStart ? data : Buffer.concat([ prev!, data ]);
 
         if (isEnd) {
             const frame = await this.motionDetector.processFrame(buffer);
 
-            this.emitter.emit(JpegStream.Events.JpegFrame, frame, time);
+            this.emitter.emit(JpegStream.Events.JpegFrame, frame);
 
-            return { data: frame, time };
+            return frame;
         } else {
-            return { data: buffer, time };
+            return buffer;
         }
     }
 

@@ -2,10 +2,6 @@ import { Feed } from 'hastycam.interface';
 import { config } from '../config';
 import { JpegStream } from './JpegStream';
 
-// https://docs.fileformat.com/image/jpeg/
-const JPG_START = Buffer.from([0xff, 0xd8]);
-const JPG_END = Buffer.from([0xff, 0xd9]);
-
 export enum StreamEventType {
     JpgChunk = "JPEG_CHUNK",
     JpgComplete = "JPEG_COMPLETE",

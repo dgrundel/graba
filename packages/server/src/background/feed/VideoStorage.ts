@@ -18,10 +18,10 @@ const store = new conf<VideoStorage>({
     }
 });
 
-const generateFileName = (date: Date, feed: Feed) => {
+const generateFileName = (date: Date, feed: Feed, ext: string) => {
     const randomId = nanoid(4);
     const dateString = date.toISOString().replace(/\W+/g, '-');
-    const partialName = `_${feed.id}_${randomId}_${dateString}.jpegstream`;
+    const partialName = `_${feed.id}_${randomId}_${dateString}.${ext}`;
 
     const maxChars = (MAX_FILE_NAME_LENGTH - partialName.length);
     let feedNameString = feed.name.replace(/\W+/g, '-');
@@ -72,7 +72,7 @@ export const createVideoRecord = (feed: Feed): VideoRecord => {
     }
 
     const date = new Date();
-    const fileName = generateFileName(date, feed);
+    const fileName = generateFileName(date, feed, 'mkv');
     const filePath = path.join(feed.savePath, fileName);
 
     const now = Date.now();
