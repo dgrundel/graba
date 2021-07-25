@@ -3,7 +3,8 @@ export interface VideoRecord {
     id: string;
     feedId: string;
     path: string;
-    start: number;
-    end: number;
-    byteLength: number;
+    startTime: number;
+    endTime?: number;
+    byteLength?: number;
+    thumbnailPath?: string;
 }

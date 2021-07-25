@@ -11,28 +11,6 @@ const CHAIN_END_SIGNAL = Buffer.from([0xff, 0xd9, 0xff, 0xd9]);
 
 export const router = express.Router();
 
-const getFirstFrame = async (filePath: string): Promise<Buffer> => {
-    return Buffer.alloc(0);
-    // return new Promise((resolve, reject) => {
-    //     const stream = fs.createReadStream(filePath);
-    //     let buf: Buffer = Buffer.alloc(0);
-
-    //     stream.on('data', (chunk: Buffer) => {
-    //         const endMarker = chunk.indexOf(JPG_END);
-    //         if (endMarker === -1) {
-    //             buf = Buffer.concat([ buf, chunk ]);
-    //         } else {
-    //             buf = Buffer.concat([buf, chunk.slice(0, endMarker + JPG_END.length)]);
-    //             resolve(buf);
-    //             stream.destroy();
-    //         }
-    //     });
-
-    //     stream.on('error', err => reject(err));
-    //     stream.on('end', () => resolve(buf));
-    // });
-}
-
 router.get('/list', (req: any, res: any, next: () => void) => {
     res.json(getAllVideoRecords());
 });
@@ -155,13 +133,19 @@ router.get('/still/:id', async (req: any, res: any, next: () => void) => {
     const id = req.params.id;
     const record = getRecordById(id);
 
-    if (!record) {
+    if (!record || !record.thumbnailPath) {
         res.writeHead(404);
         res.end('Not found.');
         return;
     }
 
-    const frame = await getFirstFrame(record.path);
+    const chunks: Buffer[] = [];
+    const stream = fs.createReadStream(record.thumbnailPath);
+    const frame: Buffer = await new Promise<Buffer>((resolve, reject) => {
+        stream.on('data', (chunk: Buffer) => chunks.push(chunk));
+        stream.on('error', (err) => reject(err));
+        stream.on('end', () => resolve(Buffer.concat(chunks)));
+    });
 
     res.writeHead(200, {
         'Content-Type': 'image/jpeg',

@@ -4,6 +4,7 @@ import fs from 'fs';
 import { createVideoRecord, updateRecord } from './VideoStorage';
 import { onExit } from '../../util';
 import { ChildProcess, spawn } from 'child_process';
+import path from 'path';
 
 export class VideoRecorder extends FeedConsumer {
     private record?: VideoRecord;
@@ -58,7 +59,7 @@ export class VideoRecorder extends FeedConsumer {
 
             updateRecord({
                 id: this.record.id,
-                end: Date.now(),
+                endTime: Date.now(),
                 byteLength: stats.size,
             });
 
@@ -85,9 +86,13 @@ export class VideoRecorder extends FeedConsumer {
             Buffer.from('\n'),
         ]);
 
+        if (!this.record?.thumbnailPath) {
+            this.writeThumbnail(buffer);
+        }
+
         this.ffmpeg.stdin?.write(data);
     }
-
+    
     private isEnabled() {
         return this.getFeed().saveVideo === true;
     }
@@ -129,5 +134,30 @@ export class VideoRecorder extends FeedConsumer {
 
     private ffmpegStdout (buffer: Buffer) {
         console.error('[ffmpeg][stdout]', buffer.toString());
+    }
+
+    private writeThumbnail(buffer: Buffer) {
+        if (!this.record) {
+            return;
+        }
+
+        const savePath = this.getFeed().savePath;
+        if (!savePath) {
+            return;
+        }
+
+        // TODO: this should use the same name as the video file (diff ext)
+        const thumbnameFileName = `${this.record.id}-thumbnail.jpg`;
+
+        this.record.thumbnailPath = path.join(savePath, thumbnameFileName);
+
+        const out = fs.createWriteStream(this.record.thumbnailPath);
+        out.write(buffer);
+        out.close();
+
+        updateRecord({
+            id: this.record.id,
+            thumbnailPath: this.record.thumbnailPath,
+        });
     }
 }

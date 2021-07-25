@@ -76,13 +76,11 @@ export const createVideoRecord = (feed: Feed): VideoRecord => {
     const filePath = path.join(feed.savePath, fileName);
 
     const now = Date.now();
-    const record = {
+    const record: VideoRecord = {
         id: nanoid(),
         feedId: feed.id,
         path: filePath,
-        start: now,
-        end: -1,
-        byteLength: 0,
+        startTime: now,
     };
 
     const records = store.get('records');

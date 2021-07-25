@@ -31,8 +31,8 @@ const col = (fieldName: keyof DisplayRecord, name: string, props?: Partial<IColu
 const detailListColumns: IColumn[] = [
     col('stillUrl', 'Preview', { minWidth: 60, maxWidth: 60 }),
     col('feedId', 'Feed'),
-    col('start', 'Start'),
-    col('end', 'End'),
+    col('startTime', 'Start'),
+    col('endTime', 'End'),
     col('byteLength', 'Size', { minWidth: 60, maxWidth: 100 }),
     col('path', 'Path', { minWidth: 150, maxWidth: 300 }),
     col('actions', ''),
@@ -49,10 +49,10 @@ const renderItemColumn = (item?: DisplayRecord, index?: number, column?: IColumn
         case 'stillUrl':
             return <img src={item!.stillUrl} alt={item!.id} style={thumbStyle} />;
 
-        case 'start':
-        case 'end':
-            const n = item![prop] as number;
-            return n === -1 ? '(Recording)' : new Date(n).toLocaleString();
+        case 'startTime':
+        case 'endTime':
+            const n = item![prop] as number | undefined;
+            return (n && n > 0) ? new Date(n).toLocaleString() : '(Recording)';
 
         case 'byteLength':
             return item?.byteLength ? humanSize(item.byteLength, 1) : '-';
@@ -87,7 +87,7 @@ export class Playback extends React.Component<{}, State> {
             stillUrl: `http://localhost:4000/playback/still/${r.id}`,
             actions: <span>
                 <ActionButton iconProps={{ iconName: 'PlayerPlay' }} onClick={() => this.setState({ playId: r.id })}>Play</ActionButton>
-                <ActionButton disabled={r.end === -1} iconProps={{ iconName: 'Trash' }} onClick={() => this.setState({ confirmDeleteId: r.id})}>Delete</ActionButton>
+                <ActionButton disabled={!(r.endTime && r.endTime > 0)} iconProps={{ iconName: 'Trash' }} onClick={() => this.setState({ confirmDeleteId: r.id})}>Delete</ActionButton>
             </span>
         }));
 
