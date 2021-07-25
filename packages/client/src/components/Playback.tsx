@@ -2,11 +2,10 @@ import React, { CSSProperties, ReactNode } from 'react';
 import { VideoRecord } from 'hastycam.interface';
 import { Spinner } from './Spinner';
 import { deleteRequest, getJson } from '../fetch';
-import { ActionButton, DetailsList, DetailsListLayoutMode, IColumn, IconButton, Modal, SelectionMode } from '@fluentui/react';
-import { Grid } from './Grid';
-import { theme } from '../theme';
+import { ActionButton, DetailsList, DetailsListLayoutMode, IColumn, SelectionMode } from '@fluentui/react';
 import { StreamImg } from './StreamImg';
 import { humanSize } from '../display';
+import { Modal } from './Modal';
 
 interface DisplayRecord extends VideoRecord {
     stillUrl: string;
@@ -52,10 +51,10 @@ const renderItemColumn = (item?: DisplayRecord, index?: number, column?: IColumn
         case 'start':
         case 'end':
             const n = item![prop] as number;
-            return n === -1 ? '-' : new Date(n).toLocaleString();
+            return n === -1 ? '(Recording)' : new Date(n).toLocaleString();
 
         case 'byteLength':
-            return item?.byteLength ? humanSize(item.byteLength, 1) : '';
+            return item?.byteLength ? humanSize(item.byteLength, 1) : '(Recording)';
 
         case 'actions':
             return item?.actions || '';
@@ -87,7 +86,7 @@ export class Playback extends React.Component<{}, State> {
             stillUrl: `http://localhost:4000/playback/still/${r.id}`,
             actions: <span>
                 <ActionButton iconProps={{ iconName: 'PlayerPlay' }} onClick={() => this.setState({ playId: r.id })}>Play</ActionButton>
-                <ActionButton iconProps={{ iconName: 'Trash' }} onClick={() => this.deleteItem(r.id)}>Delete</ActionButton>
+                <ActionButton disabled={r.end === -1} iconProps={{ iconName: 'Trash' }} onClick={() => this.deleteItem(r.id)}>Delete</ActionButton>
             </span>
         }));
 
@@ -124,22 +123,10 @@ export class Playback extends React.Component<{}, State> {
                 onRenderItemColumn={renderItemColumn}
             />
             <Modal
-                isOpen={this.state.playId !== undefined}
-                onDismiss={closeModal}
-                isBlocking={true}
+                open={this.state.playId !== undefined}
+                onCancel={closeModal}
             >
-                <Grid rows="2rem 1fr" style={{ padding: theme.spacing.s1 }}>
-                    <div style={{ textAlign: 'right' }}>
-                        <IconButton
-                            iconProps={{ iconName: 'X' }}
-                            ariaLabel="Close modal"
-                            onClick={closeModal}
-                        />
-                    </div>
-                    <div>
-                        {modalContent}
-                    </div>
-                </Grid>
+                {modalContent}
             </Modal>
         </Spinner>;
     }

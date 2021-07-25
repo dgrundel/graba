@@ -50,6 +50,7 @@ export class StreamImg extends React.Component<Props, State> {
     }
 
     render() {
+        // eslint-disable-next-line jsx-a11y/alt-text
         return <img ref={this.ref} {...this.props} />
     }
 }
