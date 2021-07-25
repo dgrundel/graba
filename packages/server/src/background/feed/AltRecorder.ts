@@ -1,38 +1,5 @@
-import { performance } from 'perf_hooks';
 import { ChildProcess, spawn } from 'child_process';
-import { EventEmitter } from 'stream';
-import { Feed } from 'hastycam.interface';
-import { FeedConsumer } from './FeedConsumer';
-import { MotionDetector } from './MotionDetector';
-import { VideoRecorder } from './VideoRecorder';
-import { Chain } from '../Chain';
 import { nanoid } from 'nanoid';
-
-// const streamUrl = '';
-// const filters: string[] = [];
-
-// // scale video
-// const scaleFactor = 0.5;
-// filters.push(`scale='iw*${scaleFactor}:ih*${scaleFactor}'`);  
-
-// // set max fps
-// const maxFps = 10;
-// filters.push(`fps='fps=min(${maxFps},source_fps)'`); 
-
-// const qualityLevel = 24;
-
-// const ffmpegArgs = [
-//     '-re', // read input at native frame rate, "good for live streams"
-//     '-i', streamUrl, // input
-//     '-filter:v', filters.join(','), 
-//     '-f', 'image2', // use image processor
-//     '-c:v', 'mjpeg', // output a jpg
-//     '-qscale:v', qualityLevel.toString(), // set quality level
-//     // '-frames:v', '1', // output a single frame
-//     '-update', '1', // reuse the same output (stdout in this case)
-//     'pipe:1', // pipe to stdout
-//     '-hide_banner', // don't output copyright notice, build options, library versions
-// ];
 
 export class AltRecorder {
     private ff: ChildProcess;
@@ -40,10 +7,16 @@ export class AltRecorder {
     constructor() {
         const outfile = `output-${Date.now()}-${nanoid(3)}.mkv`;
         const args = [
-            '-framerate', '10',
+            // use current time as timestamp for each frame
+            // we're piping in frames in real time, so use the
+            // actual current time as the timestamp
+            '-use_wallclock_as_timestamps', '1', 
+            // get input piped from stdin
             '-f', 'image2pipe',
+            // input format is jpeg
             '-c:v', 'mjpeg',
-            '-i', '-', 
+            // input file is stdin/pipe
+            '-i', '-',
             '-codec', 'copy',
             outfile,
         ];

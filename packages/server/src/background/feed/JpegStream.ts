@@ -6,7 +6,7 @@ import { FeedConsumer } from './FeedConsumer';
 import { MotionDetector } from './MotionDetector';
 import { VideoRecorder } from './VideoRecorder';
 import { Chain } from '../Chain';
-// import { AltRecorder } from './AltRecorder';
+import { AltRecorder } from './AltRecorder';
 
 type FFmpegArgs = string[];
 
@@ -22,7 +22,7 @@ export class JpegStream extends FeedConsumer {
     private readonly frameChain: Chain<FrameData>;
     private ffmpeg: ChildProcess;
 
-    // private altRec?: AltRecorder;
+    private altRec?: AltRecorder;
 
     constructor(feed: Feed) {
         super(feed);
@@ -39,10 +39,10 @@ export class JpegStream extends FeedConsumer {
         this.videoRecorder.start();
         this.onFrame(this.videoRecorder.writeFrame);
 
-        // if (feed.saveVideo) {
-        //     this.altRec = new AltRecorder();
-        //     this.onFrame(this.altRec.frame);
-        // }
+        if (feed.saveVideo) {
+            this.altRec = new AltRecorder();
+            this.onFrame(this.altRec.frame);
+        }
 
         this.frameChain = new Chain(this.chainProcessor.bind(this));
         this.ffmpeg = this.spawnFFmpeg(this.buildFFmpegArgs(feed));
