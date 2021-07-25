@@ -63,7 +63,7 @@ export class JpegStream extends FeedConsumer {
         const qualityLevel = feed.videoQuality || Feed.DEFAULT_VIDEO_QUALITY;
     
         return [
-            '-re', // read input at native frame rate, "good for live streams"
+            // '-re', // read input at native frame rate, "good for live streams"
             '-i', feed.streamUrl, // input
             '-filter:v', filters.join(','), 
             '-f', 'image2', // use image processor
