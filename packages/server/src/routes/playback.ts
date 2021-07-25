@@ -3,6 +3,7 @@ import express from 'express';
 import { deleteRecordById, getAllVideoRecords, getRecordById } from '../background/feed/VideoStorage';
 import { Chain } from '../background/Chain';
 import sharp from 'sharp';
+import { spawn } from 'child_process';
 
 const MJPEG_BOUNDARY = 'mjpegBoundary';
 const JPG_START = Buffer.from([0xff, 0xd8]);
@@ -76,20 +77,16 @@ router.get('/stream/:id', (req: any, res: any, next: () => void) => {
 
         if (isChainEnd) {
             res.end();
-            return frame;
-
-        } else {
-            // add delay
-            return new Promise(resolve => {
-                setTimeout(() => resolve(frame), 100);
-            });
         }
+        return frame;
     };
+
+    const chain = new Chain<Buffer>(chainProcessor, Buffer.alloc(0));
 
     // data listener for FS read stream
     // breaks data into jpg frames
     let frameBuf = Buffer.alloc(0);
-    const streamListener = (chunk: Buffer) => {
+    const dataListener = (chunk: Buffer) => {
         frameBuf = Buffer.concat([
             frameBuf,
             chunk
@@ -116,16 +113,25 @@ router.get('/stream/:id', (req: any, res: any, next: () => void) => {
         }
     };
 
-    const chain = new Chain<Buffer>(chainProcessor, Buffer.alloc(0));
-    const stream = fs.createReadStream(record.path);
+    const args = [
+        '-re', // read input at native frame rate, "good for live streams"
+        '-i', record.path, // input
+        '-f', 'image2', // use image processor
+        '-c:v', 'mjpeg', // output a jpg
+        '-update', '1', // reuse the same output (stdout in this case)
+        'pipe:1', // pipe to stdout
+        '-hide_banner', // don't output copyright notice, build options, library versions
+    ];
 
+    const ff = spawn('ffmpeg', args);
+    ff.on('close', () => chain.put(CHAIN_END_SIGNAL));
+    ff.on('error', () => res.end());
+    // ff.stderr.on('data', (data: Buffer) => console.log('[ffmpeg][stderr][playback]', data.toString()));
+    ff.stdout.on('data', dataListener);
 
-    stream.on('data', streamListener);
-    stream.on('error', () => res.end());
-    stream.on('end', () => chain.put(CHAIN_END_SIGNAL));
     res.socket!.on('close', () => {
         chain.stop();
-        stream.off('data', streamListener);
+        ff.kill();
     });
 });
 
