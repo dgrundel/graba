@@ -8,7 +8,7 @@ import { Chain } from '../Chain';
 
 type FFmpegArgs = string[];
 
-export class JpegStream extends FeedConsumer {
+export class RtspToJpeg extends FeedConsumer {
     private readonly emitter = new EventEmitter();
     private readonly motionDetector: MotionDetector;
     private readonly videoRecorder: VideoRecorder;
@@ -116,7 +116,7 @@ export class JpegStream extends FeedConsumer {
     ffmpegCloseHandler(code: number) {
         const feed = this.getFeed();
         console.log(`ffmpeg for feed "${feed.name}" [${feed.id}] exited with code ${code}`);
-        this.emitter.emit(JpegStream.Events.StreamEnd);
+        this.emitter.emit(RtspToJpeg.Events.StreamEnd);
     }
 
     ffmpegErrorHandler(err: Error) {
@@ -141,7 +141,7 @@ export class JpegStream extends FeedConsumer {
         if (isEnd) {
             const frame = await this.motionDetector.processFrame(buffer);
 
-            this.emitter.emit(JpegStream.Events.JpegFrame, frame);
+            this.emitter.emit(RtspToJpeg.Events.JpegFrame, frame);
 
             return frame;
         } else {
@@ -151,23 +151,23 @@ export class JpegStream extends FeedConsumer {
 
     async getFrame() {
         return new Promise<Buffer>(resolve => {
-            this.emitter.once(JpegStream.Events.JpegFrame, buffer => resolve(buffer));
+            this.emitter.once(RtspToJpeg.Events.JpegFrame, buffer => resolve(buffer));
         });
     }
 
     onFrame(handler: (buffer: Buffer, time: number) => void): () => void {
-        this.emitter.on(JpegStream.Events.JpegFrame, handler);
+        this.emitter.on(RtspToJpeg.Events.JpegFrame, handler);
 
         // return an unsubscribe fn
-        return () => this.emitter.off(JpegStream.Events.JpegFrame, handler);
+        return () => this.emitter.off(RtspToJpeg.Events.JpegFrame, handler);
     }
 
     onEnd(handler: () => void) {
-        this.emitter.once(JpegStream.Events.StreamEnd, handler);
+        this.emitter.once(RtspToJpeg.Events.StreamEnd, handler);
     }
 }
 
-export namespace JpegStream {
+export namespace RtspToJpeg {
     export enum Events {
         JpegFrame = 'jpeg-frame',
         StreamEnd = 'stream-end',

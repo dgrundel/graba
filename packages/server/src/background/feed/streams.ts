@@ -1,6 +1,6 @@
 import { Feed } from 'hastycam.interface';
 import { config } from '../config';
-import { JpegStream } from './JpegStream';
+import { RtspToJpeg } from './RtspToJpeg';
 
 export enum StreamEventType {
     JpgChunk = "JPEG_CHUNK",
@@ -15,29 +15,24 @@ export interface StreamEvent {
     data?: Buffer;
 }
 
-const streams: Record<string, JpegStream> = {};
+const streams: Record<string, RtspToJpeg> = {};
 
-export const getStream = (id: string): JpegStream | undefined => {
+export const getStream = (id: string): RtspToJpeg | undefined => {
     return streams[id];
 };
 
-export const addStream = (feed: Feed): JpegStream => {
+export const addStream = (feed: Feed): RtspToJpeg => {
     const existing = getStream(feed.id);
 
     if (existing) {
-        // check to see if stream url was changed
-        if (existing.getFeed().streamUrl !== feed.streamUrl) {
-            // url changed, do something
-        }
-
         return existing;
     }
 
-    streams[feed.id] = new JpegStream(feed);
+    streams[feed.id] = new RtspToJpeg(feed);
     return streams[feed.id];
 };
 
-export const getAllStreams = (): JpegStream[] => {
+export const getAllStreams = (): RtspToJpeg[] => {
     return Object.values(streams);
 };
 
