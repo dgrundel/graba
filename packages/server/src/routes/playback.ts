@@ -1,15 +1,10 @@
 import fs, { promises as fsPromises } from 'fs';
 import express from 'express';
-import { deleteRecordById, getAllVideoRecords, getRecordById } from '../background/feed/VideoStorage';
-import { Chain } from '../background/Chain';
 import sharp from 'sharp';
-import { spawn } from 'child_process';
+import { deleteRecordById, getAllVideoRecords, getRecordById } from '../background/feed/VideoStorage';
 import { FFmpegToJpeg } from '../background/feed/FFmpegToJpeg';
 
 const MJPEG_BOUNDARY = 'mjpegBoundary';
-const JPG_START = Buffer.from([0xff, 0xd8]);
-const JPG_END = Buffer.from([0xff, 0xd9]);
-const CHAIN_END_SIGNAL = Buffer.from([0xff, 0xd9, 0xff, 0xd9]);
 
 export const router = express.Router();
 

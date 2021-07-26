@@ -9,6 +9,9 @@ interface Options {
     debug?: boolean;
 };
 
+const JPG_START = Buffer.from([0xff, 0xd8]);
+const JPG_END = Buffer.from([0xff, 0xd9]);
+
 const enum Events {
     JpegFrame = 'jpeg-frame',
     StreamEnd = 'stream-end',
@@ -110,18 +113,26 @@ export class FFmpegToJpeg {
     }
 
     private async chainProcessor(data: Buffer, prev?: Buffer) {
-        // first two bytes of jpeg data should be SOI marker [ff d8]
-        // https://docs.fileformat.com/image/jpeg/
-        const isStart = data[0] === 0xff && data[1] === 0xd8;
+        let buffer = prev ? Buffer.concat([ prev, data ]) : data;
+        let start = buffer.indexOf(JPG_START);
         
-        const buffer = isStart ? data : Buffer.concat([ prev!, data ]);
-        
-        // last two bytes should be EOI marker [ff d9]
-        const isEnd = data[data.length - 2] === 0xff && data[data.length - 1] === 0xd9;
-        if (isEnd) {
-            this.emitter.emit(Events.JpegFrame, buffer);
+        while (start !== -1) {
+            // look for EOI marker [ff d9] after start marker
+            let endMarker = buffer.indexOf(JPG_END, start + JPG_START.length);
+            if (endMarker === -1) {
+                break;
+            }
+            
+            const end = endMarker + JPG_END.length;
+            const frame = buffer.slice(start, end);
+            this.emitter.emit(Events.JpegFrame, frame);
+            
+            buffer = buffer.slice(end);
+            start = buffer.indexOf(JPG_START);
         }
 
         return buffer;
     }
 }
+
+
