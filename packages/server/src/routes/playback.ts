@@ -4,6 +4,7 @@ import { deleteRecordById, getAllVideoRecords, getRecordById } from '../backgrou
 import { Chain } from '../background/Chain';
 import sharp from 'sharp';
 import { spawn } from 'child_process';
+import { FFmpegToJpeg } from '../background/feed/FFmpegToJpeg';
 
 const MJPEG_BOUNDARY = 'mjpegBoundary';
 const JPG_START = Buffer.from([0xff, 0xd8]);
@@ -50,70 +51,7 @@ router.get('/stream/:id', (req: any, res: any, next: () => void) => {
         'Content-Type': 'multipart/x-mixed-replace;boundary=' + MJPEG_BOUNDARY
     });
 
-    const chainProcessor = async (data: Buffer, prev?: Buffer): Promise<Buffer> => {
-        let frame = data;
-
-        const isChainEnd = Buffer.compare(frame, CHAIN_END_SIGNAL) === 0;
-        if (isChainEnd) {
-            
-            // two end signals in a row means _really_ end
-            if (Buffer.compare(prev!, CHAIN_END_SIGNAL) === 0) {
-                return frame;
-            }
-
-            // send a copy of the last frame, darkened
-            frame = await sharp(prev)
-                .modulate({
-                    brightness: 0.25,
-                    saturation: 0.25,
-                })
-                .toBuffer();
-        }
-
-        res.write(Buffer.from(`\r\n--${MJPEG_BOUNDARY}`));
-        res.write(Buffer.from(`\r\nContent-Type: image/jpeg`));
-        res.write(Buffer.from(`\r\nContent-length: ${frame.length}\r\n\r\n`));
-        res.write(frame);
-
-        if (isChainEnd) {
-            res.end();
-        }
-        return frame;
-    };
-
-    const chain = new Chain<Buffer>(chainProcessor, Buffer.alloc(0));
-
-    // data listener for FS read stream
-    // breaks data into jpg frames
-    let frameBuf = Buffer.alloc(0);
-    const dataListener = (chunk: Buffer) => {
-        frameBuf = Buffer.concat([
-            frameBuf,
-            chunk
-        ]);
-
-        let hasStart = frameBuf.length >= 2 && frameBuf[0] === 0xff && frameBuf[1] === 0xd8;
-        if (!hasStart) {
-            throw new Error('frameBuf is missing expected JPG start marker.');
-        }
-
-        while (hasStart) {
-            // look for end marker after start marker
-            let endMarker = frameBuf.indexOf(JPG_END, JPG_START.length);
-            if (endMarker === -1) {
-                break;
-            }
-
-            const end = endMarker + JPG_END.length;
-            const frame = frameBuf.slice(0, end);
-            chain.put(frame);
-            
-            frameBuf = frameBuf.slice(end);
-            hasStart = frameBuf.length >= 2 && frameBuf[0] === 0xff && frameBuf[1] === 0xd8;
-        }
-    };
-
-    const args = [
+    const ffArgGenerator = (): string[] => [
         '-re', // read input at native frame rate, "good for live streams"
         '-i', record.path, // input
         '-f', 'image2', // use image processor
@@ -123,15 +61,37 @@ router.get('/stream/:id', (req: any, res: any, next: () => void) => {
         '-hide_banner', // don't output copyright notice, build options, library versions
     ];
 
-    const ff = spawn('ffmpeg', args);
-    ff.on('close', () => chain.put(CHAIN_END_SIGNAL));
-    ff.on('error', () => res.end());
-    // ff.stderr.on('data', (data: Buffer) => console.log('[ffmpeg][stderr][playback]', data.toString()));
-    ff.stdout.on('data', dataListener);
+    const writeFrame = (frame: Buffer) => {
+        res.write(Buffer.from(`\r\n--${MJPEG_BOUNDARY}`));
+        res.write(Buffer.from(`\r\nContent-Type: image/jpeg`));
+        res.write(Buffer.from(`\r\nContent-length: ${frame.length}\r\n\r\n`));
+        res.write(frame);
+    };
+
+    const ffToJpeg = new FFmpegToJpeg(ffArgGenerator, { debug: true });
+    let prev: Buffer | undefined;
+
+    ffToJpeg.onFrame((frame: Buffer) => {
+        prev = frame;
+        writeFrame(frame);
+    });
+
+    ffToJpeg.onEnd(async () => {
+        // send a copy of the last frame, darkened
+        const frame = await sharp(prev)
+            .modulate({
+                brightness: 0.25,
+                saturation: 0.25,
+            })
+            .toBuffer();
+        writeFrame(frame);
+
+        // close connection
+        res.end();
+    })
 
     res.socket!.on('close', () => {
-        chain.stop();
-        ff.kill();
+        ffToJpeg.stop();
     });
 });
 
