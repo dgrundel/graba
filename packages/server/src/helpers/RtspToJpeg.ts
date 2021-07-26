@@ -1,7 +1,7 @@
 import { Feed } from 'hastycam.interface';
-import { FeedConsumer } from './FeedConsumer';
-import { MotionDetector } from './MotionDetector';
-import { VideoRecorder } from './VideoRecorder';
+import { FeedConsumer } from '../background/feed/FeedConsumer';
+import { MotionDetector } from '../background/feed/MotionDetector';
+import { VideoRecorder } from '../background/feed/VideoRecorder';
 import { FFmpegToJpeg } from './FFmpegToJpeg';
 
 type FFmpegArgs = string[];

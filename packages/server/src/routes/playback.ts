@@ -2,7 +2,7 @@ import fs, { promises as fsPromises } from 'fs';
 import express from 'express';
 import sharp from 'sharp';
 import { deleteRecordById, getAllVideoRecords, getRecordById } from '../background/feed/VideoStorage';
-import { FFmpegToJpeg } from '../background/feed/FFmpegToJpeg';
+import { FFmpegToJpeg } from '../helpers/FFmpegToJpeg';
 
 const MJPEG_BOUNDARY = 'mjpegBoundary';
 
