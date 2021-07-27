@@ -1,13 +1,20 @@
 import React, { CSSProperties } from 'react';
-import { Text, Stack } from '@fluentui/react';
-import { Config, Feed } from 'hastycam.interface';
+import { Text, Stack, ProgressIndicator } from '@fluentui/react';
+import { Config, Feed, SystemStats } from 'hastycam.interface';
 import { Spinner } from './Spinner';
 import { getJson } from '../fetch';
 import { Grid } from './Grid';
 import { Overlay } from './Overlay';
+import { humanSize } from '../display';
+
+interface LoaderResult {
+    config: Config;
+    stats: SystemStats;
+}
 
 interface State {
     feeds: Feed[];
+    stats?: SystemStats;
 }
 
 const recIndicatorStyle: CSSProperties = {
@@ -22,7 +29,7 @@ const recIndicatorStyle: CSSProperties = {
 };
 
 export class Dashboard extends React.Component<{}, State> {
-    private readonly loader: Promise<Config>;
+    private readonly loader: Promise<LoaderResult>;
 
     constructor(props: any) {
         super(props);
@@ -31,13 +38,17 @@ export class Dashboard extends React.Component<{}, State> {
             feeds: [],
         };
 
-        this.loader = getJson<Config>('http://localhost:4000/config');
+        this.loader = Promise.all([
+            getJson<Config>('http://localhost:4000/config'),
+            getJson<SystemStats>('http://localhost:4000/dashboard/stats')
+        ]).then(([config, stats]) => ({ config, stats }));
     }
 
     componentDidMount() {
-        this.loader.then((config: Config) => {
+        this.loader.then(({ config, stats }) => {
             this.setState({
-                feeds: config.feeds
+                feeds: config.feeds,
+                stats,
             });
         });
     }
@@ -56,7 +67,54 @@ export class Dashboard extends React.Component<{}, State> {
                         </Overlay>
                     })}
                 </Grid>
+
+
+                {this.renderStats()}
             </Stack>
         </Spinner>;
+    }
+    renderStats() {
+        const stats = this.state.stats;
+
+        if (!stats) {
+            return undefined;
+        }
+
+        return <>
+            <Text block variant="xLarge">System Information</Text>
+
+            <Grid columns={4}>
+                {stats.load.cpus.map((cpu, i) => <ProgressIndicator 
+                    label={`CPU Core ${i + 1} Load`}
+                    description={`${cpu.load.toFixed(2)}%`}
+                    percentComplete={cpu.load / 100}
+                />)}
+
+                <ProgressIndicator 
+                    label="Memory Usage" 
+                    description={`${humanSize(stats.memory.used)} / ${humanSize(stats.memory.total)}`} 
+                    percentComplete={stats.memory.used / stats.memory.total}
+                />
+
+                {stats.disks.map(disk => <ProgressIndicator 
+                    label={`Disk Usage: ${disk.mount}`}
+                    description={`${humanSize(disk.used)} / ${humanSize(disk.size)}`}
+                    percentComplete={disk.used / disk.size}
+                />)}
+
+                {stats.network.map(net => <>
+                    <ProgressIndicator 
+                        label={`${net.iface} TX`}
+                        description={humanSize(net.tx_sec)}
+                        percentComplete={net.tx_sec / 1000000000}
+                    />
+                    <ProgressIndicator 
+                        label={`${net.iface} RX`}
+                        description={humanSize(net.rx_sec)}
+                        percentComplete={net.rx_sec / 1000000000}
+                    />
+                </>)}
+            </Grid>
+        </>;
     }
 }

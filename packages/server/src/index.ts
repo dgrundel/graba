@@ -4,11 +4,12 @@ import cookieParser from 'cookie-parser';
 import { text, json } from 'body-parser';
 import logger from 'morgan';
 import cors from 'cors';
+import { start as startFeeds } from './background/streams';
 import { router as indexRouter } from './routes/index';
+import { router as dashboardRouter } from './routes/dashboard';
 import { router as configRouter } from './routes/config';
 import { router as feedRouter } from './routes/feed';
 import { router as playbackRouter } from './routes/playback';
-import { start as startFeeds } from './background/streams';
 
 /**
  * Start background process(es)
@@ -31,6 +32,7 @@ app.use(json()); // body-parser
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', indexRouter);
+app.use('/dashboard', dashboardRouter);
 app.use('/config', configRouter);
 app.use('/feed', feedRouter);
 app.use('/playback', playbackRouter);
