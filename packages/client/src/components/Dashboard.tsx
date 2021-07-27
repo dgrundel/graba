@@ -68,11 +68,11 @@ export class Dashboard extends React.Component<{}, State> {
                     })}
                 </Grid>
 
-
                 {this.renderStats()}
             </Stack>
         </Spinner>;
     }
+
     renderStats() {
         const stats = this.state.stats;
 
@@ -84,36 +84,54 @@ export class Dashboard extends React.Component<{}, State> {
             <Text block variant="xLarge">System Information</Text>
 
             <Grid columns={4}>
-                {stats.load.cpus.map((cpu, i) => <ProgressIndicator 
-                    label={`CPU Core ${i + 1} Load`}
-                    description={`${cpu.load.toFixed(2)}%`}
-                    percentComplete={cpu.load / 100}
-                />)}
 
-                <ProgressIndicator 
-                    label="Memory Usage" 
-                    description={`${humanSize(stats.memory.used)} / ${humanSize(stats.memory.total)}`} 
-                    percentComplete={stats.memory.used / stats.memory.total}
-                />
+                <Stack tokens={{ childrenGap: 's2', }}>
+                    <Text block variant="large">CPU Load</Text>
 
-                {stats.disks.map(disk => <ProgressIndicator 
-                    label={`Disk Usage: ${disk.mount}`}
-                    description={`${humanSize(disk.used)} / ${humanSize(disk.size)}`}
-                    percentComplete={disk.used / disk.size}
-                />)}
+                    {stats.load.cpus.map((cpu, i) => <ProgressIndicator 
+                        description={`Core ${i + 1} / ${cpu.load.toFixed(2)}%`}
+                        percentComplete={cpu.load / 100}
+                    />)}
+                </Stack>
 
-                {stats.network.map(net => <>
+                <Stack tokens={{ childrenGap: 's2', }}>
+                    <Text block variant="large">Disk Usage</Text>
+
+                    {stats.disks.map(disk => <ProgressIndicator 
+                        label={disk.mount}
+                        description={`${humanSize(disk.used)} / ${humanSize(disk.size)}`}
+                        percentComplete={disk.used / disk.size}
+                    />)}
+                </Stack>
+
+                <Stack tokens={{ childrenGap: 's2', }}>
+                    <Text block variant="large">Memory Usage</Text>
+
                     <ProgressIndicator 
-                        label={`${net.iface} TX`}
-                        description={humanSize(net.tx_sec)}
-                        percentComplete={net.tx_sec / 1000000000}
+                        description={`${humanSize(stats.memory.used)} / ${humanSize(stats.memory.total)}`} 
+                        percentComplete={stats.memory.used / stats.memory.total}
                     />
-                    <ProgressIndicator 
-                        label={`${net.iface} RX`}
-                        description={humanSize(net.rx_sec)}
-                        percentComplete={net.rx_sec / 1000000000}
-                    />
-                </>)}
+                </Stack>
+
+                <Stack tokens={{ childrenGap: 's1', }}>
+                    <Text block variant="large">Network Activity</Text>
+
+                    {stats.network.map(net => <Stack tokens={{ childrenGap: 's2', }}>
+                        <Text block variant="medium">{net.iface}</Text>
+    
+                        <Grid columns={2}>
+                            <div>
+                                <Text variant="xxLarge">{humanSize(net.tx_sec)}</Text>
+                                <Text variant="medium">tx</Text>
+                            </div>
+                            <div>
+                                <Text variant="xxLarge">{humanSize(net.rx_sec)}</Text>
+                                <Text variant="medium">rx</Text>
+                            </div>
+                        </Grid>
+                    </Stack>)}
+                </Stack>
+                
             </Grid>
         </>;
     }

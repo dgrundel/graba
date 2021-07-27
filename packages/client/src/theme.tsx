@@ -74,12 +74,19 @@ export const theme = createTheme({
         medium: {
             fontSize: '15px',
         },
+        mediumPlus: {
+            fontSize: '16px',
+        },
         large: {
             fontSize: '20px',
             fontWeight: 'semibold',
         },
         xLarge: {
             fontSize: '22px',
+            fontWeight: 'bold',
+        },
+        xxLarge: {
+            fontSize: '26px',
             fontWeight: 'bold',
         },
     },
