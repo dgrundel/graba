@@ -8,7 +8,7 @@ import { router as indexRouter } from './routes/index';
 import { router as configRouter } from './routes/config';
 import { router as feedRouter } from './routes/feed';
 import { router as playbackRouter } from './routes/playback';
-import { start as startFeeds } from './background/feed/streams';
+import { start as startFeeds } from './background/streams';
 
 /**
  * Start background process(es)

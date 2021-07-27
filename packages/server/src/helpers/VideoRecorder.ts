@@ -1,8 +1,8 @@
 import { Feed, VideoRecord } from 'hastycam.interface';
 import { FeedConsumer } from './FeedConsumer';
 import fs from 'fs';
-import { createVideoRecord, updateRecord } from './VideoStorage';
-import { onExit } from '../../util';
+import { createVideoRecord, updateRecord } from '../background/VideoStorage';
+import { onExit } from './util';
 import { ChildProcess, spawn } from 'child_process';
 import path from 'path';
 

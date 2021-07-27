@@ -1,8 +1,7 @@
 import express from 'express';
-import { Feed, validateFeed } from 'hastycam.interface';
+import { Feed, validateFeed, ErrorMessage, mergeErrors } from 'hastycam.interface';
 import { config } from '../background/config';
-import { getAllStreams, getStream, addStream } from '../background/feed/streams';
-import { ErrorMessage, mergeErrors } from '../../../interface/build/validator/validators';
+import { getAllStreams, getStream, addStream } from '../background/streams';
 import fs from 'fs';
 
 export const router = express.Router();

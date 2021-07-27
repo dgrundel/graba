@@ -1,4 +1,4 @@
-import { Chain } from '../background/Chain';
+import { Chain } from './Chain';
 import { ChildProcess, spawn } from 'child_process';
 import { EventEmitter } from 'stream';
 

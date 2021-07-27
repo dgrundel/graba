@@ -1,6 +1,6 @@
 import { Feed } from 'hastycam.interface';
-import { config } from '../config';
-import { RtspToJpeg } from '../../helpers/RtspToJpeg';
+import { config } from './config';
+import { RtspToJpeg } from './RtspToJpeg';
 
 export enum StreamEventType {
     JpgChunk = "JPEG_CHUNK",
