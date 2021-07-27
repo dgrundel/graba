@@ -1,3 +1,4 @@
+import { pid } from 'process';
 import express from 'express';
 import si from 'systeminformation';
 import { SystemStats } from 'hastycam.interface';
@@ -19,13 +20,16 @@ router.get('/stats', async (req: any, res: any, next: () => void) => {
     const temperatures = await si.cpuTemperature();
     const network = await si.networkStats();
     const disks = await si.fsSize();
+    const processes = await si.processes();
 
     const stats: SystemStats = {
+        serverPid: pid,
         load,
         memory,
         temperatures: temperatures.main ? temperatures : undefined,
         network,
         disks,
+        processes,
     };
 
     res.json(stats);

@@ -1,10 +1,22 @@
 export interface SystemStats {
+    serverPid: number;
     load: {
         avgLoad: number;
         currentLoad: number; // %
         cpus: {
             load: number;  // %
         }[]
+    };
+    processes: {
+        list: {
+            pid: number;
+            parentPid: number;
+            name: string;
+            cpu: number;
+            command: string;
+            params: string;
+            path: string;
+        }[];
     };
     memory: {
         free: number; // bytes

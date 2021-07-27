@@ -131,6 +131,14 @@ export class Dashboard extends React.Component<{}, State> {
                         </Grid>
                     </Stack>)}
                 </Stack>
+
+                <Stack tokens={{ childrenGap: 's2', }}>
+                    <Text block variant="large">Processes</Text>
+
+                    {stats.processes.list
+                        .filter(p => p.parentPid === stats.serverPid)
+                        .map(p => <div>{p.command}</div>)}
+                </Stack>
                 
             </Grid>
         </>;
