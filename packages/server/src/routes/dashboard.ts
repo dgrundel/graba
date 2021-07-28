@@ -15,6 +15,8 @@ const warmup = Promise.all([
 router.get('/stats', async (req: any, res: any, next: () => void) => {
     await warmup;
 
+    const serverPid = pid;
+
     const load = await si.currentLoad();
     const memory = await si.mem();
     const temperatures = await si.cpuTemperature();
@@ -23,7 +25,7 @@ router.get('/stats', async (req: any, res: any, next: () => void) => {
     const processes = await si.processes();
 
     const stats: SystemStats = {
-        serverPid: pid,
+        serverPid,
         load,
         memory,
         temperatures: temperatures.main ? temperatures : undefined,

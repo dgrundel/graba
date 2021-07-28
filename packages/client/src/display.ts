@@ -1,3 +1,4 @@
+import { IColumn } from '@fluentui/react';
 
 /**
  * humanSize stolen from https://github.com/andrewrk/node-human-size
@@ -12,3 +13,13 @@ export const humanSize = (bytes: number, precision?: number) => {
     var suffix = MAGS[magnitude].trim() + 'B';
     return result.toFixed(precision) + suffix;
 };
+
+export const col = <T>(fieldName: keyof T, name: string, props?: Partial<IColumn>): IColumn => ({
+    name,
+    fieldName: fieldName as string, 
+    key: fieldName as string, 
+    minWidth: 50, 
+    maxWidth: 200, 
+    isResizable: true,
+    ...props,
+});

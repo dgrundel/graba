@@ -1,11 +1,11 @@
 import React, { CSSProperties } from 'react';
-import { Text, Stack, ProgressIndicator } from '@fluentui/react';
+import { Text, Stack, ProgressIndicator, DetailsList, IColumn, DetailsListLayoutMode, SelectionMode, Separator } from '@fluentui/react';
 import { Config, Feed, SystemStats } from 'hastycam.interface';
 import { Spinner } from './Spinner';
 import { getJson } from '../fetch';
 import { Grid } from './Grid';
 import { Overlay } from './Overlay';
-import { humanSize } from '../display';
+import { col, humanSize } from '../display';
 
 interface LoaderResult {
     config: Config;
@@ -83,7 +83,7 @@ export class Dashboard extends React.Component<{}, State> {
         return <>
             <Text block variant="xLarge">System Information</Text>
 
-            <Grid columns={4}>
+            <Grid columns="1fr 1fr 3fr">
 
                 <Stack tokens={{ childrenGap: 's2', }}>
                     <Text block variant="large">CPU Load</Text>
@@ -95,6 +95,15 @@ export class Dashboard extends React.Component<{}, State> {
                 </Stack>
 
                 <Stack tokens={{ childrenGap: 's2', }}>
+                    <Text block variant="large">Memory Usage</Text>
+
+                    <ProgressIndicator 
+                        description={`${humanSize(stats.memory.used)} / ${humanSize(stats.memory.total)}`} 
+                        percentComplete={stats.memory.used / stats.memory.total}
+                    />
+
+                    <Separator/>
+                    
                     <Text block variant="large">Disk Usage</Text>
 
                     {stats.disks.map(disk => <ProgressIndicator 
@@ -102,18 +111,9 @@ export class Dashboard extends React.Component<{}, State> {
                         description={`${humanSize(disk.used)} / ${humanSize(disk.size)}`}
                         percentComplete={disk.used / disk.size}
                     />)}
-                </Stack>
 
-                <Stack tokens={{ childrenGap: 's2', }}>
-                    <Text block variant="large">Memory Usage</Text>
+                    <Separator/>
 
-                    <ProgressIndicator 
-                        description={`${humanSize(stats.memory.used)} / ${humanSize(stats.memory.total)}`} 
-                        percentComplete={stats.memory.used / stats.memory.total}
-                    />
-                </Stack>
-
-                <Stack tokens={{ childrenGap: 's1', }}>
                     <Text block variant="large">Network Activity</Text>
 
                     {stats.network.map(net => <Stack tokens={{ childrenGap: 's2', }}>
@@ -135,12 +135,50 @@ export class Dashboard extends React.Component<{}, State> {
                 <Stack tokens={{ childrenGap: 's2', }}>
                     <Text block variant="large">Processes</Text>
 
-                    {stats.processes.list
-                        .filter(p => p.parentPid === stats.serverPid)
-                        .map(p => <div>{p.command}</div>)}
+                    {this.renderProcessList()}
                 </Stack>
-                
             </Grid>
         </>;
+    }
+
+    renderProcessList() {
+        const stats = this.state.stats;
+
+        if (!stats) {
+            return undefined;
+        }
+
+        const detailListColumns: IColumn[] = [
+            col<SystemStats.Process>('pid', 'id', { minWidth: 40, maxWidth: 40 }),
+            col<SystemStats.Process>('name', 'Name', { minWidth: 80, maxWidth: 80 }),
+            col<SystemStats.Process>('cpu', 'CPU', { minWidth: 60, maxWidth: 60 }),
+            col<SystemStats.Process>('mem', 'Memory', { minWidth: 60, maxWidth: 60 }),
+            col<SystemStats.Process>('command', 'Command'),
+        ];
+
+        const items = stats.processes.list
+            .filter(p => p.parentPid === stats.serverPid);
+
+        const renderItemColumn = (item?: SystemStats.Process, index?: number, column?: IColumn): React.ReactNode => {
+                const prop = column!.fieldName as keyof SystemStats.Process;
+                
+                switch (prop) {
+                    case 'cpu':
+                    case 'mem':
+                        const n = item![prop] as number | undefined;
+                        return (n && n > 0 ? n : 0).toFixed(2) + '%';
+            
+                    default:
+                        return item![prop] as string;
+                }
+            }
+
+        return <DetailsList
+            items={items}
+            columns={detailListColumns}
+            layoutMode={DetailsListLayoutMode.justified}
+            selectionMode={SelectionMode.none}
+            onRenderItemColumn={renderItemColumn}
+        />
     }
 }

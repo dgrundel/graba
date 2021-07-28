@@ -4,7 +4,7 @@ import { Spinner } from './Spinner';
 import { deleteRequest, getJson } from '../fetch';
 import { ActionButton, DefaultButton, DetailsList, DetailsListLayoutMode, IColumn, PrimaryButton, SelectionMode } from '@fluentui/react';
 import { StreamImg } from './StreamImg';
-import { humanSize } from '../display';
+import { col, humanSize } from '../display';
 import { Modal } from './Modal';
 
 interface DisplayRecord extends VideoRecord {
@@ -18,24 +18,14 @@ interface State {
     confirmDeleteId?: string;
 }
 
-const col = (fieldName: keyof DisplayRecord, name: string, props?: Partial<IColumn>): IColumn => ({
-    name,
-    fieldName, 
-    key: fieldName, 
-    minWidth: 50, 
-    maxWidth: 200, 
-    isResizable: true,
-    ...props,
-});
-
 const detailListColumns: IColumn[] = [
-    col('stillUrl', 'Preview', { minWidth: 60, maxWidth: 60 }),
-    col('feedId', 'Feed'),
-    col('startTime', 'Start'),
-    col('endTime', 'End'),
-    col('byteLength', 'Size', { minWidth: 60, maxWidth: 100 }),
-    col('path', 'Path', { minWidth: 150, maxWidth: 300 }),
-    col('actions', ''),
+    col<DisplayRecord>('stillUrl', 'Preview', { minWidth: 60, maxWidth: 60 }),
+    col<DisplayRecord>('feedId', 'Feed'),
+    col<DisplayRecord>('startTime', 'Start'),
+    col<DisplayRecord>('endTime', 'End'),
+    col<DisplayRecord>('byteLength', 'Size', { minWidth: 60, maxWidth: 100 }),
+    col<DisplayRecord>('path', 'Path', { minWidth: 150, maxWidth: 300 }),
+    col<DisplayRecord>('actions', ''),
 ];
 
 const thumbStyle: CSSProperties = {
