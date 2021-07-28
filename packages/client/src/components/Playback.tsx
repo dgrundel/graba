@@ -42,7 +42,7 @@ const renderItemColumn = (item?: DisplayRecord, index?: number, column?: IColumn
         case 'startTime':
         case 'endTime':
             const n = item![prop] as number | undefined;
-            return (n && n > 0) ? new Date(n).toLocaleString() : '(Recording)';
+            return (n && n > 0) ? new Date(n).toLocaleString() : '-';
 
         case 'byteLength':
             return item?.byteLength ? humanSize(item.byteLength, 1) : '-';
@@ -65,7 +65,7 @@ export class Playback extends React.Component<{}, State> {
             records: []
         };
 
-        this.loader = getJson<VideoRecord[]>('http://localhost:4000/playback/list');
+        this.loader = getJson<VideoRecord[]>('/playback/list');
 
         this.updateRecords = this.updateRecords.bind(this);
         this.deleteItem = this.deleteItem.bind(this);
@@ -74,10 +74,10 @@ export class Playback extends React.Component<{}, State> {
     updateRecords(response: VideoRecord[]) {
         const records: DisplayRecord[] = response.map(r => ({
             ...r,
-            stillUrl: `http://localhost:4000/playback/still/${r.id}`,
+            stillUrl: `/playback/still/${r.id}`,
             actions: <span>
                 <ActionButton iconProps={{ iconName: 'PlayerPlay' }} onClick={() => this.setState({ playId: r.id })}>Play</ActionButton>
-                <ActionButton disabled={!(r.endTime && r.endTime > 0)} iconProps={{ iconName: 'Trash' }} onClick={() => this.setState({ confirmDeleteId: r.id})}>Delete</ActionButton>
+                <ActionButton iconProps={{ iconName: 'Trash' }} onClick={() => this.setState({ confirmDeleteId: r.id})}>Delete</ActionButton>
             </span>
         }));
 
@@ -85,11 +85,14 @@ export class Playback extends React.Component<{}, State> {
     }
 
     deleteItem(id: string) {
-        deleteRequest(`http://localhost:4000/playback/${id}`)
-            .then(() => getJson<VideoRecord[]>('http://localhost:4000/playback/list'))
+        deleteRequest(`/playback/${id}`)
+            .catch(err => {
+                console.error(err);
+                alert(JSON.stringify(err));
+            })
+            .then(() => getJson<VideoRecord[]>('/playback/list'))
             .then(this.updateRecords)
-            .then(() => this.setState({ confirmDeleteId: undefined }))
-            .catch(err => console.error(err));
+            .then(() => this.setState({ confirmDeleteId: undefined }));
     }
 
     componentDidMount() {
