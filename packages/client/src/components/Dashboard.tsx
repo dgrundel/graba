@@ -6,6 +6,7 @@ import { getJson } from '../fetch';
 import { Grid } from './Grid';
 import { Overlay } from './Overlay';
 import { col, humanSize } from '../display';
+import { Interval } from './Interval';
 
 interface LoaderResult {
     config: Config;
@@ -42,6 +43,8 @@ export class Dashboard extends React.Component<{}, State> {
             getJson<Config>('http://localhost:4000/config'),
             getJson<SystemStats>('http://localhost:4000/dashboard/stats')
         ]).then(([config, stats]) => ({ config, stats }));
+
+        this.updateStats = this.updateStats.bind(this);
     }
 
     componentDidMount() {
@@ -53,23 +56,30 @@ export class Dashboard extends React.Component<{}, State> {
         });
     }
 
+    updateStats() {
+        getJson<SystemStats>('http://localhost:4000/dashboard/stats')
+            .then(stats => this.setState({ stats }));
+    }
+
     render() {
         const recIndicator = <Text block variant="smallPlus" style={recIndicatorStyle}>Rec</Text>;
 
         return <Spinner waitFor={this.loader}>
-            <Stack tokens={{ childrenGap: 'm', }}>
-                <Text block variant="xLarge">Feeds</Text>
+            <Interval callback={this.updateStats} interval={5000}>
+                <Stack tokens={{ childrenGap: 'm', }}>
+                    <Text block variant="xLarge">Feeds</Text>
 
-                <Grid columns={4}>
-                    {this.state.feeds.map(feed => {
-                        return <Overlay position="tr" element={feed.saveVideo ? recIndicator : undefined}>
-                            <img alt={feed.name} src={`http://localhost:4000/feed/still/${feed.id}`} style={{ maxWidth: '100%', objectFit: 'contain' }}/>
-                        </Overlay>
-                    })}
-                </Grid>
+                    <Grid columns={4}>
+                        {this.state.feeds.map(feed => {
+                            return <Overlay position="tr" element={feed.saveVideo ? recIndicator : undefined}>
+                                <img alt={feed.name} src={`http://localhost:4000/feed/still/${feed.id}`} style={{ maxWidth: '100%', objectFit: 'contain' }}/>
+                            </Overlay>
+                        })}
+                    </Grid>
 
-                {this.renderStats()}
-            </Stack>
+                    {this.renderStats()}
+                </Stack>
+            </Interval>
         </Spinner>;
     }
 
