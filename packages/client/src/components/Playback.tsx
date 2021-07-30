@@ -7,7 +7,7 @@ import { StreamImg } from './StreamImg';
 import { col, humanSize } from '../display';
 import { Modal } from './Modal';
 import { connect } from 'react-redux';
-import { addMessage } from '../store/appReducer';
+import { flashMessage } from '../store/appReducer';
 
 interface DisplayRecord extends VideoRecord {
     stillUrl: string;
@@ -15,7 +15,7 @@ interface DisplayRecord extends VideoRecord {
 }
 
 interface Props {
-    addMessage: typeof addMessage;
+    flashMessage: typeof flashMessage;
 }
 
 interface State {
@@ -94,7 +94,7 @@ class Component extends React.Component<Props, State> {
         deleteRequest(`/playback/${id}`)
             .catch(err => {
                 console.error(err);
-                this.props.addMessage({
+                this.props.flashMessage({
                     type: MessageBarType.error,
                     body: JSON.stringify(err),
                 });
@@ -144,7 +144,7 @@ class Component extends React.Component<Props, State> {
 }
 
 const mapDispatchToProps: Partial<Props> = {
-    addMessage,
+    flashMessage,
 };
 
 export const Playback = connect(undefined, mapDispatchToProps)(Component);
