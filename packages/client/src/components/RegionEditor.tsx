@@ -8,7 +8,81 @@ interface Props {
 interface State {
 }
 
+type Point = [number, number];
 type Region = [number, number, number, number];
+
+const isPointInRegion = (p: Point, r: Region): boolean => {
+    const [x, y] = p;
+    const [xMin, yMin, w, h] = r;
+    const xMax = xMin + w;
+    const yMax = yMin + h;
+
+    return x <= xMax && x >= xMin && y <= yMax && y >= yMin;
+};
+
+const getCorners = (r: Region): [Point, Point, Point, Point] => {
+    const [x, y, w, h] = r;
+    const tl: Point = [x, y];
+    const tr: Point = [x + w, y];
+    const br: Point = [x + w, y + h];
+    const bl: Point = [x, y + h];
+
+    return [ tl, tr, br, bl, ];
+};
+
+const isOverlap = (r1: Region, r2: Region): boolean => {
+    return getCorners(r1).some(p => isPointInRegion(p, r2)) ||
+        getCorners(r2).some(p => isPointInRegion(p, r1));
+};
+
+// https://codereview.stackexchange.com/a/196783
+const getIntersectingRectangle = (reg1: Region, reg2: Region): Region | undefined => {
+    const [rx1, rx2] = [reg1, reg2].map(reg => ({
+        x: [
+            reg[0],
+            reg[0] + reg[2],
+        ].sort((a,b) => a - b),
+        y: [
+            reg[1],
+            reg[1] + reg[3],
+        ].sort((a,b) => a - b)
+    }));
+
+    const noIntersect = rx2.x[0] > rx1.x[1] || rx2.x[1] < rx1.x[0] ||
+                        rx2.y[0] > rx1.y[1] || rx2.y[1] < rx1.y[0];
+    if (noIntersect) {
+        return undefined;
+    }
+
+    const x1 = Math.max(rx1.x[0], rx2.x[0]); // _[0] is the lesser,
+    const y1 = Math.max(rx1.y[0], rx2.y[0]); // _[1] is the greater
+    const x2 = Math.min(rx1.x[1], rx2.x[1]);
+    const y2 = Math.min(rx1.y[1], rx2.y[1]);
+
+    return [
+        x1,
+        y1,
+        x2 - x1,
+        y2 - y1,
+    ];
+};
+
+const findIntersections = (regions: Region[]): Region[] => {
+    const intersections: Region[] = [];
+
+    for (let i = 0; i < regions.length; i++) {
+        const r1 = regions[i];
+        for (let j = i+1; j < regions.length; j++) {
+            const r2 = regions[j];
+            const intersect = getIntersectingRectangle(r1, r2);
+            if (intersect) {
+                intersections.push(intersect);
+            }
+        }
+    }
+
+    return intersections;
+};
 
 export class RegionEditor extends React.Component<Props, State> {
     private readonly ref: React.RefObject<HTMLCanvasElement>;
@@ -67,7 +141,7 @@ export class RegionEditor extends React.Component<Props, State> {
                     ctx.drawImage(image, 0 , 0);
                 }
                 ctx.lineWidth = 2;
-                ctx.strokeStyle = '#0f0';
+                ctx.strokeStyle = '#f00';
                 regions.forEach(r => ctx.strokeRect(...r));
                 ctx.strokeRect(...lastRegion);
 
@@ -94,6 +168,9 @@ export class RegionEditor extends React.Component<Props, State> {
                         console.log('all rects', regions);
                     }
                 }
+
+                ctx.fillStyle = '#0f0';
+                findIntersections(regions).forEach(intersect => ctx.fillRect(...intersect));
 
                 lastRegion = undefined;
             };
