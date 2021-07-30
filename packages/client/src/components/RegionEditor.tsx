@@ -1,5 +1,5 @@
-import React, { Component } from 'react';
-import { Feed } from 'hastycam.interface';
+import React from 'react';
+import { Feed, MotionRegion as Region } from 'hastycam.interface';
 
 interface Props {
     feed: Feed;
@@ -10,7 +10,6 @@ interface State {
 }
 
 type Point = [number, number];
-type Region = [number, number, number, number];
 
 const isPointInRegion = (p: Point, r: Region): boolean => {
     const [x, y] = p;
@@ -42,17 +41,34 @@ const scaleAndOffsetPoint = (p: Point, rect?: DOMRect, c?: HTMLCanvasElement): P
 
 export class RegionEditor extends React.Component<Props, State> {
     private readonly ref: React.RefObject<HTMLCanvasElement>;
-    private onMouseDown?: (e: MouseEvent) => void;
-    private onMouseUp?: (e: MouseEvent) => void;
-    private onMouseMove?: (e: MouseEvent) => void;
-    private onCanvasKeyUp?: (e: KeyboardEvent) => void;
+    private image?: HTMLImageElement;
     private regions: Region[];
+    private mousedown = false;
+    private clickX = -1;
+    private clickY = -1;
+    private mouseX = -1;
+    private mouseY = -1;
+    private canvasRect: DOMRect | undefined;
+    private activeRegion: Region | undefined;
+    private selectedRegion: Region | undefined;
 
     constructor(props: Props) {
         super(props);
 
         this.ref = React.createRef();
         this.regions = props.feed.motionRegions || [];
+
+        this.addRegion = this.addRegion.bind(this);
+        this.deleteRegion = this.deleteRegion.bind(this);
+        this.withCanvas = this.withCanvas.bind(this);
+        this.drawRect = this.drawRect.bind(this);
+        this.highlightRect = this.highlightRect.bind(this);
+        this.frameHandler = this.frameHandler.bind(this);
+        this.drawFrame = this.drawFrame.bind(this);
+        this.onMouseDown = this.onMouseDown.bind(this);
+        this.onMouseUp = this.onMouseUp.bind(this);
+        this.onMouseMove = this.onMouseMove.bind(this);
+        this.onCanvasKeyUp = this.onCanvasKeyUp.bind(this);
     }
 
     addRegion(r: Region) {
@@ -72,197 +88,183 @@ export class RegionEditor extends React.Component<Props, State> {
         }
     }
 
-    componentDidMount() {
-        const feed = this.props.feed;
+    withCanvas<T>(callback: (canvasElem: HTMLCanvasElement, ctx: CanvasRenderingContext2D) => T): T | undefined {
+        const canvasElem = this.ref.current;
+        const ctx = canvasElem ? canvasElem.getContext('2d') : undefined;
+        if (ctx) {
+            return callback(canvasElem!, ctx);
+        }
+    }
 
+    drawRect(r: Region) {
         this.withCanvas((c, ctx) => {
-            const image = new Image();
+            ctx.fillStyle = 'rgba(255,0,0,0.4)';
+            ctx.fillRect(...r);
+        });
+    }
 
-            let mousedown = false;
-            let clickX = -1;
-            let clickY = -1;
-            let mouseX = -1;
-            let mouseY = -1;
-            let canvasRect: DOMRect | undefined;
-            let activeRegion: Region | undefined;
-            let selectedRegion: Region | undefined;
+    highlightRect(r: Region) {
+        this.withCanvas((c, ctx) => {
+            ctx.strokeStyle = '#f00';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(...r);
+        });
+    }
 
-            const drawRect = (r: Region) => {
-                ctx.fillStyle = 'rgba(255,0,0,0.4)';
-                ctx.fillRect(...r);
-            };
+    frameHandler() {
+        if (!this.mousedown) {
+            return;
+        }
 
-            const highlightRect = (r: Region) => {
-                ctx.strokeStyle = '#f00';
-                ctx.lineWidth = 3;
-                ctx.strokeRect(...r);
-            };
+        this.withCanvas(c => {
+            const rect = this.canvasRect!;
 
-            const drawFrame = () => {
-                ctx.clearRect(0, 0, c.width, c.height);
-                if (image.width && image.height) {
-                    ctx.drawImage(image, 0 , 0);
-                }
-                this.regions.forEach(drawRect);
-                
-                if (activeRegion) {
-                    drawRect(activeRegion);
-                }
-                if (selectedRegion) {
-                    highlightRect(selectedRegion);
-                }
-            };
-
-            const frameHandler = () => {
-                if (!mousedown) {
-                    return;
-                }
-
-                const rect = canvasRect!;
-
-                const scaleX = c.width / rect.width;
-                const scaleY = c.height / rect.height;
-
-                const offsetMouseX = mouseX - rect.x;
-                const offsetMouseY = mouseY - rect.y;
-
-                const offsetClickX = clickX - rect.x;
-                const offsetClickY = clickY - rect.y
-
-                const width = (offsetMouseX - offsetClickX) * scaleX;
-                const height = (offsetMouseY - offsetClickY) * scaleY;
-
-                if (width !== 0 && height !== 0) {
-                    // prevent negative widths and heights
-                    const originX = (offsetClickX * scaleX) + (width < 0 ? width : 0)
-                    const originY = (offsetClickY * scaleY) + (height < 0 ? height : 0)
-
-                    activeRegion = [originX, originY, Math.abs(width), Math.abs(height)];    
-                } else {
-                    activeRegion = undefined;
-                }
-                
-                drawFrame();
-
-                window.requestAnimationFrame(frameHandler);
-            };
+            const scaleX = c.width / rect.width;
+            const scaleY = c.height / rect.height;
+    
+            const offsetMouseX = this.mouseX - rect.x;
+            const offsetMouseY = this.mouseY - rect.y;
+    
+            const offsetClickX = this.clickX - rect.x;
+            const offsetClickY = this.clickY - rect.y
+    
+            const width = (offsetMouseX - offsetClickX) * scaleX;
+            const height = (offsetMouseY - offsetClickY) * scaleY;
+    
+            if (width !== 0 && height !== 0) {
+                // prevent negative widths and heights
+                const originX = (offsetClickX * scaleX) + (width < 0 ? width : 0)
+                const originY = (offsetClickY * scaleY) + (height < 0 ? height : 0)
+    
+                this.activeRegion = [originX, originY, Math.abs(width), Math.abs(height)];    
+            } else {
+                this.activeRegion = undefined;
+            }
             
-            this.onMouseDown = (e: MouseEvent) => {
-                mousedown = true;
-                
-                canvasRect = c.getBoundingClientRect();
-                clickX = e.clientX;
-                clickY = e.clientY;
-                
-                window.requestAnimationFrame(frameHandler);
-            };
+            this.drawFrame();
+    
+            window.requestAnimationFrame(this.frameHandler);
+        });
+    }
+
+    drawFrame() {
+        this.withCanvas((c, ctx) => {
+            ctx.clearRect(0, 0, c.width, c.height);
+            if (this.image?.width && this.image.height) {
+                ctx.drawImage(this.image, 0 , 0);
+            }
+            this.regions.forEach(this.drawRect);
             
-            this.onMouseUp = () => {
-                mousedown = false;
+            if (this.activeRegion) {
+                this.drawRect(this.activeRegion);
+            }
+            if (this.selectedRegion) {
+                this.highlightRect(this.selectedRegion);
+            }
+        });
+    }
 
-                // clear selection, we might reset it in a minute
-                selectedRegion = undefined;
+    onMouseDown(e: MouseEvent) {
+        this.mousedown = true;
+        
+        this.canvasRect = this.withCanvas(c => c.getBoundingClientRect());
+        this.clickX = e.clientX;
+        this.clickY = e.clientY;
+        
+        window.requestAnimationFrame(this.frameHandler);
+    };
+    
+    onMouseUp() {
+        this.mousedown = false;
 
-                if (activeRegion) {
-                    // we're just finished drawing a rectangle
-                    // so add it to the list
+        // clear selection, we might reset it in a minute
+        this.selectedRegion = undefined;
 
-                    // make sure it's visible
-                    const [,,width,height] = activeRegion;
-                    if (width > 0 && height > 0) {
-                        this.addRegion(activeRegion);
-                    }
+        if (this.activeRegion) {
+            // we're just finished drawing a rectangle
+            // so add it to the list
 
-                    // select our newly created region
-                    selectedRegion = activeRegion;
-                } else {
-                    // we weren't drawing a rectangle 
-                    // this is just a click
-                    // so we modify the active selection
+            // make sure it's visible
+            const [,,width,height] = this.activeRegion;
+            if (width > 0 && height > 0) {
+                this.addRegion(this.activeRegion);
+            }
 
-                    const p: Point = scaleAndOffsetPoint([
-                        mouseX,
-                        mouseY,
-                    ], canvasRect, c);
-                    
-                    // see if the mouse click happened within a region
-                    // iterate in reverse order so that for overlapping
-                    // regions we get the most recent one first
-                    let i = this.regions.length;
-                    while (i--) {
-                        if (isPointInRegion(p, this.regions[i])) {
-                            selectedRegion = this.regions[i];
-                            break;
-                        }
+            // select our newly created region
+            this.selectedRegion = this.activeRegion;
+        } else {
+            // we weren't drawing a rectangle 
+            // this is just a click
+            // so we modify the active selection
+
+            const clickLoc: Point | undefined = this.withCanvas(c => scaleAndOffsetPoint([
+                this.mouseX,
+                this.mouseY,
+            ], this.canvasRect, c));
+            
+            if (clickLoc) {
+                // see if the mouse click happened within a region
+                // iterate in reverse order so that for overlapping
+                // regions we get the most recent one first
+                let i = this.regions.length;
+                while (i--) {
+                    if (isPointInRegion(clickLoc, this.regions[i])) {
+                        this.selectedRegion = this.regions[i];
+                        break;
                     }
                 }
-
-                window.requestAnimationFrame(drawFrame);
-                activeRegion = undefined;
-            };
+            }
             
-            this.onMouseMove = (e: MouseEvent) => {
-                mouseX = e.clientX;
-                mouseY = e.clientY;
-            };
+        }
 
-            this.onCanvasKeyUp = (e: KeyboardEvent) => {
-                const key = e.key;
-                if (key === 'Delete' && selectedRegion) {
-                    this.deleteRegion(selectedRegion);
-                    selectedRegion = undefined;
-                    window.requestAnimationFrame(drawFrame);
-                }
-            };
+        window.requestAnimationFrame(this.drawFrame);
+        this.activeRegion = undefined;
+    };
+    
+    onMouseMove(e: MouseEvent) {
+        this.mouseX = e.clientX;
+        this.mouseY = e.clientY;
+    };
+
+    onCanvasKeyUp(e: KeyboardEvent) {
+        const key = e.key;
+        if (key === 'Delete' && this.selectedRegion) {
+            this.deleteRegion(this.selectedRegion);
+            this.selectedRegion = undefined;
+            window.requestAnimationFrame(this.drawFrame);
+        }
+    };
+
+    componentDidMount() {
+        this.withCanvas(c => {
+            const feed = this.props.feed;
+            this.image = new Image();
 
             window.addEventListener('mousedown', this.onMouseDown);
             window.addEventListener('mouseup', this.onMouseUp);
             window.addEventListener('mousemove', this.onMouseMove);
             c.addEventListener('keyup', this.onCanvasKeyUp);
             
-            image.addEventListener('load', () => {
-                if (image.width && image.height) {
-                    c.width = image.width;
-                    c.height = image.height;
-                    drawFrame();
+            this.image.addEventListener('load', () => {
+                if (this.image?.width && this.image.height) {
+                    c.width = this.image.width;
+                    c.height = this.image.height;
+                    this.drawFrame();
                 }
             }, false);
-            image.src = `/feed/still/${feed.id}`;
+            this.image.src = `/feed/still/${feed.id}`;
         });
     }
 
     componentWillUnmount() {
-        if (this.onMouseDown) {
-            window.removeEventListener('mousedown', this.onMouseDown);
-            this.onMouseDown = undefined;
-        }
-        if (this.onMouseUp) {
-            window.removeEventListener('mouseup', this.onMouseUp);
-            this.onMouseUp = undefined;
-        }
-        if (this.onMouseMove) {
-            window.removeEventListener('mousemove', this.onMouseMove);
-            this.onMouseMove = undefined;
-        }
+        window.removeEventListener('mousedown', this.onMouseDown);
+        window.removeEventListener('mouseup', this.onMouseUp);
+        window.removeEventListener('mousemove', this.onMouseMove);
 
         this.withCanvas((c, ctx) => {
             ctx.clearRect(0, 0, c.width, c.height);
-
-            if (this.onCanvasKeyUp) {
-                c.removeEventListener('keyup', this.onCanvasKeyUp);
-                this.onCanvasKeyUp = undefined;
-            }
+            c.removeEventListener('keyup', this.onCanvasKeyUp);
         });
-    }
-
-    withCanvas(callback: (c: HTMLCanvasElement, ctx: CanvasRenderingContext2D) => void) {
-        const c = this.ref.current;
-        if (c) {
-            const ctx = c.getContext('2d');
-            if (ctx) {
-                callback(c, ctx);
-            }
-        }
     }
 
     render() {

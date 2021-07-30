@@ -115,143 +115,149 @@ export class FeedEditor extends React.Component<Props, State> {
     }
 
     renderData() {
-        return <Stack grow tokens={{ childrenGap: 's1', }}>
-            {this.renderDataField('Stream URL', this.state.feed.streamUrl)}
-            {this.renderDataField(
-                'Max FPS', 
-                this.state.feed.maxFps?.toString(),
-                <span>
-                    Set an upper bound for video frame rate.
-                    Set lower to improve performance of video processing and viewing in browser.
-                </span>
-            )}
-            {this.renderDataField(
-                'Scale Factor', 
-                this.state.feed.scaleFactor ? (this.state.feed.scaleFactor.toFixed(2) + 'x') : '',
-                <span>
-                    Scale the width and height of the video. 
-                    Set lower to improve performance of video processing and viewing in browser.
-                </span>
-            )}
-            {this.renderDataField(
-                'Video quality', 
-                this.state.feed.videoQuality ? this.state.feed.videoQuality.toString() : '',
-                <span>Quality level of the video output. Range is 2-31 where <em>a lower number represents better quality</em>.</span>
-            )}
+        return <Stack horizontal tokens={{ childrenGap: 'm', }}>
+            <Stack grow tokens={{ childrenGap: 's1', }}>
+                {this.renderDataField('Stream URL', this.state.feed.streamUrl)}
+                {this.renderDataField(
+                    'Max FPS', 
+                    this.state.feed.maxFps?.toString(),
+                    <span>
+                        Set an upper bound for video frame rate.
+                        Set lower to improve performance of video processing and viewing in browser.
+                    </span>
+                )}
+                {this.renderDataField(
+                    'Scale Factor', 
+                    this.state.feed.scaleFactor ? (this.state.feed.scaleFactor.toFixed(2) + 'x') : '',
+                    <span>
+                        Scale the width and height of the video. 
+                        Set lower to improve performance of video processing and viewing in browser.
+                    </span>
+                )}
+                {this.renderDataField(
+                    'Video quality', 
+                    this.state.feed.videoQuality ? this.state.feed.videoQuality.toString() : '',
+                    <span>Quality level of the video output. Range is 2-31 where <em>a lower number represents better quality</em>.</span>
+                )}
 
-            <Separator styles={separatorStyles} />
-            
-            {this.renderDataField(
-                'Save video', 
-                this.state.feed.saveVideo ? 'Enabled' : 'Disabled'
-            )}
+                <Separator styles={separatorStyles} />
+                
+                {this.renderDataField(
+                    'Save video', 
+                    this.state.feed.saveVideo ? 'Enabled' : 'Disabled'
+                )}
 
-            {this.state.feed.saveVideo ? this.renderDataField(
-                'Save path',
-                this.state.feed.savePath
-            ) : ''}
+                {this.state.feed.saveVideo ? this.renderDataField(
+                    'Save path',
+                    this.state.feed.savePath
+                ) : ''}
 
-            <Separator styles={separatorStyles} />
-            
-            {this.renderDataField(
-                'Motion detection', 
-                this.state.feed.detectMotion ? 'Enabled' : 'Disabled'
-            )}
+                <Separator styles={separatorStyles} />
+                
+                {this.renderDataField(
+                    'Motion detection', 
+                    this.state.feed.detectMotion ? 'Enabled' : 'Disabled'
+                )}
 
-            {this.state.feed.detectMotion ? this.renderDataField(
-                'Threshold',
-                this.state.feed.motionDiffThreshold?.toFixed(2) || ''
-            ) : ''}
+                {this.state.feed.detectMotion ? this.renderDataField(
+                    'Threshold',
+                    this.state.feed.motionDiffThreshold?.toFixed(2) || ''
+                ) : ''}
+            </Stack>
+
+            <img alt={this.state.feed.name} src={`http://localhost:4000/feed/still/${this.state.feed.id}`} style={{ maxWidth: '15vw', objectFit: 'contain' }}/>
         </Stack>;
     }
 
     renderForm() {
-        return <Stack grow tokens={{ childrenGap: 's1', }}>
-            <TextField
-                label="Feed name"
-                value={this.state.feed.name}
-                onChange={(e, name) => { this.setFeedData({ name }) }}
-            />
+        return <Stack horizontal tokens={{ childrenGap: 'm', }}>
+            <Stack grow tokens={{ childrenGap: 's1', }}>
+                <TextField
+                    label="Feed name"
+                    value={this.state.feed.name}
+                    onChange={(e, name) => { this.setFeedData({ name }) }}
+                />
 
-            <Separator styles={separatorStyles} />
+                <Separator styles={separatorStyles} />
 
-            <TextField
-                label="Stream URL"
-                value={this.state.feed.streamUrl}
-                onChange={(e, streamUrl) => { this.setFeedData({ streamUrl }) }}
-            />
-            <Slider
-                label="Max FPS"
-                min={0}
-                step={1}
-                max={60}
-                value={this.state.feed.maxFps || Feed.DEFAULT_MAX_FPS}
-                showValue
-                onChange={(maxFps) => { this.setFeedData({ maxFps }) }}
-                valueFormat={(n) => n === 0 ? 'Unset' : n.toString()}
-            />
-            <Slider
-                label="Scale factor"
-                min={0}
-                step={0.05}
-                max={2}
-                value={this.state.feed.scaleFactor}
-                showValue
-                onChange={(scaleFactor) => { this.setFeedData({ scaleFactor }) }}
-                valueFormat={(n) => n === 0 ? 'Unset' : (n.toFixed(2) + 'x')}
-            />
-            <Slider
-                label="Video quality"
-                min={-31}
-                step={1}
-                max={-2}
-                value={(this.state.feed.videoQuality ? this.state.feed.videoQuality : Feed.DEFAULT_VIDEO_QUALITY) * -1}
-                showValue
-                onChange={(videoQuality) => { this.setFeedData({ videoQuality: videoQuality * -1 }) }}
-                valueFormat={(n) => (n * -1).toString()}
-            />
+                <TextField
+                    label="Stream URL"
+                    value={this.state.feed.streamUrl}
+                    onChange={(e, streamUrl) => { this.setFeedData({ streamUrl }) }}
+                />
+                <Slider
+                    label="Max FPS"
+                    min={0}
+                    step={1}
+                    max={60}
+                    value={this.state.feed.maxFps || Feed.DEFAULT_MAX_FPS}
+                    showValue
+                    onChange={(maxFps) => { this.setFeedData({ maxFps }) }}
+                    valueFormat={(n) => n === 0 ? 'Unset' : n.toString()}
+                />
+                <Slider
+                    label="Scale factor"
+                    min={0}
+                    step={0.05}
+                    max={2}
+                    value={this.state.feed.scaleFactor}
+                    showValue
+                    onChange={(scaleFactor) => { this.setFeedData({ scaleFactor }) }}
+                    valueFormat={(n) => n === 0 ? 'Unset' : (n.toFixed(2) + 'x')}
+                />
+                <Slider
+                    label="Video quality"
+                    min={-31}
+                    step={1}
+                    max={-2}
+                    value={(this.state.feed.videoQuality ? this.state.feed.videoQuality : Feed.DEFAULT_VIDEO_QUALITY) * -1}
+                    showValue
+                    onChange={(videoQuality) => { this.setFeedData({ videoQuality: videoQuality * -1 }) }}
+                    valueFormat={(n) => (n * -1).toString()}
+                />
 
-            <Separator styles={separatorStyles} />
+                <Separator styles={separatorStyles} />
 
-            <Toggle 
-                label="Save video" 
-                inlineLabel
-                defaultChecked={this.state.feed.saveVideo === true}
-                onChange={(e, saveVideo) => this.setFeedData({ saveVideo })}
-            />
+                <Toggle 
+                    label="Save video" 
+                    inlineLabel
+                    defaultChecked={this.state.feed.saveVideo === true}
+                    onChange={(e, saveVideo) => this.setFeedData({ saveVideo })}
+                />
 
-            <TextField
-                label="Save Path"
-                value={this.state.feed.savePath}
-                onChange={(e, savePath) => { this.setFeedData({ savePath }) }}
-            />
+                <TextField
+                    label="Save Path"
+                    value={this.state.feed.savePath}
+                    onChange={(e, savePath) => { this.setFeedData({ savePath }) }}
+                />
 
-            <Separator styles={separatorStyles} />
+                <Separator styles={separatorStyles} />
 
-            <Toggle 
-                label="Detect motion" 
-                inlineLabel
-                defaultChecked={this.state.feed.detectMotion === true}
-                onChange={(e, detectMotion) => this.setFeedData({ detectMotion })}
-            />
+                <Toggle 
+                    label="Detect motion" 
+                    inlineLabel
+                    defaultChecked={this.state.feed.detectMotion === true}
+                    onChange={(e, detectMotion) => this.setFeedData({ detectMotion })}
+                />
 
-            <Slider
-                label="Motion detection threshold"
-                min={0}
-                step={0.01}
-                max={1}
-                value={this.state.feed.motionDiffThreshold || 0}
-                showValue
-                onChange={(motionDiffThreshold) => { this.setFeedData({ motionDiffThreshold }) }}
-                valueFormat={(n) => n.toFixed(2)}
-            />
+                <Slider
+                    label="Motion detection threshold"
+                    min={0}
+                    step={0.01}
+                    max={1}
+                    value={this.state.feed.motionDiffThreshold || 0}
+                    showValue
+                    onChange={(motionDiffThreshold) => { this.setFeedData({ motionDiffThreshold }) }}
+                    valueFormat={(n) => n.toFixed(2)}
+                />
 
-            <Separator styles={separatorStyles} />
+                <Separator styles={separatorStyles} />
 
-            <RegionEditor
-                feed={this.state.feed}
-                onChange={motionRegions => { this.setFeedData({ motionRegions }) }}
-            />
+                <RegionEditor
+                    feed={this.state.feed}
+                    onChange={motionRegions => { this.setFeedData({ motionRegions }) }}
+                />
+            </Stack>
         </Stack>;
     }
 
@@ -283,12 +289,7 @@ export class FeedEditor extends React.Component<Props, State> {
 
             <div>
                 {this.state.error ? <Text block style={{ color: theme.palette.redDark }}>{this.state.error}</Text> : ''}
-                
-                <Stack horizontal tokens={{ childrenGap: 'm', }}>
-                    {this.state.editing ? this.renderForm() : this.renderData()}
-
-                    <img alt={this.state.feed.name} src={`http://localhost:4000/feed/still/${this.state.feed.id}`} style={{ maxWidth: '15vw', objectFit: 'contain' }}/>
-                </Stack>
+                {this.state.editing ? this.renderForm() : this.renderData()}
             </div>    
                 
             <Stack horizontal>
