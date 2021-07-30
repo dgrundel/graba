@@ -5,6 +5,7 @@ import { theme } from '../theme';
 import { postJson } from '../fetch';
 import { nanoid } from 'nanoid';
 import { Grid } from './Grid';
+import { RegionEditor } from './RegionEditor';
 
 interface Props {
     feed: Feed;
@@ -247,6 +248,10 @@ export class FeedEditor extends React.Component<Props, State> {
                 }) }}
                 valueFormat={(n) => n.toFixed(2)}
             />
+
+            <Separator styles={separatorStyles} />
+
+            <RegionEditor feed={this.state.feed}/>
         </Stack>;
     }
 
