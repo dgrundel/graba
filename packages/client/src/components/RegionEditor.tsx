@@ -8,7 +8,7 @@ interface Props {
 interface State {
 }
 
-type Rect = [number, number, number, number];
+type Region = [number, number, number, number];
 
 export class RegionEditor extends React.Component<Props, State> {
     private readonly ref: React.RefObject<HTMLCanvasElement>;
@@ -27,62 +27,80 @@ export class RegionEditor extends React.Component<Props, State> {
 
         this.withCanvas((c, ctx) => {
             const image = new Image();
-            const rects: Rect[] = [];
+            const regions: Region[] = [];
 
             let mousedown = false;
-            let originX = -1;
-            let originY = -1;
-            let x = -1;
-            let y = -1;
-            let sX = -1;
-            let sY = -1;
-            let lastRect: Rect | undefined;
+            let clickX = -1;
+            let clickY = -1;
+            let mouseX = -1;
+            let mouseY = -1;
+            let canvasRect: DOMRect | undefined;
+            let lastRegion: Region | undefined;
 
             const frameHandler = () => {
                 if (!mousedown) {
                     return;
                 }
 
-                // TODO: normalize these to prevent negative numbers
+                const rect = canvasRect!;
+
+                const scaleX = c.width / rect.width;
+                const scaleY = c.height / rect.height;
+
+                const offsetMouseX = mouseX - rect.x;
+                const offsetMouseY = mouseY - rect.y;
+
+                const offsetClickX = clickX - rect.x;
+                const offsetClickY = clickY - rect.y
+
+                const width = (offsetMouseX - offsetClickX) * scaleX;
+                const height = (offsetMouseY - offsetClickY) * scaleY;
                 
-                const width = (x - originX) * sX;
-                const height = (y - originY) * sY;
-                lastRect = [originX * sX, originY * sY, width, height];
+                // prevent negative widths and heights
+                const originX = (offsetClickX * scaleX) + (width < 0 ? width : 0)
+                const originY = (offsetClickY * scaleY) + (height < 0 ? height : 0)
+
+                lastRegion = [originX, originY, Math.abs(width), Math.abs(height)];
                 
                 ctx.clearRect(0, 0, c.width, c.height);
-                ctx.drawImage(image, 0 , 0);
+                if (image.width && image.height) {
+                    ctx.drawImage(image, 0 , 0);
+                }
                 ctx.lineWidth = 2;
                 ctx.strokeStyle = '#0f0';
-                rects.forEach(r => ctx.strokeRect(...r));
-                ctx.strokeRect(...lastRect);
+                regions.forEach(r => ctx.strokeRect(...r));
+                ctx.strokeRect(...lastRegion);
 
                 window.requestAnimationFrame(frameHandler);
             };
+            
             this.onMouseDown = (e: MouseEvent) => {
-                const rect = c.getBoundingClientRect();
                 mousedown = true;
-                originX = e.clientX - rect.x;
-                originY = e.clientY - rect.y;
-                sX = c.width / rect.width;
-                sY = c.height / rect.height;
+                
+                canvasRect = c.getBoundingClientRect();
+                clickX = e.clientX;
+                clickY = e.clientY;
+                
                 window.requestAnimationFrame(frameHandler);
             };
+            
             this.onMouseUp = () => {
                 mousedown = false;
-                originX = -1;
-                originY = -1;
 
-                if (lastRect) {
-                    rects.push(lastRect);
-                    console.log('all rects', rects);
+                if (lastRegion) {
+                    const [,,width,height] = lastRegion;
+                    if (width > 0 && height > 0) {
+                        regions.push(lastRegion);
+                        console.log('all rects', regions);
+                    }
                 }
 
-                lastRect = undefined;
+                lastRegion = undefined;
             };
+            
             this.onMouseMove = (e: MouseEvent) => {
-                const rect = c.getBoundingClientRect();
-                x = e.clientX - rect.x;
-                y = e.clientY - rect.y;
+                mouseX = e.clientX;
+                mouseY = e.clientY;
             };
 
             window.addEventListener('mousedown', this.onMouseDown);
@@ -90,9 +108,11 @@ export class RegionEditor extends React.Component<Props, State> {
             window.addEventListener('mousemove', this.onMouseMove);
             
             image.addEventListener('load', () => {
-                c.width = image.width;
-                c.height = image.height;
-                ctx.drawImage(image, 0 , 0);
+                if (image.width && image.height) {
+                    c.width = image.width;
+                    c.height = image.height;
+                    ctx.drawImage(image, 0 , 0);
+                }
             }, false);
             image.src = `/feed/still/${feed.id}`;
         });
