@@ -1,5 +1,5 @@
 import { createTheme, registerIcons } from '@fluentui/react';
-import { IconCheck, IconPlus, IconTrash, IconChevronUp, IconChevronDown, IconChevronLeft, IconChevronRight, IconSettings, IconPlayerPlay, IconHome, IconVideo, IconDeviceFloppy, IconPencil, IconX, IconInfoCircle, IconHelp, IconPlayerRecord } from '@tabler/icons';
+import { IconCheck, IconPlus, IconTrash, IconChevronUp, IconChevronDown, IconChevronLeft, IconChevronRight, IconSettings, IconPlayerPlay, IconHome, IconVideo, IconDeviceFloppy, IconPencil, IconX, IconInfoCircle, IconHelp, IconPlayerRecord, IconAlertCircle } from '@tabler/icons';
 import { CSSProperties } from 'react';
 
 // const generated = ({
@@ -112,12 +112,15 @@ const fluentIconProps = {
 
 registerIcons({
     icons: {
-        // used by Fluent
+        // used by Fluent, needs special styling
         CheckMark: <IconCheck {...fluentIconProps} />,
         ChevronDown: <IconChevronDown {...fluentIconProps} />,
         ChevronLeft: <IconChevronLeft {...fluentIconProps} />,
         ChevronRight: <IconChevronRight {...fluentIconProps} />,
         ChevronUp: <IconChevronUp {...fluentIconProps} />,
+        
+        // used by Fluent, default styling
+        ErrorBadge: <IconAlertCircle {...iconProps} />,
 
         // others
         DeviceFloppy: <IconDeviceFloppy {...iconProps} />,

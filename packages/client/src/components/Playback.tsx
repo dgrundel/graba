@@ -2,14 +2,20 @@ import React, { CSSProperties, ReactNode } from 'react';
 import { VideoRecord } from 'hastycam.interface';
 import { Spinner } from './Spinner';
 import { deleteRequest, getJson } from '../fetch';
-import { ActionButton, DefaultButton, DetailsList, DetailsListLayoutMode, IColumn, PrimaryButton, SelectionMode } from '@fluentui/react';
+import { ActionButton, DefaultButton, DetailsList, DetailsListLayoutMode, IColumn, MessageBarType, PrimaryButton, SelectionMode } from '@fluentui/react';
 import { StreamImg } from './StreamImg';
 import { col, humanSize } from '../display';
 import { Modal } from './Modal';
+import { connect } from 'react-redux';
+import { addMessage } from '../store/appReducer';
 
 interface DisplayRecord extends VideoRecord {
     stillUrl: string;
     actions?: ReactNode;
+}
+
+interface Props {
+    addMessage: typeof addMessage;
 }
 
 interface State {
@@ -55,7 +61,7 @@ const renderItemColumn = (item?: DisplayRecord, index?: number, column?: IColumn
     }
 }
 
-export class Playback extends React.Component<{}, State> {
+class Component extends React.Component<Props, State> {
     private readonly loader: Promise<VideoRecord[]>;
 
     constructor(props: any) {
@@ -88,7 +94,10 @@ export class Playback extends React.Component<{}, State> {
         deleteRequest(`/playback/${id}`)
             .catch(err => {
                 console.error(err);
-                alert(JSON.stringify(err));
+                this.props.addMessage({
+                    type: MessageBarType.error,
+                    body: JSON.stringify(err),
+                });
             })
             .then(() => getJson<VideoRecord[]>('/playback/list'))
             .then(this.updateRecords)
@@ -133,3 +142,9 @@ export class Playback extends React.Component<{}, State> {
         </Spinner>;
     }
 }
+
+const mapDispatchToProps: Partial<Props> = {
+    addMessage,
+};
+
+export const Playback = connect(undefined, mapDispatchToProps)(Component);

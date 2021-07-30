@@ -11,10 +11,6 @@ interface State {
 export class Interval extends React.Component<Props, State> {
     private intervalId: any;
 
-    constructor(props: Props) {
-        super(props);
-    }
-
     componentDidMount() {
         this.intervalId = setInterval(this.props.callback, this.props.interval);
     }

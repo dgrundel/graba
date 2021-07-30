@@ -11,8 +11,20 @@ import { SideNav } from './SideNav';
 import { theme } from '../theme';
 import { Playback } from './Playback';
 import { Dashboard } from './Dashboard';
+import { connect } from 'react-redux';
+import { RootState } from '../store/store';
+import { AppMessage } from '../store/appReducer';
+import { MessageBar } from '@fluentui/react';
 
-export class App extends React.Component<{}, {}> {
+interface Props {
+    messages: AppMessage[];
+}
+
+interface State {
+
+}
+
+class Component extends React.Component<Props, State> {
     render() {
         return (
             <Router>
@@ -23,6 +35,15 @@ export class App extends React.Component<{}, {}> {
                     </div>
                         
                     <div className="main-content-container">
+                        <div className="main-content-messages">
+                            {this.props.messages.map(m => <MessageBar
+                                messageBarType={m.type}
+                                dismissButtonAriaLabel="Close"
+                            >
+                                {m.body}
+                            </MessageBar>)}
+                        </div>
+
                         <Switch>
                             <Route exact path="/">
                                 <Dashboard />
@@ -43,3 +64,11 @@ export class App extends React.Component<{}, {}> {
         );
     }
 }
+
+const mapStateToProps = (state: RootState, ownProps: Partial<Props>): Props => {
+    return {
+        messages: state.app.messages,
+    };
+};
+
+export const App = connect(mapStateToProps, {})(Component);
