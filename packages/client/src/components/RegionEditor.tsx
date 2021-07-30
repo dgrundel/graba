@@ -141,39 +141,44 @@ export class RegionEditor extends React.Component<Props, State> {
             this.onMouseUp = () => {
                 mousedown = false;
 
-                console.log('mouseup', {
-                    activeRegion,
-                    selectedRegion,
-                })
+                // clear selection, we might reset it in a minute
+                selectedRegion = undefined;
 
                 if (activeRegion) {
+                    // we're just finished drawing a rectangle
+                    // so add it to the list
+
+                    // make sure it's visible
                     const [,,width,height] = activeRegion;
                     if (width > 0 && height > 0) {
                         regions.push(activeRegion);
-                        console.log('all rects', regions);
                     }
 
+                    // select our newly created region
                     selectedRegion = activeRegion;
-                    window.requestAnimationFrame(drawFrame);
                 } else {
+                    // we weren't drawing a rectangle 
+                    // this is just a click
+                    // so we modify the active selection
+
                     const p: Point = scaleAndOffsetPoint([
                         mouseX,
                         mouseY,
                     ], canvasRect, c);
                     
+                    // see if the mouse click happened within a region
+                    // iterate in reverse order so that for overlapping
+                    // regions we get the most recent one first
                     let i = regions.length;
-                    let found: Region | undefined = undefined;
                     while (i--) {
                         if (isPointInRegion(p, regions[i])) {
-                            found = regions[i];
+                            selectedRegion = regions[i];
                             break;
                         }
                     }
-                    
-                    selectedRegion = found;
-                    window.requestAnimationFrame(drawFrame);
                 }
 
+                window.requestAnimationFrame(drawFrame);
                 activeRegion = undefined;
             };
             
