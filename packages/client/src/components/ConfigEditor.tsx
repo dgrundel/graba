@@ -5,7 +5,7 @@ import { Spinner } from './Spinner';
 import { theme } from '../theme';
 import { FeedEditor } from './FeedEditor';
 import { nanoid } from 'nanoid';
-import { getJson } from '../fetch';
+import { deleteRequest, getJson } from '../fetch';
 import { Grid } from './Grid';
 
 interface State {
@@ -53,19 +53,9 @@ export class ConfigEditor extends React.Component<{}, State> {
     }
 
     deleteFeed(id: string) {
-        this.setState(prev => {
-            const i = prev.config.feeds.findIndex(feed => feed.id === id);
-            const feeds = prev.config.feeds.slice();
-            if (i !== -1) {
-                feeds.splice(i, 1);
-            }
-            return { 
-                config: {
-                    ...prev.config,
-                    feeds,
-                } 
-            };
-        });
+        deleteRequest(`/feed/${id}`)
+            .then(() => getJson<Config>('/config'))
+            .then(config => this.setState({ config }));
     }
 
     render() {

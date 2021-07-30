@@ -24,7 +24,7 @@ router.delete('/:id', (req: any, res: any, next: () => void) => {
 
     fsPromises.unlink(record.path)
         .then(() => deleteRecordById(id))
-        .then(() => res.json('OK!'))
+        .then(() => res.json(true))
         .catch(err => res.status(500).json({
             __type: typeof err === 'object' ? err.constructor.name : typeof err,
             ...err,

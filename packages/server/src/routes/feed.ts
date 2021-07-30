@@ -1,7 +1,7 @@
 import express from 'express';
 import { Feed, validateFeed, ErrorMessage, mergeErrors } from 'hastycam.interface';
 import { config } from '../background/config';
-import { getAllStreams, getStream, addStream } from '../background/streams';
+import { getAllStreams, getStream, addStream, deleteStream } from '../background/streams';
 import fs from 'fs';
 
 export const router = express.Router();
@@ -116,4 +116,18 @@ router.post('/', (req: any, res: any, next: () => void) => {
     } else {
         res.status(400).json(errors);
     }
+});
+
+router.delete('/:id', (req: any, res: any, next: () => void) => {
+    const id = req.params.id;
+
+    const stream = getStream(id);
+    if (!stream) {
+        res.writeHead(404);
+        res.end('Not found.');
+        return;
+    }
+
+    deleteStream(id);
+    res.json(true);
 });

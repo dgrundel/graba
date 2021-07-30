@@ -36,6 +36,23 @@ export const getAllStreams = (): RtspToJpeg[] => {
     return Object.values(streams);
 };
 
+export const deleteStream = (id: string): void => {
+    // first attempt to kill the stream if active
+    const existing = getStream(id);
+    if (existing) {
+        existing.endFeed();
+        delete streams[id];
+    }
+
+    // next remove from config if present
+    const feeds = config.get('feeds');
+    const i = feeds.findIndex(f => f.id === id);
+    if (i !== -1) {
+        feeds.splice(i, 1);
+        config.set('feeds', feeds);
+    }
+};
+
 export const start = () => {
     const feeds = config.get('feeds');
     // set up feeds
