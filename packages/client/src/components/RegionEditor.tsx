@@ -34,6 +34,8 @@ export class RegionEditor extends React.Component<Props, State> {
             let originY = -1;
             let x = -1;
             let y = -1;
+            let sX = -1;
+            let sY = -1;
             let lastRect: Rect | undefined;
 
             const frameHandler = () => {
@@ -41,16 +43,15 @@ export class RegionEditor extends React.Component<Props, State> {
                     return;
                 }
 
-                // TODO: scaling
-
                 // TODO: normalize these to prevent negative numbers
-                const width = x - originX;
-                const height = y - originY;
-                lastRect = [originX, originY, width, height];
+                
+                const width = (x - originX) * sX;
+                const height = (y - originY) * sY;
+                lastRect = [originX * sX, originY * sY, width, height];
                 
                 ctx.clearRect(0, 0, c.width, c.height);
                 ctx.drawImage(image, 0 , 0);
-                ctx.lineWidth = 1;
+                ctx.lineWidth = 2;
                 ctx.strokeStyle = '#0f0';
                 rects.forEach(r => ctx.strokeRect(...r));
                 ctx.strokeRect(...lastRect);
@@ -62,6 +63,8 @@ export class RegionEditor extends React.Component<Props, State> {
                 mousedown = true;
                 originX = e.clientX - rect.x;
                 originY = e.clientY - rect.y;
+                sX = c.width / rect.width;
+                sY = c.height / rect.height;
                 window.requestAnimationFrame(frameHandler);
             };
             this.onMouseUp = () => {
