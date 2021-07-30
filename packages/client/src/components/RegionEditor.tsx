@@ -20,68 +20,23 @@ const isPointInRegion = (p: Point, r: Region): boolean => {
     return x <= xMax && x >= xMin && y <= yMax && y >= yMin;
 };
 
-const getCorners = (r: Region): [Point, Point, Point, Point] => {
-    const [x, y, w, h] = r;
-    const tl: Point = [x, y];
-    const tr: Point = [x + w, y];
-    const br: Point = [x + w, y + h];
-    const bl: Point = [x, y + h];
-
-    return [ tl, tr, br, bl, ];
-};
-
-const isOverlap = (r1: Region, r2: Region): boolean => {
-    return getCorners(r1).some(p => isPointInRegion(p, r2)) ||
-        getCorners(r2).some(p => isPointInRegion(p, r1));
-};
-
-// https://codereview.stackexchange.com/a/196783
-const getIntersectingRectangle = (reg1: Region, reg2: Region): Region | undefined => {
-    const [rx1, rx2] = [reg1, reg2].map(reg => ({
-        x: [
-            reg[0],
-            reg[0] + reg[2],
-        ].sort((a,b) => a - b),
-        y: [
-            reg[1],
-            reg[1] + reg[3],
-        ].sort((a,b) => a - b)
-    }));
-
-    const noIntersect = rx2.x[0] > rx1.x[1] || rx2.x[1] < rx1.x[0] ||
-                        rx2.y[0] > rx1.y[1] || rx2.y[1] < rx1.y[0];
-    if (noIntersect) {
-        return undefined;
+const scaleAndOffsetPoint = (p: Point, rect?: DOMRect, c?: HTMLCanvasElement): Point => {
+    if (!rect || !c) {
+        return [-1, -1];
     }
 
-    const x1 = Math.max(rx1.x[0], rx2.x[0]); // _[0] is the lesser,
-    const y1 = Math.max(rx1.y[0], rx2.y[0]); // _[1] is the greater
-    const x2 = Math.min(rx1.x[1], rx2.x[1]);
-    const y2 = Math.min(rx1.y[1], rx2.y[1]);
+    const [x, y] = p;
+
+    const scaleX = c.width / rect.width;
+    const scaleY = c.height / rect.height;
+
+    const offsetX = x - rect.x;
+    const offsetY = y - rect.y;
 
     return [
-        x1,
-        y1,
-        x2 - x1,
-        y2 - y1,
+        offsetX * scaleX,
+        offsetY * scaleY,
     ];
-};
-
-const findIntersections = (regions: Region[]): Region[] => {
-    const intersections: Region[] = [];
-
-    for (let i = 0; i < regions.length; i++) {
-        const r1 = regions[i];
-        for (let j = i+1; j < regions.length; j++) {
-            const r2 = regions[j];
-            const intersect = getIntersectingRectangle(r1, r2);
-            if (intersect) {
-                intersections.push(intersect);
-            }
-        }
-    }
-
-    return intersections;
 };
 
 export class RegionEditor extends React.Component<Props, State> {
@@ -89,6 +44,7 @@ export class RegionEditor extends React.Component<Props, State> {
     private onMouseDown?: (e: MouseEvent) => void;
     private onMouseUp?: (e: MouseEvent) => void;
     private onMouseMove?: (e: MouseEvent) => void;
+    private onCanvasKeyUp?: (e: KeyboardEvent) => void;
 
     constructor(props: Props) {
         super(props);
@@ -109,7 +65,34 @@ export class RegionEditor extends React.Component<Props, State> {
             let mouseX = -1;
             let mouseY = -1;
             let canvasRect: DOMRect | undefined;
-            let lastRegion: Region | undefined;
+            let activeRegion: Region | undefined;
+            let selectedRegion: Region | undefined;
+
+            const drawRect = (r: Region) => {
+                ctx.fillStyle = 'rgba(255,0,0,0.4)';
+                ctx.fillRect(...r);
+            };
+
+            const highlightRect = (r: Region) => {
+                ctx.strokeStyle = '#f00';
+                ctx.lineWidth = 3;
+                ctx.strokeRect(...r);
+            };
+
+            const drawFrame = () => {
+                ctx.clearRect(0, 0, c.width, c.height);
+                if (image.width && image.height) {
+                    ctx.drawImage(image, 0 , 0);
+                }
+                regions.forEach(drawRect);
+                
+                if (activeRegion) {
+                    drawRect(activeRegion);
+                }
+                if (selectedRegion) {
+                    highlightRect(selectedRegion);
+                }
+            };
 
             const frameHandler = () => {
                 if (!mousedown) {
@@ -129,21 +112,18 @@ export class RegionEditor extends React.Component<Props, State> {
 
                 const width = (offsetMouseX - offsetClickX) * scaleX;
                 const height = (offsetMouseY - offsetClickY) * scaleY;
-                
-                // prevent negative widths and heights
-                const originX = (offsetClickX * scaleX) + (width < 0 ? width : 0)
-                const originY = (offsetClickY * scaleY) + (height < 0 ? height : 0)
 
-                lastRegion = [originX, originY, Math.abs(width), Math.abs(height)];
-                
-                ctx.clearRect(0, 0, c.width, c.height);
-                if (image.width && image.height) {
-                    ctx.drawImage(image, 0 , 0);
+                if (width !== 0 && height !== 0) {
+                    // prevent negative widths and heights
+                    const originX = (offsetClickX * scaleX) + (width < 0 ? width : 0)
+                    const originY = (offsetClickY * scaleY) + (height < 0 ? height : 0)
+
+                    activeRegion = [originX, originY, Math.abs(width), Math.abs(height)];    
+                } else {
+                    activeRegion = undefined;
                 }
-                ctx.lineWidth = 2;
-                ctx.strokeStyle = '#f00';
-                regions.forEach(r => ctx.strokeRect(...r));
-                ctx.strokeRect(...lastRegion);
+                
+                drawFrame();
 
                 window.requestAnimationFrame(frameHandler);
             };
@@ -161,18 +141,40 @@ export class RegionEditor extends React.Component<Props, State> {
             this.onMouseUp = () => {
                 mousedown = false;
 
-                if (lastRegion) {
-                    const [,,width,height] = lastRegion;
+                console.log('mouseup', {
+                    activeRegion,
+                    selectedRegion,
+                })
+
+                if (activeRegion) {
+                    const [,,width,height] = activeRegion;
                     if (width > 0 && height > 0) {
-                        regions.push(lastRegion);
+                        regions.push(activeRegion);
                         console.log('all rects', regions);
                     }
+
+                    selectedRegion = activeRegion;
+                    window.requestAnimationFrame(drawFrame);
+                } else {
+                    const p: Point = scaleAndOffsetPoint([
+                        mouseX,
+                        mouseY,
+                    ], canvasRect, c);
+                    
+                    let i = regions.length;
+                    let found: Region | undefined = undefined;
+                    while (i--) {
+                        if (isPointInRegion(p, regions[i])) {
+                            found = regions[i];
+                            break;
+                        }
+                    }
+                    
+                    selectedRegion = found;
+                    window.requestAnimationFrame(drawFrame);
                 }
 
-                ctx.fillStyle = '#0f0';
-                findIntersections(regions).forEach(intersect => ctx.fillRect(...intersect));
-
-                lastRegion = undefined;
+                activeRegion = undefined;
             };
             
             this.onMouseMove = (e: MouseEvent) => {
@@ -180,9 +182,22 @@ export class RegionEditor extends React.Component<Props, State> {
                 mouseY = e.clientY;
             };
 
+            this.onCanvasKeyUp = (e: KeyboardEvent) => {
+                const key = e.key;
+                if (key === 'Delete' && selectedRegion) {
+                    const i = regions.findIndex(r => r === selectedRegion);
+                    if (i !== -1) {
+                        regions.splice(i, 1);
+                        selectedRegion = undefined;
+                        window.requestAnimationFrame(drawFrame);
+                    }
+                }
+            };
+
             window.addEventListener('mousedown', this.onMouseDown);
             window.addEventListener('mouseup', this.onMouseUp);
             window.addEventListener('mousemove', this.onMouseMove);
+            c.addEventListener('keyup', this.onCanvasKeyUp);
             
             image.addEventListener('load', () => {
                 if (image.width && image.height) {
@@ -196,10 +211,6 @@ export class RegionEditor extends React.Component<Props, State> {
     }
 
     componentWillUnmount() {
-        this.withCanvas((c, ctx) => {
-            ctx.clearRect(0, 0, c.width, c.height);
-        });
-
         if (this.onMouseDown) {
             window.removeEventListener('mousedown', this.onMouseDown);
             this.onMouseDown = undefined;
@@ -212,6 +223,15 @@ export class RegionEditor extends React.Component<Props, State> {
             window.removeEventListener('mousemove', this.onMouseMove);
             this.onMouseMove = undefined;
         }
+
+        this.withCanvas((c, ctx) => {
+            ctx.clearRect(0, 0, c.width, c.height);
+
+            if (this.onCanvasKeyUp) {
+                c.removeEventListener('keyup', this.onCanvasKeyUp);
+                this.onCanvasKeyUp = undefined;
+            }
+        });
     }
 
     withCanvas(callback: (c: HTMLCanvasElement, ctx: CanvasRenderingContext2D) => void) {
@@ -229,6 +249,8 @@ export class RegionEditor extends React.Component<Props, State> {
             maxWidth: '100%',
         };
 
-        return <canvas ref={this.ref} style={canvasStyle}></canvas>;
+        return <div>
+            <canvas tabIndex={10000} ref={this.ref} style={canvasStyle}></canvas>
+        </div>;
     }
 }
