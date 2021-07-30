@@ -20,25 +20,6 @@ const isPointInRegion = (p: Point, r: Region): boolean => {
     return x <= xMax && x >= xMin && y <= yMax && y >= yMin;
 };
 
-const scaleAndOffsetPoint = (p: Point, rect?: DOMRect, c?: HTMLCanvasElement): Point => {
-    if (!rect || !c) {
-        return [-1, -1];
-    }
-
-    const [x, y] = p;
-
-    const scaleX = c.width / rect.width;
-    const scaleY = c.height / rect.height;
-
-    const offsetX = x - rect.x;
-    const offsetY = y - rect.y;
-
-    return [
-        offsetX * scaleX,
-        offsetY * scaleY,
-    ];
-};
-
 const viewportPxToOffsetPercent = (pt: Point, rect?: DOMRect, c?: HTMLCanvasElement): Point => {
     if (!rect || !c) {
         return [-1, -1];
@@ -135,7 +116,7 @@ export class RegionEditor extends React.Component<Props, State> {
                 ...percentToCanvasOffsetPx([x, y], this.canvasRect, c),
                 ...percentToCanvasOffsetPx([w, h], this.canvasRect, c),
             ];
-            
+
             ctx.fillStyle = 'rgba(255,0,0,0.4)';
             ctx.fillRect(...scaled);
         });
@@ -299,7 +280,8 @@ export class RegionEditor extends React.Component<Props, State> {
                     // canvas will be scaled down with CSS
                     c.width = this.image.width;
                     c.height = this.image.height;
-                    this.drawFrame();
+                    this.canvasRect = this.withCanvas(c => c.getBoundingClientRect());
+                    window.requestAnimationFrame(this.drawFrame);
                 }
             }, false);
             this.image.src = `/feed/still/${this.props.feed.id}`;
@@ -312,7 +294,6 @@ export class RegionEditor extends React.Component<Props, State> {
         window.removeEventListener('mousemove', this.onMouseMove);
 
         this.withCanvas((c, ctx) => {
-            ctx.clearRect(0, 0, c.width, c.height);
             c.removeEventListener('keyup', this.onCanvasKeyUp);
         });
     }
