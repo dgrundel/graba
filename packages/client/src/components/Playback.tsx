@@ -84,6 +84,7 @@ class Component extends React.Component<Props, State> {
             actions: <span>
                 <ActionButton iconProps={{ iconName: 'PlayerPlay' }} onClick={() => this.setState({ playId: r.id })}>Play</ActionButton>
                 <ActionButton iconProps={{ iconName: 'Trash' }} onClick={() => this.setState({ confirmDeleteId: r.id})}>Delete</ActionButton>
+                <ActionButton iconProps={{ iconName: 'Download' }} href={`/playback/download/${r.id}`}>Download</ActionButton>
             </span>
         }));
 

@@ -119,3 +119,15 @@ router.get('/still/:id', async (req: any, res: any, next: () => void) => {
     res.end();
 });
 
+router.get('/download/:id', (req: any, res: any, next: () => void) => {
+    const id = req.params.id;
+    const record = getRecordById(id);
+
+    if (!record) {
+        res.writeHead(404);
+        res.end('Not found.');
+        return;
+    }
+
+    res.download(record.path);
+});
