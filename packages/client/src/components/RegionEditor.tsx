@@ -39,15 +39,47 @@ const scaleAndOffsetPoint = (p: Point, rect?: DOMRect, c?: HTMLCanvasElement): P
     ];
 };
 
+const viewportPxToOffsetPercent = (pt: Point, rect?: DOMRect, c?: HTMLCanvasElement): Point => {
+    if (!rect || !c) {
+        return [-1, -1];
+    }
+
+    const [viewportX, viewportY] = pt;
+
+    const offsetX = viewportX - rect.x;
+    const offsetY = viewportY - rect.y;
+
+    const scaleX = c.width / rect.width;
+    const scaleY = c.height / rect.height;
+
+    return [
+        (offsetX * scaleX) / c.width,
+        (offsetY * scaleY) / c.height,
+    ];
+};
+
+const percentToCanvasOffsetPx = (pt: Point, rect?: DOMRect, c?: HTMLCanvasElement): Point => {
+    if (!rect || !c) {
+        return [-1, -1];
+    }
+
+    const [percentX, percentY] = pt;
+
+    return [
+        percentX * c.width,
+        percentY * c.height,
+    ];
+};
+
 export class RegionEditor extends React.Component<Props, State> {
     private readonly ref: React.RefObject<HTMLCanvasElement>;
     private image?: HTMLImageElement;
     private regions: Region[];
     private mousedown = false;
-    private clickX = -1;
-    private clickY = -1;
-    private mouseX = -1;
-    private mouseY = -1;
+    private viewportClickX = -1;
+    private viewportClickY = -1;
+    private viewportMouseX = -1;
+    private viewportMouseY = -1;
     private canvasRect: DOMRect | undefined;
     private activeRegion: Region | undefined;
     private selectedRegion: Region | undefined;
@@ -63,8 +95,8 @@ export class RegionEditor extends React.Component<Props, State> {
         this.withCanvas = this.withCanvas.bind(this);
         this.drawRect = this.drawRect.bind(this);
         this.highlightRect = this.highlightRect.bind(this);
-        this.frameHandler = this.frameHandler.bind(this);
         this.drawFrame = this.drawFrame.bind(this);
+        this.frameHandler = this.frameHandler.bind(this);
         this.onMouseDown = this.onMouseDown.bind(this);
         this.onMouseUp = this.onMouseUp.bind(this);
         this.onMouseMove = this.onMouseMove.bind(this);
@@ -98,16 +130,53 @@ export class RegionEditor extends React.Component<Props, State> {
 
     drawRect(r: Region) {
         this.withCanvas((c, ctx) => {
+            const [x, y, w, h] = r;
+            const scaled: Region = [
+                ...percentToCanvasOffsetPx([x, y], this.canvasRect, c),
+                ...percentToCanvasOffsetPx([w, h], this.canvasRect, c),
+            ];
+            
             ctx.fillStyle = 'rgba(255,0,0,0.4)';
-            ctx.fillRect(...r);
+            ctx.fillRect(...scaled);
         });
     }
 
     highlightRect(r: Region) {
         this.withCanvas((c, ctx) => {
+            const [x, y, w, h] = r;
+            const scaled: Region = [
+                ...percentToCanvasOffsetPx([x, y], this.canvasRect, c),
+                ...percentToCanvasOffsetPx([w, h], this.canvasRect, c),
+            ];
+
             ctx.strokeStyle = '#f00';
             ctx.lineWidth = 3;
-            ctx.strokeRect(...r);
+            ctx.strokeRect(...scaled);
+        });
+    }
+
+    drawFrame() {
+        this.withCanvas((c, ctx) => {
+            // clear canvas
+            ctx.clearRect(0, 0, c.width, c.height);
+            
+            // redraw still image
+            if (this.image?.width && this.image.height) {
+                ctx.drawImage(this.image, 0 , 0);
+            }
+
+            // draw rectangles
+            this.regions.forEach(this.drawRect);
+            
+            // draw rectange in progress
+            if (this.activeRegion) {
+                this.drawRect(this.activeRegion);
+            }
+
+            // add border to selected rectangle
+            if (this.selectedRegion) {
+                this.highlightRect(this.selectedRegion);
+            }
         });
     }
 
@@ -117,26 +186,24 @@ export class RegionEditor extends React.Component<Props, State> {
         }
 
         this.withCanvas(c => {
-            const rect = this.canvasRect!;
-
-            const scaleX = c.width / rect.width;
-            const scaleY = c.height / rect.height;
-    
-            const offsetMouseX = this.mouseX - rect.x;
-            const offsetMouseY = this.mouseY - rect.y;
-    
-            const offsetClickX = this.clickX - rect.x;
-            const offsetClickY = this.clickY - rect.y
-    
-            const width = (offsetMouseX - offsetClickX) * scaleX;
-            const height = (offsetMouseY - offsetClickY) * scaleY;
+            const [fromX, fromY] = viewportPxToOffsetPercent([
+                this.viewportClickX,
+                this.viewportClickY
+            ], this.canvasRect, c);
+            const [toX, toY] = viewportPxToOffsetPercent([
+                this.viewportMouseX,
+                this.viewportMouseY
+            ], this.canvasRect, c);
+            
+            const width = toX - fromX;
+            const height = toY - fromY;
     
             if (width !== 0 && height !== 0) {
                 // prevent negative widths and heights
-                const originX = (offsetClickX * scaleX) + (width < 0 ? width : 0)
-                const originY = (offsetClickY * scaleY) + (height < 0 ? height : 0)
+                const x = fromX + (width < 0 ? width : 0);
+                const y = fromY + (height < 0 ? height : 0);
     
-                this.activeRegion = [originX, originY, Math.abs(width), Math.abs(height)];    
+                this.activeRegion = [x, y, Math.abs(width), Math.abs(height)];    
             } else {
                 this.activeRegion = undefined;
             }
@@ -147,29 +214,12 @@ export class RegionEditor extends React.Component<Props, State> {
         });
     }
 
-    drawFrame() {
-        this.withCanvas((c, ctx) => {
-            ctx.clearRect(0, 0, c.width, c.height);
-            if (this.image?.width && this.image.height) {
-                ctx.drawImage(this.image, 0 , 0);
-            }
-            this.regions.forEach(this.drawRect);
-            
-            if (this.activeRegion) {
-                this.drawRect(this.activeRegion);
-            }
-            if (this.selectedRegion) {
-                this.highlightRect(this.selectedRegion);
-            }
-        });
-    }
-
     onMouseDown(e: MouseEvent) {
         this.mousedown = true;
         
         this.canvasRect = this.withCanvas(c => c.getBoundingClientRect());
-        this.clickX = e.clientX;
-        this.clickY = e.clientY;
+        this.viewportClickX = e.clientX;
+        this.viewportClickY = e.clientY;
         
         window.requestAnimationFrame(this.frameHandler);
     };
@@ -197,9 +247,9 @@ export class RegionEditor extends React.Component<Props, State> {
             // this is just a click
             // so we modify the active selection
 
-            const clickLoc: Point | undefined = this.withCanvas(c => scaleAndOffsetPoint([
-                this.mouseX,
-                this.mouseY,
+            const clickLoc: Point | undefined = this.withCanvas(c => viewportPxToOffsetPercent([
+                this.viewportMouseX,
+                this.viewportMouseY,
             ], this.canvasRect, c));
             
             if (clickLoc) {
@@ -222,8 +272,8 @@ export class RegionEditor extends React.Component<Props, State> {
     };
     
     onMouseMove(e: MouseEvent) {
-        this.mouseX = e.clientX;
-        this.mouseY = e.clientY;
+        this.viewportMouseX = e.clientX;
+        this.viewportMouseY = e.clientY;
     };
 
     onCanvasKeyUp(e: KeyboardEvent) {
@@ -237,22 +287,22 @@ export class RegionEditor extends React.Component<Props, State> {
 
     componentDidMount() {
         this.withCanvas(c => {
-            const feed = this.props.feed;
-            this.image = new Image();
-
             window.addEventListener('mousedown', this.onMouseDown);
             window.addEventListener('mouseup', this.onMouseUp);
             window.addEventListener('mousemove', this.onMouseMove);
             c.addEventListener('keyup', this.onCanvasKeyUp);
             
+            this.image = new Image();
             this.image.addEventListener('load', () => {
                 if (this.image?.width && this.image.height) {
+                    // resize the canvas to match the image dimensions
+                    // canvas will be scaled down with CSS
                     c.width = this.image.width;
                     c.height = this.image.height;
                     this.drawFrame();
                 }
             }, false);
-            this.image.src = `/feed/still/${feed.id}`;
+            this.image.src = `/feed/still/${this.props.feed.id}`;
         });
     }
 

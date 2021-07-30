@@ -53,11 +53,10 @@ export const validateFeed = (feed: Partial<Feed>): ErrorMessage[] => {
         ...validateIf(
             feed.detectMotion === true,
             validateIf(
-                validateNotEmpty(feed, 'motionDiffThreshold', 'Motion detection settings'),
+                validateNumeric(feed, 'motionDiffThreshold', 'Motion detection threshold'),
                 [
-                    validateNumeric(feed, 'motionDiffThreshold', 'Threshold'),
-                    validateNumberLessThanOrEqual(feed, 'motionDiffThreshold', 1, 'Threshold'),
-                    validateNumberGreaterThanOrEqual(feed, 'motionDiffThreshold', 0, 'Threshold'),
+                    validateNumberLessThanOrEqual(feed, 'motionDiffThreshold', 1, 'Motion detection threshold'),
+                    validateNumberGreaterThanOrEqual(feed, 'motionDiffThreshold', 0, 'Motion detection threshold'),
                 ]
             )
         ),
