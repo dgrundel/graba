@@ -61,8 +61,10 @@ export class FeedEditor extends React.Component<Props, State> {
 
         postJson<Feed>('http://localhost:4000/feed/', this.state.feed)
             .then(feed => {
-                console.log('feed', feed);
-                this.setState({ editing: false });
+                console.log({ feed });
+                this.setState({ 
+                    editing: false
+                });
             })
             .catch((errs: any) => {
                 if (Array.isArray(errs)) {
@@ -158,7 +160,7 @@ export class FeedEditor extends React.Component<Props, State> {
 
             {this.state.feed.detectMotion ? this.renderDataField(
                 'Threshold',
-                this.state.feed.motionDetectionSettings?.diffThreshold?.toFixed(2) || ''
+                this.state.feed.motionDiffThreshold?.toFixed(2) || ''
             ) : ''}
         </Stack>;
     }
@@ -238,20 +240,18 @@ export class FeedEditor extends React.Component<Props, State> {
                 min={0}
                 step={0.01}
                 max={1}
-                value={this.state.feed.motionDetectionSettings ? this.state.feed.motionDetectionSettings.diffThreshold : 0}
+                value={this.state.feed.motionDiffThreshold || 0}
                 showValue
-                onChange={(diffThreshold) => { this.setFeedData({ 
-                    motionDetectionSettings: {
-                        ...this.state.feed.motionDetectionSettings,
-                        diffThreshold
-                    }
-                }) }}
+                onChange={(motionDiffThreshold) => { this.setFeedData({ motionDiffThreshold }) }}
                 valueFormat={(n) => n.toFixed(2)}
             />
 
             <Separator styles={separatorStyles} />
 
-            <RegionEditor feed={this.state.feed}/>
+            <RegionEditor
+                feed={this.state.feed}
+                onChange={motionRegions => { this.setFeedData({ motionRegions }) }}
+            />
         </Stack>;
     }
 

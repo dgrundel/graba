@@ -1,8 +1,8 @@
 import { ErrorMessage, mergeErrors, validateIf, validateNotEmpty, validateNumberGreaterThanOrEqual, validateNumberLessThanOrEqual, validateNumeric } from '../validator/validators';
 
-export interface MotionDetectionSettings {
-    diffThreshold?: number;
-}
+
+export type Point = [ x: number, y: number];
+export type MotionRegion = [ x: number, y: number, width: number, height: number];
 
 export interface Feed {
     id: string;
@@ -20,7 +20,8 @@ export interface Feed {
 
     // motion detection
     detectMotion?: boolean;
-    motionDetectionSettings?: MotionDetectionSettings;
+    motionDiffThreshold?: number;
+    motionRegions?: MotionRegion[];
 }
 
 export namespace Feed {
@@ -36,8 +37,9 @@ export const validateFeed = (feed: Partial<Feed>): ErrorMessage[] => {
         validateNumeric(feed, 'maxFps', 'Max FPS'),
         validateNumeric(feed, 'scaleFactor', 'Scale factor'),
         ...validateIf(
-            validateNumeric(feed, 'videoQuality', 'Video quality'),
+            validateNotEmpty(feed, 'videoQuality', 'Video quality'),
             [
+                validateNumeric(feed, 'videoQuality', 'Video quality'),
                 validateNumberGreaterThanOrEqual(feed, 'videoQuality', 2, 'Video quality'),
                 validateNumberLessThanOrEqual(feed, 'videoQuality', 31, 'Video quality'),
             ]
@@ -51,11 +53,11 @@ export const validateFeed = (feed: Partial<Feed>): ErrorMessage[] => {
         ...validateIf(
             feed.detectMotion === true,
             validateIf(
-                validateNotEmpty(feed, 'motionDetectionSettings', 'Motion detection settings'),
+                validateNotEmpty(feed, 'motionDiffThreshold', 'Motion detection settings'),
                 [
-                    validateNumeric(feed.motionDetectionSettings!, 'diffThreshold', 'Threshold'),
-                    validateNumberLessThanOrEqual(feed.motionDetectionSettings!, 'diffThreshold', 1, 'Threshold'),
-                    validateNumberGreaterThanOrEqual(feed.motionDetectionSettings!, 'diffThreshold', 0, 'Threshold'),
+                    validateNumeric(feed, 'motionDiffThreshold', 'Threshold'),
+                    validateNumberLessThanOrEqual(feed, 'motionDiffThreshold', 1, 'Threshold'),
+                    validateNumberGreaterThanOrEqual(feed, 'motionDiffThreshold', 0, 'Threshold'),
                 ]
             )
         ),

@@ -14,13 +14,13 @@ export class MotionDetector extends FeedConsumer {
         super(feed);
 
         this.enabled = feed.detectMotion === true;
-        this.diffThreshold = feed.motionDetectionSettings?.diffThreshold || 0;
+        this.diffThreshold = feed.motionDiffThreshold || 0;
     }
 
     handleFeedUpdate(feed: Feed, prev: Feed): void {
         // update settings from feed
         this.enabled = feed.detectMotion === true;
-        this.diffThreshold = feed.motionDetectionSettings?.diffThreshold || 0;
+        this.diffThreshold = feed.motionDiffThreshold || 0;
 
         // if video scale changes, frame sizes won't match, so we need to clear prev frame
         this.prevPixels = undefined;

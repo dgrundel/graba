@@ -112,7 +112,7 @@ router.post('/', (req: any, res: any, next: () => void) => {
             addStream(feed);
         }
 
-        res.json("OK!");
+        res.json(feed);
     } else {
         res.status(400).json(errors);
     }

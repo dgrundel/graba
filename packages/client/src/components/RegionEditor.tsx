@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { Component } from 'react';
 import { Feed } from 'hastycam.interface';
 
 interface Props {
     feed: Feed;
+    onChange?: (regions: Region[]) => void;
 }
 
 interface State {
@@ -45,11 +46,30 @@ export class RegionEditor extends React.Component<Props, State> {
     private onMouseUp?: (e: MouseEvent) => void;
     private onMouseMove?: (e: MouseEvent) => void;
     private onCanvasKeyUp?: (e: KeyboardEvent) => void;
+    private regions: Region[];
 
     constructor(props: Props) {
         super(props);
 
         this.ref = React.createRef();
+        this.regions = props.feed.motionRegions || [];
+    }
+
+    addRegion(r: Region) {
+        this.regions.push(r);
+        if (this.props.onChange) {
+            this.props.onChange(this.regions);
+        }
+    }
+
+    deleteRegion(r: Region) {
+        const i = this.regions.findIndex(region => r === region);
+        if (i !== -1) {
+            this.regions.splice(i, 1);
+            if (this.props.onChange) {
+                this.props.onChange(this.regions);
+            }
+        }
     }
 
     componentDidMount() {
@@ -57,7 +77,6 @@ export class RegionEditor extends React.Component<Props, State> {
 
         this.withCanvas((c, ctx) => {
             const image = new Image();
-            const regions: Region[] = [];
 
             let mousedown = false;
             let clickX = -1;
@@ -84,7 +103,7 @@ export class RegionEditor extends React.Component<Props, State> {
                 if (image.width && image.height) {
                     ctx.drawImage(image, 0 , 0);
                 }
-                regions.forEach(drawRect);
+                this.regions.forEach(drawRect);
                 
                 if (activeRegion) {
                     drawRect(activeRegion);
@@ -151,7 +170,7 @@ export class RegionEditor extends React.Component<Props, State> {
                     // make sure it's visible
                     const [,,width,height] = activeRegion;
                     if (width > 0 && height > 0) {
-                        regions.push(activeRegion);
+                        this.addRegion(activeRegion);
                     }
 
                     // select our newly created region
@@ -169,10 +188,10 @@ export class RegionEditor extends React.Component<Props, State> {
                     // see if the mouse click happened within a region
                     // iterate in reverse order so that for overlapping
                     // regions we get the most recent one first
-                    let i = regions.length;
+                    let i = this.regions.length;
                     while (i--) {
-                        if (isPointInRegion(p, regions[i])) {
-                            selectedRegion = regions[i];
+                        if (isPointInRegion(p, this.regions[i])) {
+                            selectedRegion = this.regions[i];
                             break;
                         }
                     }
@@ -190,12 +209,9 @@ export class RegionEditor extends React.Component<Props, State> {
             this.onCanvasKeyUp = (e: KeyboardEvent) => {
                 const key = e.key;
                 if (key === 'Delete' && selectedRegion) {
-                    const i = regions.findIndex(r => r === selectedRegion);
-                    if (i !== -1) {
-                        regions.splice(i, 1);
-                        selectedRegion = undefined;
-                        window.requestAnimationFrame(drawFrame);
-                    }
+                    this.deleteRegion(selectedRegion);
+                    selectedRegion = undefined;
+                    window.requestAnimationFrame(drawFrame);
                 }
             };
 
@@ -208,7 +224,7 @@ export class RegionEditor extends React.Component<Props, State> {
                 if (image.width && image.height) {
                     c.width = image.width;
                     c.height = image.height;
-                    ctx.drawImage(image, 0 , 0);
+                    drawFrame();
                 }
             }, false);
             image.src = `/feed/still/${feed.id}`;
