@@ -93,14 +93,14 @@ router.post('/', (req: any, res: any, next: () => void) => {
     if (errors.length === 0) {
         
         // add to or update config file
-        const feeds = config.get('feeds');
+        const feeds = config.feeds;
         const i = feeds.findIndex(f => f.id === feed.id);
         if (i !== -1) {
             feeds.splice(i, 1, feed);
         } else {
             feeds.push(feed);
         }
-        config.set('feeds', feeds);
+        config.feeds = feeds;
 
         // create/update stream
         const stream = getStream(feed.id);

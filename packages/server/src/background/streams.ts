@@ -45,18 +45,17 @@ export const deleteStream = (id: string): void => {
     }
 
     // next remove from config if present
-    const feeds = config.get('feeds');
+    const feeds = config.feeds;
     const i = feeds.findIndex(f => f.id === id);
     if (i !== -1) {
         feeds.splice(i, 1);
-        config.set('feeds', feeds);
+        config.feeds = feeds;
     }
 };
 
 export const start = () => {
-    const feeds = config.get('feeds');
     // set up feeds
-    feeds.forEach(feed => {
+    config.feeds.forEach(feed => {
         addStream(feed);
     });
 };

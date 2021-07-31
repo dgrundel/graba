@@ -1,34 +1,34 @@
 import conf from 'conf';
-import { Config } from 'hastycam.interface';
+import { Config, Feed } from 'hastycam.interface';
 
-const store = new conf<Config>({
-    configName: 'appConfig',
-    defaults: {
-        feeds: [],
+const CONFIG_NAME = 'appConfig';
+const DEFAULTS = {
+    feeds: [],
+};
+
+class ConfigImpl implements Config {
+    private readonly store: conf<Config>;
+
+    constructor() {
+        this.store = new conf<Config>({
+            configName: CONFIG_NAME,
+            defaults: DEFAULTS,
+        });
     }
-});
 
-const get = <K extends keyof Config> (key: K): Config[K] => {
-    return store.get(key);
-};
+    toObject(): Config {
+        return {
+            ...this.store.store
+        };
+    }
 
-const set = <K extends keyof Config> (key: K, value: Config[K]): void => {
-    store.set(key, value);
+    set feeds(value: Feed[]) {
+        this.store.set('feeds', value);
+    }
+
+    get feeds() {
+        return this.store.get('feeds');
+    }
 }
 
-const remove = (key: keyof Config): void => {
-    store.delete(key);
-}
-
-const all = (): Config => {
-    return {
-        ...store.store,
-    };
-}
-
-export const config = {
-    get,
-    set,
-    remove,
-    all,
-};
+export const config = new ConfigImpl();
