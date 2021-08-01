@@ -19,14 +19,6 @@ interface State {
     error?: string;
 }
 
-const separatorStyles = {
-    root: {
-        '::before': { 
-            background: theme.palette.neutralQuaternaryAlt,
-        }
-    }
-};
-
 const feedFieldNames: Record<keyof Feed, string> = {
     id: 'id',
     name: 'Name',
@@ -73,7 +65,33 @@ const feedFieldTooltips: Record<keyof Feed, string | JSX.Element | undefined> = 
         Percentage of pixels in a frame that must be different to be considered "motion".
         Lower values increase sensitivity of motion detection.
     </>,
-    motionRegions: undefined,
+    motionRegions: <>
+        <strong>Optional.</strong> Click and drag to define motion detection regions in image.
+        If no regions are set, motion detection will be performed on the entire video frame.
+        Setting regions can also improve performance by limiting the amount of pixels on which motion 
+        detection is performed.
+    </>,
+};
+
+const separatorStyles = {
+    root: {
+        '::before': { 
+            background: theme.palette.neutralQuaternaryAlt,
+        }
+    }
+};
+
+const noteStyles = { 
+    color: theme.palette.neutralTertiary,
+    marginTop: 0,
+    marginBottom: theme.spacing.s1,
+};
+
+const Note = (props: { field: keyof Feed; }) => {
+    const content = feedFieldTooltips[props.field] || null;
+    return content ? <Text block variant="small" style={noteStyles}>
+        {content}
+    </Text> : null;
 };
 
 export class FeedEditor extends React.Component<Props, State> {
@@ -133,34 +151,6 @@ export class FeedEditor extends React.Component<Props, State> {
                 ...data,
             }
         }))
-    }
-
-    renderDataField(label: string, value?: string, tooltip?: string | JSX.Element) {
-        if (!value) {
-            return;
-        }
-
-        let labelElement = <Text style={{ color: theme.palette.neutralTertiary }}>
-            {label} &nbsp;
-        </Text>;
-        
-        if (tooltip) {
-            const ttId = `tooltip-${nanoid(6)}`;
-            labelElement = <div>
-                <TooltipHost content={tooltip} id={ttId}>
-                    <Text aria-describedby={ttId} style={{ color: theme.palette.neutralTertiary }}>
-                        {label} <Icon iconName="Help" /> &nbsp;
-                    </Text>
-                </TooltipHost>
-            </div>;
-        }
-        
-        return <Stack horizontal>
-            {labelElement}
-            <Text>
-                {value}
-            </Text>
-        </Stack>;
     }
 
     renderFeedValue<K extends keyof Feed>(key: K, displayFn?: (value: Feed[K]) => string | React.ReactNode) {
@@ -230,20 +220,23 @@ export class FeedEditor extends React.Component<Props, State> {
         return <Stack horizontal tokens={{ childrenGap: 'm', }}>
             <Stack grow tokens={{ childrenGap: 's1', }}>
                 <TextField
-                    label="Feed name"
+                    label={feedFieldNames.name}
                     value={this.state.feed.name}
                     onChange={(e, name) => { this.setFeedData({ name }) }}
                 />
+                <Note field={'name'}/>
 
                 <Separator styles={separatorStyles} />
 
                 <TextField
-                    label="Stream URL"
+                    label={feedFieldNames.streamUrl}
                     value={this.state.feed.streamUrl}
                     onChange={(e, streamUrl) => { this.setFeedData({ streamUrl }) }}
                 />
+                <Note field={'streamUrl'}/>
+
                 <Slider
-                    label="Max FPS"
+                    label={feedFieldNames.maxFps}
                     min={0}
                     step={1}
                     max={60}
@@ -252,8 +245,10 @@ export class FeedEditor extends React.Component<Props, State> {
                     onChange={(maxFps) => { this.setFeedData({ maxFps }) }}
                     valueFormat={(n) => n === 0 ? 'Unset' : n.toString()}
                 />
+                <Note field={'maxFps'}/>
+
                 <Slider
-                    label="Scale factor"
+                    label={feedFieldNames.scaleFactor}
                     min={0}
                     step={0.05}
                     max={2}
@@ -262,8 +257,10 @@ export class FeedEditor extends React.Component<Props, State> {
                     onChange={(scaleFactor) => { this.setFeedData({ scaleFactor }) }}
                     valueFormat={(n) => n === 0 ? 'Unset' : (n.toFixed(2) + 'x')}
                 />
+                <Note field={'scaleFactor'}/>
+
                 <Slider
-                    label="Video quality"
+                    label={feedFieldNames.videoQuality}
                     min={-31}
                     step={1}
                     max={-2}
@@ -272,33 +269,38 @@ export class FeedEditor extends React.Component<Props, State> {
                     onChange={(videoQuality) => { this.setFeedData({ videoQuality: videoQuality * -1 }) }}
                     valueFormat={(n) => (n * -1).toString()}
                 />
+                <Note field={'videoQuality'}/>
 
                 <Separator styles={separatorStyles} />
 
                 <Toggle 
-                    label="Save video" 
+                    label={feedFieldNames.saveVideo} 
                     inlineLabel
                     defaultChecked={this.state.feed.saveVideo === true}
                     onChange={(e, saveVideo) => this.setFeedData({ saveVideo })}
                 />
+                <Note field={'saveVideo'}/>
 
                 <TextField
-                    label="Save Path"
+                    label={feedFieldNames.savePath}
                     value={this.state.feed.savePath}
                     onChange={(e, savePath) => { this.setFeedData({ savePath }) }}
                 />
+                <Note field={'savePath'}/>
 
                 <Separator styles={separatorStyles} />
 
                 <Toggle 
-                    label="Detect motion" 
+                    label={feedFieldNames.detectMotion} 
                     inlineLabel
                     defaultChecked={this.state.feed.detectMotion === true}
                     onChange={(e, detectMotion) => this.setFeedData({ detectMotion })}
                 />
+                <Note field={'detectMotion'}/>
 
                 <Slider
-                    label="Motion sampling interval"
+                    label={feedFieldNames.motionSampleInterval}
+                    disabled={this.state.feed.detectMotion !== true}
                     min={1}
                     step={1}
                     max={64}
@@ -307,9 +309,11 @@ export class FeedEditor extends React.Component<Props, State> {
                     onChange={(motionSampleInterval) => { this.setFeedData({ motionSampleInterval }) }}
                     valueFormat={(n) => n.toFixed(0)}
                 />
+                <Note field={'motionSampleInterval'}/>
                 
                 <Slider
-                    label="Motion detection threshold"
+                    label={feedFieldNames.motionDiffThreshold}
+                    disabled={this.state.feed.detectMotion !== true}
                     min={0}
                     step={0.0001}
                     max={1}
@@ -318,13 +322,20 @@ export class FeedEditor extends React.Component<Props, State> {
                     onChange={(motionDiffThreshold) => { this.setFeedData({ motionDiffThreshold }) }}
                     valueFormat={(n) => n.toFixed(4)}
                 />
+                <Note field={'motionDiffThreshold'}/>
 
-                <Separator styles={separatorStyles} />
 
-                <RegionEditor
-                    feed={this.state.feed}
-                    onChange={motionRegions => { this.setFeedData({ motionRegions }) }}
-                />
+                {this.state.feed.detectMotion ? <>
+                    <Separator styles={separatorStyles} />
+
+                    <Text block variant="mediumPlus">Motion Region Editor</Text>
+                    <Note field={'motionRegions'}/>
+
+                    <RegionEditor
+                        feed={this.state.feed}
+                        onChange={motionRegions => { this.setFeedData({ motionRegions }) }}
+                    />
+                </> : undefined}
             </Stack>
         </Stack>;
     }
