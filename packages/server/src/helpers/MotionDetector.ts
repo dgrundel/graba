@@ -3,28 +3,12 @@ import { FeedConsumer } from './FeedConsumer';
 import sharp from 'sharp';
 import { frameDiff } from './frameDiff';
 
-const SAMPLE_INTERVAL = 1;
+const DEFAULT_SAMPLE_INTERVAL = 1;
 
 export class MotionDetector extends FeedConsumer {
     private prevPixels?: Buffer;
-    private enabled: boolean;
-    private diffThreshold: number;
-    private motionRegions?: MotionRegion[];
-
-    constructor(feed: Feed) {
-        super(feed);
-
-        this.enabled = feed.detectMotion === true;
-        this.diffThreshold = feed.motionDiffThreshold || 0;
-        this.motionRegions = feed.motionRegions;
-    }
 
     handleFeedUpdate(feed: Feed, prev: Feed): void {
-        // update settings from feed
-        this.enabled = feed.detectMotion === true;
-        this.diffThreshold = feed.motionDiffThreshold || 0;
-        this.motionRegions = feed.motionRegions;
-
         // if video scale changes, frame sizes won't match, so we need to clear prev frame
         this.prevPixels = undefined;
     }
@@ -35,9 +19,16 @@ export class MotionDetector extends FeedConsumer {
     }
     
     async processFrame(jpg: Buffer): Promise<Buffer> {
-        if (!this.enabled) {
+        const feed = this.getFeed();
+        const enabled = feed.detectMotion === true;
+        
+        if (!enabled) {
             return jpg;
         }
+
+        const sampleInterval = feed.motionSampleInterval || DEFAULT_SAMPLE_INTERVAL;
+        const diffThreshold = feed.motionDiffThreshold || 0;
+        const motionRegions = feed.motionRegions;
 
         const raw = await sharp(jpg)
             .raw()
@@ -52,14 +43,14 @@ export class MotionDetector extends FeedConsumer {
         if (prevPixels) {
             const diff = frameDiff(prevPixels, pixels, width, height, {
                 colorThreshold: 0.1,
-                sampleInterval: SAMPLE_INTERVAL,
-                regions: this.motionRegions || [],
+                sampleInterval: sampleInterval,
+                regions: motionRegions || [],
             });
 
-            const maxDiffPixels = Math.floor(width * height / SAMPLE_INTERVAL);
+            const maxDiffPixels = Math.floor(width * height / sampleInterval);
             const diffPercent = diff.count / maxDiffPixels;
 
-            if (diffPercent >= this.diffThreshold) {
+            if (diffPercent >= diffThreshold) {
                 return await sharp(diff.pixels, {
                     raw: {
                         width,

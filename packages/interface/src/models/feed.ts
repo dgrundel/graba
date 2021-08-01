@@ -17,6 +17,7 @@ export interface Feed {
 
     // motion detection
     detectMotion?: boolean;
+    motionSampleInterval?: number;
     motionDiffThreshold?: number;
     motionRegions?: MotionRegion[];
 }
@@ -49,13 +50,23 @@ export const validateFeed = (feed: Partial<Feed>): ErrorMessage[] => {
         ),
         ...validateIf(
             feed.detectMotion === true,
-            validateIf(
-                validateNumeric(feed, 'motionDiffThreshold', 'Motion detection threshold'),
-                [
-                    validateNumberLessThanOrEqual(feed, 'motionDiffThreshold', 1, 'Motion detection threshold'),
-                    validateNumberGreaterThanOrEqual(feed, 'motionDiffThreshold', 0, 'Motion detection threshold'),
-                ]
-            )
+            [
+                ...validateIf(
+                    typeof feed.motionSampleInterval !== 'undefined',
+                    [
+                        validateNumeric(feed, 'motionSampleInterval', 'Motion sampling interval'),
+                        validateNumberGreaterThanOrEqual(feed, 'motionSampleInterval', 1, 'Motion sampling interval'),
+                    ]
+                ),
+                ...validateIf(
+                    typeof feed.motionDiffThreshold !== 'undefined',
+                    [
+                        validateNumeric(feed, 'motionDiffThreshold', 'Motion detection threshold'),
+                        validateNumberLessThanOrEqual(feed, 'motionDiffThreshold', 1, 'Motion detection threshold'),
+                        validateNumberGreaterThanOrEqual(feed, 'motionDiffThreshold', 0, 'Motion detection threshold'),
+                    ]
+                ),
+            ]
         ),
     );
 }

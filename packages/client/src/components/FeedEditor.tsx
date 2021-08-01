@@ -160,8 +160,24 @@ export class FeedEditor extends React.Component<Props, State> {
                 )}
 
                 {this.state.feed.detectMotion ? this.renderDataField(
+                    'Motion sampling interval',
+                    this.state.feed.motionSampleInterval?.toFixed(0) || '',
+                    <span>
+                        Check every <em>n</em> pixels for motion.
+                        When set to a value greater than <strong>1</strong>, video frame pixel data will
+                        be sampled during motion detection. Larger values improve performance by lowering
+                        the number of pixels checked for motion but also reduce the effectiveness of Motion
+                        detection.
+                    </span>
+                ) : ''}
+                
+                {this.state.feed.detectMotion ? this.renderDataField(
                     'Threshold',
-                    this.state.feed.motionDiffThreshold?.toFixed(4) || ''
+                    this.state.feed.motionDiffThreshold?.toFixed(4) || '',
+                    <span>
+                        Percentage of pixels in a frame that must be different to be considered "motion".
+                        Lower values increase sensitivity of motion detection.
+                    </span>
                 ) : ''}
             </Stack>
 
@@ -240,6 +256,17 @@ export class FeedEditor extends React.Component<Props, State> {
                     onChange={(e, detectMotion) => this.setFeedData({ detectMotion })}
                 />
 
+                <Slider
+                    label="Motion sampling interval"
+                    min={1}
+                    step={1}
+                    max={64}
+                    value={this.state.feed.motionSampleInterval || 1}
+                    showValue
+                    onChange={(motionSampleInterval) => { this.setFeedData({ motionSampleInterval }) }}
+                    valueFormat={(n) => n.toFixed(0)}
+                />
+                
                 <Slider
                     label="Motion detection threshold"
                     min={0}
