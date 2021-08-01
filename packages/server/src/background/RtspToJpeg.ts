@@ -51,14 +51,10 @@ export class RtspToJpeg extends FeedConsumer {
     }
 
     handleFeedUpdate(next: Feed, prev: Feed): void {
-        this.videoRecorder.stop();
-        
         this.motionDetector.updateFeed(next);
         this.videoRecorder.updateFeed(next);
 
         this.ffmpegToJpeg.updateArgGenerator(() => this.buildFFmpegArgs(next));
-
-        this.videoRecorder.start();
     }
 
     handleFeedEnd(feed: Feed): void {

@@ -50,9 +50,6 @@ export class MotionDetector extends FeedConsumer {
             });
 
             const diffPercent = diff.pxDiffCount / diff.pxAnalyzeCount;
-
-            // console.log('diffPercent', diffPercent.toFixed(8));
-
             if (diffPercent >= diffThreshold) {
                 const diffBuffer = await sharp(diff.pixelData, {
                     raw: {
