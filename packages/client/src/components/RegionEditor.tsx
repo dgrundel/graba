@@ -1,5 +1,5 @@
 import React from 'react';
-import { Feed, MotionRegion as Region } from 'hastycam.interface';
+import { Feed, MotionRegion as Region, Point, percentToImageOffsetPx, isPointInRegion } from 'hastycam.interface';
 
 interface Props {
     feed: Feed;
@@ -9,22 +9,7 @@ interface Props {
 interface State {
 }
 
-type Point = [number, number];
-
-const isPointInRegion = (p: Point, r: Region): boolean => {
-    const [x, y] = p;
-    const [xMin, yMin, w, h] = r;
-    const xMax = xMin + w;
-    const yMax = yMin + h;
-
-    return x <= xMax && x >= xMin && y <= yMax && y >= yMin;
-};
-
-const viewportPxToOffsetPercent = (pt: Point, rect?: DOMRect, c?: HTMLCanvasElement): Point => {
-    if (!rect || !c) {
-        return [-1, -1];
-    }
-
+const viewportPxToOffsetPercent = (pt: Point, rect: DOMRect, c: HTMLCanvasElement): Point => {
     const [viewportX, viewportY] = pt;
 
     const offsetX = viewportX - rect.x;
@@ -36,19 +21,6 @@ const viewportPxToOffsetPercent = (pt: Point, rect?: DOMRect, c?: HTMLCanvasElem
     return [
         (offsetX * scaleX) / c.width,
         (offsetY * scaleY) / c.height,
-    ];
-};
-
-const percentToCanvasOffsetPx = (pt: Point, rect?: DOMRect, c?: HTMLCanvasElement): Point => {
-    if (!rect || !c) {
-        return [-1, -1];
-    }
-
-    const [percentX, percentY] = pt;
-
-    return [
-        percentX * c.width,
-        percentY * c.height,
     ];
 };
 
@@ -113,8 +85,8 @@ export class RegionEditor extends React.Component<Props, State> {
         this.withCanvas((c, ctx) => {
             const [x, y, w, h] = r;
             const scaled: Region = [
-                ...percentToCanvasOffsetPx([x, y], this.canvasRect, c),
-                ...percentToCanvasOffsetPx([w, h], this.canvasRect, c),
+                ...percentToImageOffsetPx([x, y], [c.width, c.height]),
+                ...percentToImageOffsetPx([w, h], [c.width, c.height]),
             ];
 
             ctx.fillStyle = 'rgba(255,0,0,0.4)';
@@ -126,8 +98,8 @@ export class RegionEditor extends React.Component<Props, State> {
         this.withCanvas((c, ctx) => {
             const [x, y, w, h] = r;
             const scaled: Region = [
-                ...percentToCanvasOffsetPx([x, y], this.canvasRect, c),
-                ...percentToCanvasOffsetPx([w, h], this.canvasRect, c),
+                ...percentToImageOffsetPx([x, y], [c.width, c.height]),
+                ...percentToImageOffsetPx([w, h], [c.width, c.height]),
             ];
 
             ctx.strokeStyle = '#f00';
@@ -167,6 +139,10 @@ export class RegionEditor extends React.Component<Props, State> {
         }
 
         this.withCanvas(c => {
+            if (!this.canvasRect) {
+                return;
+            }
+
             const [fromX, fromY] = viewportPxToOffsetPercent([
                 this.viewportClickX,
                 this.viewportClickY
@@ -223,7 +199,7 @@ export class RegionEditor extends React.Component<Props, State> {
 
             // select our newly created region
             this.selectedRegion = this.activeRegion;
-        } else {
+        } else if (this.canvasRect) {
             // we weren't drawing a rectangle 
             // this is just a click
             // so we modify the active selection
@@ -231,7 +207,7 @@ export class RegionEditor extends React.Component<Props, State> {
             const clickLoc: Point | undefined = this.withCanvas(c => viewportPxToOffsetPercent([
                 this.viewportMouseX,
                 this.viewportMouseY,
-            ], this.canvasRect, c));
+            ], this.canvasRect!, c));
             
             if (clickLoc) {
                 // see if the mouse click happened within a region

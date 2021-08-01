@@ -1,8 +1,5 @@
 import { ErrorMessage, mergeErrors, validateIf, validateNotEmpty, validateNumberGreaterThanOrEqual, validateNumberLessThanOrEqual, validateNumeric } from '../validator/validators';
-
-
-export type Point = [ x: number, y: number];
-export type MotionRegion = [ x: number, y: number, width: number, height: number];
+import { MotionRegion } from './geometry';
 
 export interface Feed {
     id: string;

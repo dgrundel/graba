@@ -176,7 +176,7 @@ export class VideoRecorder extends FeedConsumer {
         }
 
         const now = Date.now();
-        // the number of mills remaining until tomorrow, UTC
+        // the number of mills remaining until midnight, UTC
         const remaining = ONE_DAY_MS - (now % ONE_DAY_MS);
         // since we'd like to break up videos cleanly on the day, 
         // we work back from midnight to figure out how long to wait
