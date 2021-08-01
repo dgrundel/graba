@@ -13,6 +13,7 @@ export interface Feed {
 
     // storage
     saveVideo?: boolean;
+    onlySaveMotion?: boolean; // only save video when motion is detected
     savePath?: string;
 
     // motion detection

@@ -27,6 +27,7 @@ const feedFieldNames: Record<keyof Feed, string> = {
     scaleFactor: 'Scale factor',
     videoQuality: 'Video quality',
     saveVideo: 'Save video',
+    onlySaveMotion: 'Only save when motion detected',
     savePath: 'Save path',
     detectMotion: 'Motion detection',
     motionSampleInterval: 'Motion sampling interval',
@@ -52,6 +53,7 @@ const feedFieldTooltips: Record<keyof Feed, string | JSX.Element | undefined> = 
         <em>This value is passed to FFmpeg's <code>qscale</code> argument.</em>
     </>,
     saveVideo: undefined,
+    onlySaveMotion: undefined,
     savePath: undefined,
     detectMotion: undefined,
     motionSampleInterval: <>
@@ -197,6 +199,9 @@ export class FeedEditor extends React.Component<Props, State> {
                 <Separator styles={separatorStyles} />
                 
                 {this.renderFeedValue('saveVideo', value => value ? 'Enabled' : 'Disabled')}
+                {this.state.feed.saveVideo && this.state.feed.detectMotion ? 
+                    this.renderFeedValue('onlySaveMotion', value => value ? 'Enabled' : 'Disabled')
+                    : undefined}
                 {this.state.feed.saveVideo ? this.renderFeedValue('savePath') : ''}
 
                 <Separator styles={separatorStyles} />
@@ -280,6 +285,15 @@ export class FeedEditor extends React.Component<Props, State> {
                     onChange={(e, saveVideo) => this.setFeedData({ saveVideo })}
                 />
                 <Note field={'saveVideo'}/>
+
+                <Toggle 
+                    label={feedFieldNames.onlySaveMotion}
+                    disabled={!(this.state.feed.saveVideo && this.state.feed.detectMotion)}
+                    inlineLabel
+                    defaultChecked={this.state.feed.onlySaveMotion === true}
+                    onChange={(e, onlySaveMotion) => this.setFeedData({ onlySaveMotion })}
+                />
+                <Note field={'onlySaveMotion'}/>
 
                 <TextField
                     label={feedFieldNames.savePath}
