@@ -19,8 +19,8 @@ const viewportPxToOffsetPercent = (pt: Point, rect: DOMRect, c: HTMLCanvasElemen
     const scaleY = c.height / rect.height;
 
     return [
-        (offsetX * scaleX) / c.width,
-        (offsetY * scaleY) / c.height,
+        Math.min(1, Math.max(0, (offsetX * scaleX) / c.width)),
+        Math.min(1, Math.max(0, (offsetY * scaleY) / c.height)),
     ];
 };
 
@@ -156,11 +156,22 @@ export class RegionEditor extends React.Component<Props, State> {
             const height = toY - fromY;
     
             if (width !== 0 && height !== 0) {
-                // prevent negative widths and heights
+                /**
+                 * flip dimensions with negative values
+                 * if width is negative we add it to X to ensure that the X is always far left
+                 * if height is negative we add it to Y to ensure that the Y is always top
+                 */
                 const x = fromX + (width < 0 ? width : 0);
                 const y = fromY + (height < 0 ? height : 0);
     
-                this.activeRegion = [x, y, Math.abs(width), Math.abs(height)];    
+                /**
+                 * since we added the negative widths and heights to x and y,
+                 * we now take the abs value of those dimensions.
+                 */
+                const absWidth = Math.abs(width);
+                const absHeight = Math.abs(height);
+
+                this.activeRegion = [x, y, absWidth, absHeight];    
             } else {
                 this.activeRegion = undefined;
             }
