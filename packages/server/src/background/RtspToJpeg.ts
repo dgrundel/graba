@@ -17,9 +17,7 @@ export class RtspToJpeg extends FeedConsumer {
         this.ffmpegToJpeg = new FFmpegToJpeg(() => this.buildFFmpegArgs(feed), {
             frameProcessor: this.processFrame.bind(this),
         });
-
         this.motionDetector = new MotionDetector(feed);
-
         this.videoRecorder = new VideoRecorder(feed);
         this.onFrame(this.videoRecorder.writeFrame);
     }

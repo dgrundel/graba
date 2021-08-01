@@ -49,11 +49,12 @@ export class MotionDetector extends FeedConsumer {
                 regions: motionRegions || [],
             });
 
-            const maxDiffPixels = Math.floor(width * height / sampleInterval);
-            const diffPercent = diff.count / maxDiffPixels;
+            const diffPercent = diff.pxDiffCount / diff.pxAnalyzeCount;
+
+            // console.log('diffPercent', diffPercent.toFixed(8));
 
             if (diffPercent >= diffThreshold) {
-                const diffBuffer = await sharp(diff.pixels, {
+                const diffBuffer = await sharp(diff.pixelData, {
                     raw: {
                         width,
                         height,

@@ -328,13 +328,13 @@ export class FeedEditor extends React.Component<Props, State> {
                 <Slider
                     label={feedFieldNames.motionDiffThreshold}
                     disabled={this.state.feed.detectMotion !== true}
-                    min={0}
-                    step={0.0001}
-                    max={1}
+                    min={0.0}
+                    step={0.0005}
+                    max={1.0}
                     value={this.state.feed.motionDiffThreshold || 0}
                     showValue
                     onChange={(motionDiffThreshold) => { this.setFeedData({ motionDiffThreshold }) }}
-                    valueFormat={(n) => n.toFixed(4)}
+                    valueFormat={(n) => (n * 100).toFixed(2) + '%'}
                 />
                 <Note field={'motionDiffThreshold'}/>
 

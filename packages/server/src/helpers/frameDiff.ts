@@ -22,8 +22,9 @@ export interface FrameDiffOptions {
 }
 
 export interface FrameDiffResult {
-    count: number;
-    pixels: Buffer;
+    pxDiffCount: number;
+    pxAnalyzeCount: number;
+    pixelData: Buffer;
 }
 
 const defaultOptions: FrameDiffOptions = {
@@ -65,7 +66,8 @@ export const frameDiff = (img1: Pixels, img2: Pixels, width: number, height: num
     // 35215 is the maximum possible value for the YIQ difference metric
     const maxDelta = 35215 * colorThreshold * colorThreshold;
     
-    let count = 0;
+    let pxDiffCount = 0;
+    let pxAnalyzeCount = 0;
     const output = Buffer.from(img2, img2.byteOffset, img2.length);
 
     // convert motion regions from % to px
@@ -103,15 +105,18 @@ export const frameDiff = (img1: Pixels, img2: Pixels, width: number, height: num
                 const color = delta < 0 ? diffColorAlt : diffColor;
                 // found substantial difference; draw it as such
                 drawPixel(output, pos, ...color);
-                count++;
+                pxDiffCount++;
             }
+
+            pxAnalyzeCount++;
         }
     }
 
     // return the number of different pixels
     return {
-        count,
-        pixels: output
+        pxDiffCount,
+        pxAnalyzeCount,
+        pixelData: output
     };
 }
 

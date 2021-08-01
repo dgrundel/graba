@@ -100,6 +100,8 @@ export class VideoRecorder extends FeedConsumer {
             Buffer.from('\n'),
         ]);
 
+        // console.log('motion detected', frame.motionDetected === true);
+
         if (!this.record?.thumbnailPath) {
             this.writeThumbnail(buffer);
         }
