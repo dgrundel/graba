@@ -27,6 +27,55 @@ const separatorStyles = {
     }
 };
 
+const feedFieldNames: Record<keyof Feed, string> = {
+    id: 'id',
+    name: 'Name',
+    streamUrl: 'Stream URL',
+    maxFps: 'Max FPS',
+    scaleFactor: 'Scale factor',
+    videoQuality: 'Video quality',
+    saveVideo: 'Save video',
+    savePath: 'Save path',
+    detectMotion: 'Motion detection',
+    motionSampleInterval: 'Motion sampling interval',
+    motionDiffThreshold: 'Motion diff threshold',
+    motionRegions: 'Motion regions',
+};
+
+const feedFieldTooltips: Record<keyof Feed, string | JSX.Element | undefined> = {
+    id: undefined,
+    name: undefined,
+    streamUrl: undefined,
+    maxFps: <>
+        Set an upper bound for video frame rate.
+        Lower values improve performance of background video processing and viewing in browser.
+    </>,
+    scaleFactor: <>
+        Scale the width and height of the video.
+        Lower values improve performance of background video processing and viewing in browser.
+    </>,
+    videoQuality: <>
+        Quality level of the video output. 
+        Range is 2-31 where a lower number represents better quality.
+        <em>This value is passed to FFmpeg's <code>qscale</code> argument.</em>
+    </>,
+    saveVideo: undefined,
+    savePath: undefined,
+    detectMotion: undefined,
+    motionSampleInterval: <>
+        Check every <em>n</em> pixels for motion.
+        When set to a value greater than <strong>1</strong>, video frame pixel data will
+        be sampled during motion detection. Larger values improve performance by lowering
+        the number of pixels checked for motion but also reduce the effectiveness of Motion
+        detection.
+    </>,
+    motionDiffThreshold: <>
+        Percentage of pixels in a frame that must be different to be considered "motion".
+        Lower values increase sensitivity of motion detection.
+    </>,
+    motionRegions: undefined,
+};
+
 export class FeedEditor extends React.Component<Props, State> {
     constructor(props: Props) {
         super(props);
@@ -114,70 +163,62 @@ export class FeedEditor extends React.Component<Props, State> {
         </Stack>;
     }
 
+    renderFeedValue<K extends keyof Feed>(key: K, displayFn?: (value: Feed[K]) => string | React.ReactNode) {
+        const v = this.state.feed[key];
+        const value = displayFn ? displayFn(v) : v;
+        const label = feedFieldNames[key];
+        const tooltip = feedFieldTooltips[key];
+
+        if (!value) {
+            return;
+        }
+
+        let labelElement;
+        if (tooltip) {
+            const ttId = `tooltip-${nanoid(4)}`;
+            labelElement = <div>
+                <TooltipHost content={tooltip} id={ttId}>
+                    <Text aria-describedby={ttId} style={{ color: theme.palette.neutralTertiary }}>
+                        {label} <Icon iconName="Help" /> &nbsp;
+                    </Text>
+                </TooltipHost>
+            </div>;
+        } else {
+            labelElement = <Text style={{ color: theme.palette.neutralTertiary }}>
+                {label} &nbsp;
+            </Text>;
+        }
+        
+        return <Stack horizontal>
+            {labelElement}
+            <Text>{value}</Text>
+        </Stack>;
+    }
+
     renderData() {
         return <Stack horizontal tokens={{ childrenGap: 'm', }}>
             <Stack grow tokens={{ childrenGap: 's1', }}>
-                {this.renderDataField('Stream URL', this.state.feed.streamUrl)}
-                {this.renderDataField(
-                    'Max FPS', 
-                    this.state.feed.maxFps?.toString(),
-                    <span>
-                        Set an upper bound for video frame rate.
-                        Set lower to improve performance of video processing and viewing in browser.
-                    </span>
-                )}
-                {this.renderDataField(
-                    'Scale Factor', 
-                    this.state.feed.scaleFactor ? (this.state.feed.scaleFactor.toFixed(2) + 'x') : '',
-                    <span>
-                        Scale the width and height of the video. 
-                        Set lower to improve performance of video processing and viewing in browser.
-                    </span>
-                )}
-                {this.renderDataField(
-                    'Video quality', 
-                    this.state.feed.videoQuality ? this.state.feed.videoQuality.toString() : '',
-                    <span>Quality level of the video output. Range is 2-31 where <em>a lower number represents better quality</em>.</span>
-                )}
+
+                {this.renderFeedValue('streamUrl')}
+                {this.renderFeedValue('maxFps')}
+                {this.renderFeedValue('scaleFactor')}
+                {this.renderFeedValue('videoQuality')}
 
                 <Separator styles={separatorStyles} />
                 
-                {this.renderDataField(
-                    'Save video', 
-                    this.state.feed.saveVideo ? 'Enabled' : 'Disabled'
-                )}
-
-                {this.state.feed.saveVideo ? this.renderDataField(
-                    'Save path',
-                    this.state.feed.savePath
-                ) : ''}
+                {this.renderFeedValue('saveVideo', value => value ? 'Enabled' : 'Disabled')}
+                {this.state.feed.saveVideo ? this.renderFeedValue('savePath') : ''}
 
                 <Separator styles={separatorStyles} />
                 
-                {this.renderDataField(
-                    'Motion detection', 
-                    this.state.feed.detectMotion ? 'Enabled' : 'Disabled'
-                )}
-
-                {this.state.feed.detectMotion ? this.renderDataField(
-                    'Motion sampling interval',
-                    this.state.feed.motionSampleInterval?.toFixed(0) || '',
-                    <span>
-                        Check every <em>n</em> pixels for motion.
-                        When set to a value greater than <strong>1</strong>, video frame pixel data will
-                        be sampled during motion detection. Larger values improve performance by lowering
-                        the number of pixels checked for motion but also reduce the effectiveness of Motion
-                        detection.
-                    </span>
+                {this.renderFeedValue('detectMotion', value => value ? 'Enabled' : 'Disabled')}
+                {this.state.feed.detectMotion ? this.renderFeedValue(
+                    'motionSampleInterval',
+                    interval => interval?.toFixed(0) || '',
                 ) : ''}
-                
-                {this.state.feed.detectMotion ? this.renderDataField(
-                    'Threshold',
-                    this.state.feed.motionDiffThreshold?.toFixed(4) || '',
-                    <span>
-                        Percentage of pixels in a frame that must be different to be considered "motion".
-                        Lower values increase sensitivity of motion detection.
-                    </span>
+                {this.state.feed.detectMotion ? this.renderFeedValue(
+                    'motionDiffThreshold',
+                    interval => interval?.toFixed(4) || '',
                 ) : ''}
             </Stack>
 
