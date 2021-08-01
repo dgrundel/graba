@@ -62,7 +62,3 @@ export const validateFeed = (feed: Partial<Feed>): ErrorMessage[] => {
         ),
     );
 }
-
-export interface Config {
-    feeds: Feed[];
-}
