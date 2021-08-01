@@ -161,7 +161,7 @@ export class FeedEditor extends React.Component<Props, State> {
 
                 {this.state.feed.detectMotion ? this.renderDataField(
                     'Threshold',
-                    this.state.feed.motionDiffThreshold?.toFixed(2) || ''
+                    this.state.feed.motionDiffThreshold?.toFixed(4) || ''
                 ) : ''}
             </Stack>
 
@@ -243,12 +243,12 @@ export class FeedEditor extends React.Component<Props, State> {
                 <Slider
                     label="Motion detection threshold"
                     min={0}
-                    step={0.01}
+                    step={0.0001}
                     max={1}
                     value={this.state.feed.motionDiffThreshold || 0}
                     showValue
                     onChange={(motionDiffThreshold) => { this.setFeedData({ motionDiffThreshold }) }}
-                    valueFormat={(n) => n.toFixed(2)}
+                    valueFormat={(n) => n.toFixed(4)}
                 />
 
                 <Separator styles={separatorStyles} />

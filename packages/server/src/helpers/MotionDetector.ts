@@ -59,9 +59,7 @@ export class MotionDetector extends FeedConsumer {
             const maxDiffPixels = Math.floor(width * height / SAMPLE_INTERVAL);
             const diffPercent = diff.count / maxDiffPixels;
 
-            console.log(diffPercent);
-
-            // if (diffPercent >= this.diffThreshold) {
+            if (diffPercent >= this.diffThreshold) {
                 return await sharp(diff.pixels, {
                     raw: {
                         width,
@@ -71,7 +69,7 @@ export class MotionDetector extends FeedConsumer {
                 })
                     .jpeg()
                     .toBuffer();
-            // }
+            }
         }
 
         // no diff, just return original data
