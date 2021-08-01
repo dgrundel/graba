@@ -6,9 +6,13 @@ import { onExit } from './util';
 import { ChildProcess, spawn } from 'child_process';
 import path from 'path';
 
+const ONE_DAY_MS = 24 * 60 * 60 * 1000 // 24 hr
+
 export class VideoRecorder extends FeedConsumer {
     private record?: VideoRecord;
     private ffmpeg?: ChildProcess;
+    private timeout?: NodeJS.Timeout;
+    private rotateInterval?: number = 60 * 60 * 1000; // 1 hr
 
     constructor(feed: Feed) {
         super(feed);
@@ -17,7 +21,8 @@ export class VideoRecorder extends FeedConsumer {
         this.stop = this.stop.bind(this);
         this.restart = this.restart.bind(this);
         this.writeFrame = this.writeFrame.bind(this);
-
+        this.initTimer = this.initTimer.bind(this);
+        
         onExit(this.stop);
     }
 
@@ -43,9 +48,15 @@ export class VideoRecorder extends FeedConsumer {
 
         this.record = createVideoRecord(this.getFeed());
         this.startFFmpeg(this.record.path);
+
+        this.initTimer();
     }
 
     stop() {
+        if (this.timeout) {
+            clearTimeout(this.timeout);
+        }
+
         if (this.ffmpeg) {
             // kill ffmpeg process
             if (!this.ffmpeg.kill()) {
@@ -156,5 +167,20 @@ export class VideoRecorder extends FeedConsumer {
             id: this.record.id,
             thumbnailPath: this.record.thumbnailPath,
         });
+    }
+
+    private initTimer() {
+        if (!this.rotateInterval) {
+            // do nothing if no rotation interval set
+            return;
+        }
+
+        const now = Date.now();
+        // the number of mills remaining until tomorrow, UTC
+        const remaining = ONE_DAY_MS - (now % ONE_DAY_MS);
+        // since we'd like to break up videos cleanly on the day, 
+        // we work back from midnight to figure out how long to wait
+        const delay = remaining % this.rotateInterval;
+        this.timeout = setTimeout(this.restart, delay);
     }
 }
