@@ -1,26 +1,29 @@
-import { Feed } from 'hastycam.interface';
+import { Feed, MotionRegion } from 'hastycam.interface';
 import { FeedConsumer } from './FeedConsumer';
 import sharp from 'sharp';
 import { frameDiff } from './frameDiff';
 
-const SAMPLE_INTERVAL = 2;
+const SAMPLE_INTERVAL = 1;
 
 export class MotionDetector extends FeedConsumer {
     private prevPixels?: Buffer;
     private enabled: boolean;
     private diffThreshold: number;
+    private motionRegions?: MotionRegion[];
 
     constructor(feed: Feed) {
         super(feed);
 
         this.enabled = feed.detectMotion === true;
         this.diffThreshold = feed.motionDiffThreshold || 0;
+        this.motionRegions = feed.motionRegions;
     }
 
     handleFeedUpdate(feed: Feed, prev: Feed): void {
         // update settings from feed
         this.enabled = feed.detectMotion === true;
         this.diffThreshold = feed.motionDiffThreshold || 0;
+        this.motionRegions = feed.motionRegions;
 
         // if video scale changes, frame sizes won't match, so we need to clear prev frame
         this.prevPixels = undefined;
@@ -50,12 +53,15 @@ export class MotionDetector extends FeedConsumer {
             const diff = frameDiff(prevPixels, pixels, width, height, {
                 colorThreshold: 0.1,
                 sampleInterval: SAMPLE_INTERVAL,
+                regions: this.motionRegions || [],
             });
 
             const maxDiffPixels = Math.floor(width * height / SAMPLE_INTERVAL);
             const diffPercent = diff.count / maxDiffPixels;
 
-            if (diffPercent >= this.diffThreshold) {
+            console.log(diffPercent);
+
+            // if (diffPercent >= this.diffThreshold) {
                 return await sharp(diff.pixels, {
                     raw: {
                         width,
@@ -65,7 +71,7 @@ export class MotionDetector extends FeedConsumer {
                 })
                     .jpeg()
                     .toBuffer();
-            }
+            // }
         }
 
         // no diff, just return original data

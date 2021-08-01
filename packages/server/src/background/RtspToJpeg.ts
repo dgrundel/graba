@@ -14,7 +14,9 @@ export class RtspToJpeg extends FeedConsumer {
     constructor(feed: Feed) {
         super(feed);
 
-        this.ffmpegToJpeg = new FFmpegToJpeg(() => this.buildFFmpegArgs(feed));
+        this.ffmpegToJpeg = new FFmpegToJpeg(() => this.buildFFmpegArgs(feed), {
+            frameProcessor: this.processFrame.bind(this),
+        });
 
         this.motionDetector = new MotionDetector(feed);
 
@@ -79,5 +81,9 @@ export class RtspToJpeg extends FeedConsumer {
 
     onEnd(handler: () => void) {
         return this.ffmpegToJpeg.onEnd(handler);
+    }
+
+    private processFrame(frame: Buffer): Promise<Buffer> {
+        return this.motionDetector.processFrame(frame);
     }
 }

@@ -7,6 +7,7 @@ type FFmpegArgGenerator = () => string[];
 
 interface Options {
     debug?: boolean;
+    frameProcessor?: (f: Buffer) => Promise<Buffer>;
 };
 
 const JPG_START = Buffer.from([0xff, 0xd8]);
@@ -18,16 +19,22 @@ const enum Events {
 };
 
 export class FFmpegToJpeg {
-    private readonly options?: Options;
     private readonly emitter = new EventEmitter();
     private readonly frameChain: Chain<Buffer>;
+
+    // options
+    private readonly isDebug: boolean;
+    private readonly frameProcessor?: (f: Buffer) => Promise<Buffer>;
     
     private argGenerator: FFmpegArgGenerator;
     private ffmpeg: ChildProcess;
 
     constructor(argGenerator: FFmpegArgGenerator, options?: Options) {
         this.argGenerator = argGenerator;
-        this.options = options;
+        
+        // options
+        this.isDebug = options?.debug === true;
+        this.frameProcessor = options?.frameProcessor;
 
         // bind handlers before using this in spawn
         this.ffmpegCloseHandler = this.ffmpegCloseHandler.bind(this);
@@ -100,16 +107,16 @@ export class FFmpegToJpeg {
     }
 
     private ffmpegCloseHandler(code: number) {
-        this.options?.debug && console.log('[ffmpeg][close]', `exited with code ${code}`);
+        this.isDebug && console.log('[ffmpeg][close]', `exited with code ${code}`);
         this.emitter.emit(Events.StreamEnd);
     }
 
     private ffmpegErrorHandler(err: Error) {
-        this.options?.debug && console.error('[ffmpeg][error]', err);
+        this.isDebug && console.error('[ffmpeg][error]', err);
     }
 
     private ffmpegStderrHandler(buffer: Buffer) {
-        this.options?.debug && console.error('[ffmpeg][stderr]', buffer.toString());
+        this.isDebug && console.error('[ffmpeg][stderr]', buffer.toString());
     }
 
     private async chainProcessor(data: Buffer, prev?: Buffer) {
@@ -125,7 +132,9 @@ export class FFmpegToJpeg {
             
             const end = endMarker + JPG_END.length;
             const frame = buffer.slice(start, end);
-            this.emitter.emit(Events.JpegFrame, frame);
+            const processed = this.frameProcessor ? (await this.frameProcessor(frame)) : frame;
+
+            this.emitter.emit(Events.JpegFrame, processed);
             
             buffer = buffer.slice(end);
             start = buffer.indexOf(JPG_START);

@@ -1,9 +1,12 @@
-/**
- * This code is based on PixelMatch:
- * https://github.com/mapbox/pixelmatch
- */
+import { isPointInRegion, MotionRegion } from 'hastycam.interface';
 
 type Pixels = Uint8ClampedArray | Buffer;
+type MinMaxXY = {
+    minX: number;
+    minY: number;
+    maxX: number;
+    maxY: number;
+};
 
 export interface FrameDiffOptions {
     // matching threshold (0 to 1); smaller is more sensitive
@@ -14,6 +17,8 @@ export interface FrameDiffOptions {
     diffColorAlt: [number, number, number];
     // check for diff every {n} pixels. A value of 1 checks every pixel. Applied to x and y directions.
     sampleInterval: number;
+    // regions.
+    regions: MotionRegion[];
 }
 
 export interface FrameDiffResult {
@@ -26,10 +31,20 @@ const defaultOptions: FrameDiffOptions = {
     diffColor: [255, 0, 0],
     diffColorAlt: [255, 0, 0],
     sampleInterval: 1,
+    regions: [],
 };
 
 const CHANNELS = 3;
 
+/**
+ * This code is based on PixelMatch:
+ * https://github.com/mapbox/pixelmatch
+ * 
+ * However, there are lots of modifications:
+ * - dropped alpha channel
+ * - added sampling
+ * - added regions
+ */
 export const frameDiff = (img1: Pixels, img2: Pixels, width: number, height: number, options: Partial<FrameDiffOptions>): FrameDiffResult => {
     if (img1.length !== img2.length) {
         throw new Error('Image sizes do not match.');
@@ -43,6 +58,7 @@ export const frameDiff = (img1: Pixels, img2: Pixels, width: number, height: num
         diffColor,
         diffColorAlt,
         sampleInterval,
+        regions,
     } = Object.assign({}, defaultOptions, options) as FrameDiffOptions;
 
     // maximum acceptable square distance between two colors;
@@ -52,11 +68,30 @@ export const frameDiff = (img1: Pixels, img2: Pixels, width: number, height: num
     let count = 0;
     const output = Buffer.from(img2, img2.byteOffset, img2.length);
 
-    // sample pixels every ${step} pixels
-    for (let y = 0; y < height; y += sampleInterval) {
+    // convert motion regions from % to px
+    const pxRegions = percentRegionsToPixels(regions, width, height);
+    
+    // get extremes from the motion detection regions
+    const minMaxXY = getMinMaxXY(pxRegions);
 
+    // calc min and max y pixel values
+    const yStart = minMaxXY ? minMaxXY.minY : 0;
+    const yMax = minMaxXY ? minMaxXY.maxY : height;
+
+    // sample pixels every ${step} pixels
+    for (let y = yStart; y < yMax; y += sampleInterval) {
+
+        // calc min and max x pixel values
         // stagger the x start point using the current y value and sample interval
-        for (let x = y % sampleInterval; x < width; x += sampleInterval) {
+        const xStart = (minMaxXY ? minMaxXY.minX : 0) + (y % sampleInterval);
+        const xMax = minMaxXY ? minMaxXY.maxX : width;
+
+        for (let x = xStart; x < xMax; x += sampleInterval) {
+            // if this point is outside motion detection regions, skip it.
+            if (pxRegions.length > 0 && !isPointInRegionSet(x, y, pxRegions)) {
+                continue;
+            }
+
             const pos = (y * width + x) * CHANNELS;
 
             // squared YUV distance between colors at this pixel position,
@@ -116,4 +151,54 @@ const drawPixel = (output: Pixels, pos: number, r: number, g: number, b: number)
     output[pos + 0] = r;
     output[pos + 1] = g;
     output[pos + 2] = b;
+};
+
+/**
+ * Get largest and smallest values for x and y.
+ * 
+ * @param regions Regions as percentages
+ */
+const getMinMaxXY = (regions: MotionRegion[]): MinMaxXY | undefined => {
+    if (regions.length === 0) {
+        return undefined;
+    }
+
+    let minX = Infinity;
+    let minY = Infinity;
+    let maxX = -Infinity;
+    let maxY = -Infinity;
+    let i = regions && regions.length || 0;
+    while (i--) {
+        const [x, y, w, h] = regions[i];
+        minX = Math.min(x, minX);
+        minY = Math.min(y, minY);
+        maxX = Math.max(x + w, maxX);
+        maxY = Math.max(y + h, maxY);
+    }
+
+    return { minX, minY, maxX, maxY };
+};
+
+const isPointInRegionSet = (x: number, y: number, regions: MotionRegion[]) => {
+    let i = regions.length;
+    while(i--) {
+        const isInThisRegion = isPointInRegion([x, y], regions[i]);
+        if (isInThisRegion){
+            return true;
+        }
+    }
+
+    return false;
+};
+
+const percentRegionsToPixels = (regions: MotionRegion[] | undefined, pxWidth: number, pxHeight: number): MotionRegion[] => {
+    return (regions || []).map(r => {
+        const [x, y, w, h] = r;
+        return [
+            Math.max(0, Math.floor(x * pxWidth)),
+            Math.max(0, Math.floor(y * pxHeight)),
+            Math.min(pxWidth, Math.ceil(w * pxWidth)),
+            Math.min(pxHeight, Math.ceil(h * pxHeight)),
+        ];
+    });
 };
