@@ -2,7 +2,7 @@ import { Feed } from 'hastycam.interface';
 import { FeedConsumer } from '../helpers/FeedConsumer';
 import { MotionDetector } from '../helpers/MotionDetector';
 import { VideoRecorder } from '../helpers/VideoRecorder';
-import { FFmpegToJpeg } from '../helpers/FFmpegToJpeg';
+import { FFmpegToJpeg, Frame } from '../helpers/FFmpegToJpeg';
 
 type FFmpegArgs = string[];
 
@@ -21,7 +21,6 @@ export class RtspToJpeg extends FeedConsumer {
         this.motionDetector = new MotionDetector(feed);
 
         this.videoRecorder = new VideoRecorder(feed);
-        this.videoRecorder.start();
         this.onFrame(this.videoRecorder.writeFrame);
     }
 
@@ -75,7 +74,7 @@ export class RtspToJpeg extends FeedConsumer {
         return this.ffmpegToJpeg.getNextFrame();
     }
 
-    onFrame(handler: (buffer: Buffer) => void): () => void {
+    onFrame(handler: (buffer: Frame) => void): () => void {
         return this.ffmpegToJpeg.onFrame(handler);
     }
 
@@ -83,7 +82,7 @@ export class RtspToJpeg extends FeedConsumer {
         return this.ffmpegToJpeg.onEnd(handler);
     }
 
-    private processFrame(frame: Buffer): Promise<Buffer> {
+    private processFrame(frame: Frame): Promise<Frame> {
         return this.motionDetector.processFrame(frame);
     }
 }

@@ -2,6 +2,7 @@ import { Feed, MotionRegion } from 'hastycam.interface';
 import { FeedConsumer } from './FeedConsumer';
 import sharp from 'sharp';
 import { frameDiff } from './frameDiff';
+import { Frame } from './FFmpegToJpeg';
 
 const DEFAULT_SAMPLE_INTERVAL = 1;
 
@@ -18,12 +19,13 @@ export class MotionDetector extends FeedConsumer {
         this.prevPixels = undefined;
     }
     
-    async processFrame(jpg: Buffer): Promise<Buffer> {
+    async processFrame(frame: Frame): Promise<Frame> {
+        const jpg = frame.buffer;
         const feed = this.getFeed();
         const enabled = feed.detectMotion === true;
         
         if (!enabled) {
-            return jpg;
+            return frame;
         }
 
         const sampleInterval = feed.motionSampleInterval || DEFAULT_SAMPLE_INTERVAL;
@@ -51,7 +53,7 @@ export class MotionDetector extends FeedConsumer {
             const diffPercent = diff.count / maxDiffPixels;
 
             if (diffPercent >= diffThreshold) {
-                return await sharp(diff.pixels, {
+                const diffBuffer = await sharp(diff.pixels, {
                     raw: {
                         width,
                         height,
@@ -60,10 +62,14 @@ export class MotionDetector extends FeedConsumer {
                 })
                     .jpeg()
                     .toBuffer();
+                return {
+                    buffer: diffBuffer,
+                    motionDetected: true,
+                };
             }
         }
 
         // no diff, just return original data
-        return jpg;
+        return frame;
     }
 }

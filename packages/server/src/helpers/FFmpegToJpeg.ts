@@ -5,9 +5,14 @@ import { EventEmitter } from 'stream';
 type FFmpegArgs = string[];
 type FFmpegArgGenerator = () => string[];
 
+export interface Frame {
+    buffer: Buffer;
+    motionDetected?: boolean;
+}
+
 interface Options {
     debug?: boolean;
-    frameProcessor?: (f: Buffer) => Promise<Buffer>;
+    frameProcessor?: (f: Frame) => Promise<Frame>;
 };
 
 const JPG_START = Buffer.from([0xff, 0xd8]);
@@ -24,7 +29,7 @@ export class FFmpegToJpeg {
 
     // options
     private readonly isDebug: boolean;
-    private readonly frameProcessor?: (f: Buffer) => Promise<Buffer>;
+    private readonly frameProcessor?: (f: Frame) => Promise<Frame>;
     
     private argGenerator: FFmpegArgGenerator;
     private ffmpeg: ChildProcess;
@@ -86,13 +91,13 @@ export class FFmpegToJpeg {
         }
     }
 
-    async getNextFrame() {
-        return new Promise<Buffer>(resolve => {
+    async getNextFrame(): Promise<Frame> {
+        return new Promise<Frame>(resolve => {
             this.emitter.once(Events.JpegFrame, buffer => resolve(buffer));
         });
     }
 
-    onFrame(handler: (buffer: Buffer) => void): () => void {
+    onFrame(handler: (buffer: Frame) => void): () => void {
         this.emitter.on(Events.JpegFrame, handler);
 
         // return an unsubscribe fn
@@ -131,7 +136,9 @@ export class FFmpegToJpeg {
             }
             
             const end = endMarker + JPG_END.length;
-            const frame = buffer.slice(start, end);
+            const frame: Frame = {
+                buffer: buffer.slice(start, end),
+            };
             const processed = this.frameProcessor ? (await this.frameProcessor(frame)) : frame;
 
             this.emitter.emit(Events.JpegFrame, processed);

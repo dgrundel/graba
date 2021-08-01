@@ -2,19 +2,6 @@ import { Feed } from 'hastycam.interface';
 import { config } from './config';
 import { RtspToJpeg } from './RtspToJpeg';
 
-export enum StreamEventType {
-    JpgChunk = "JPEG_CHUNK",
-    JpgComplete = "JPEG_COMPLETE",
-    FeedClose = "FEED_CLOSE",
-}
-
-export interface StreamEvent {
-    id: string;
-    isStart: boolean;
-    isEnd: boolean;
-    data?: Buffer;
-}
-
 const streams: Record<string, RtspToJpeg> = {};
 
 export const getStream = (id: string): RtspToJpeg | undefined => {

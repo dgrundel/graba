@@ -37,7 +37,8 @@ router.get('/stream/:id', (req: any, res: any, next: () => void) => {
         'Content-Type': 'multipart/x-mixed-replace;boundary=' + MJPEG_BOUNDARY
     });
 
-    const off = stream.onFrame(jpgData => {
+    const off = stream.onFrame(frame => {
+        const jpgData = frame.buffer;
         res.write(Buffer.from(`\r\n--${MJPEG_BOUNDARY}`));
         res.write(Buffer.from(`\r\nContent-Type: image/jpeg`));
         res.write(Buffer.from(`\r\nContent-length: ${jpgData.length}\r\n\r\n`));
@@ -58,7 +59,8 @@ router.get('/still/:id', (req: any, res: any, next: () => void) => {
         return;
     }
 
-    stream.getFrame().then(jpgData => {
+    stream.getFrame().then(frame => {
+        const jpgData = frame.buffer;
         res.writeHead(200, {
             'Expires': 'Mon, 01 Jul 1980 00:00:00 GMT',
             'Cache-Control': 'no-cache, no-store, must-revalidate',

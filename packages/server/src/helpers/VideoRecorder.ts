@@ -5,6 +5,7 @@ import { createVideoRecord, updateRecord } from '../background/VideoStorage';
 import { onExit } from './util';
 import { ChildProcess, spawn } from 'child_process';
 import path from 'path';
+import { Frame } from './FFmpegToJpeg';
 
 const ONE_DAY_MS = 24 * 60 * 60 * 1000 // 24 hr
 
@@ -24,6 +25,7 @@ export class VideoRecorder extends FeedConsumer {
         this.initTimer = this.initTimer.bind(this);
         
         onExit(this.stop);
+        this.start();
     }
 
     handleFeedUpdate(next: Feed, prev: Feed): void {
@@ -83,7 +85,7 @@ export class VideoRecorder extends FeedConsumer {
         this.start();
     }
 
-    writeFrame(buffer: Buffer) {
+    writeFrame(frame: Frame) {
         if (!this.isEnabled()) {
             return;
         }
@@ -92,6 +94,7 @@ export class VideoRecorder extends FeedConsumer {
             return;
         }
 
+        const buffer = frame.buffer;
         const data = Buffer.concat([
             buffer,
             Buffer.from('\n'),

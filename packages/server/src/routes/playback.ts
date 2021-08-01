@@ -2,7 +2,7 @@ import fs, { promises as fsPromises } from 'fs';
 import express from 'express';
 import sharp from 'sharp';
 import { deleteRecordById, getAllVideoRecords, getRecordById } from '../background/VideoStorage';
-import { FFmpegToJpeg } from '../helpers/FFmpegToJpeg';
+import { FFmpegToJpeg, Frame } from '../helpers/FFmpegToJpeg';
 
 const MJPEG_BOUNDARY = 'mjpegBoundary';
 
@@ -69,9 +69,10 @@ router.get('/stream/:id', (req: any, res: any, next: () => void) => {
     const ffToJpeg = new FFmpegToJpeg(ffArgGenerator);
     let prev: Buffer | undefined;
 
-    ffToJpeg.onFrame((frame: Buffer) => {
-        prev = frame;
-        writeFrame(frame);
+    ffToJpeg.onFrame((frame: Frame) => {
+        const buffer = frame.buffer;
+        prev = buffer;
+        writeFrame(buffer);
     });
 
     ffToJpeg.onEnd(async () => {
