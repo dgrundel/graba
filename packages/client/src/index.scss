@@ -1,7 +1,14 @@
 @import-normalize; /* bring in normalize.css styles */
 @import url(https://fontlibrary.org//face/aileron);
+@import url(https://fontlibrary.org//face/joszika);
 
 html, body {
     margin: 0;
     padding: 0;
+}
+
+code, pre {
+    font-family: 'JozsikaRegular';
+    font-weight: normal;
+    font-style: normal;
 }

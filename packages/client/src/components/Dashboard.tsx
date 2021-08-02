@@ -1,5 +1,5 @@
 import React, { CSSProperties } from 'react';
-import { Text, Stack, ProgressIndicator, DetailsList, IColumn, DetailsListLayoutMode, SelectionMode, Separator } from '@fluentui/react';
+import { Text, Stack, ProgressIndicator, DetailsList, IColumn, DetailsListLayoutMode, SelectionMode, Separator, Callout, DirectionalHint } from '@fluentui/react';
 import { Config, Feed, SystemStats } from 'hastycam.interface';
 import { Spinner } from './Spinner';
 import { getJson } from '../fetch';
@@ -7,6 +7,8 @@ import { Grid } from './Grid';
 import { Overlay } from './Overlay';
 import { col, humanSize } from '../display';
 import { Interval } from './Interval';
+import { nanoid } from 'nanoid';
+import { theme } from '../theme';
 
 interface LoaderResult {
     config: Config;
@@ -16,6 +18,7 @@ interface LoaderResult {
 interface State {
     feeds: Feed[];
     stats?: SystemStats;
+    processTooltipPid?: number;
 }
 
 const recIndicatorStyle: CSSProperties = {
@@ -167,7 +170,7 @@ export class Dashboard extends React.Component<{}, State> {
         ];
 
         const items = stats.processes.list
-            .filter(p => p.parentPid === stats.serverPid);
+            .filter(p => p.parentPid === stats.serverPid || p.pid === stats.serverPid);
 
         const renderItemColumn = (item?: SystemStats.Process, index?: number, column?: IColumn): React.ReactNode => {
                 const prop = column!.fieldName as keyof SystemStats.Process;
@@ -177,6 +180,21 @@ export class Dashboard extends React.Component<{}, State> {
                     case 'mem':
                         const n = item![prop] as number | undefined;
                         return (n && n > 0 ? n : 0).toFixed(2) + '%';
+
+                    case 'command':
+                        const calloutId = 'callout-' + nanoid(6);
+                        return <>
+                            <span id={calloutId} onClick={() => this.setState({ processTooltipPid: item?.pid })}>{item?.command}</span>
+                            {this.state.processTooltipPid === item?.pid ? <Callout
+                                role="alertdialog"
+                                gapSpace={0}
+                                target={'#' + calloutId}
+                                setInitialFocus
+                                style={{ maxWidth: '50vw', padding: theme.spacing.l1 }}
+                                onDismiss={() => this.setState({ processTooltipPid: undefined })}
+                                directionalHint={DirectionalHint.leftBottomEdge}
+                            ><code>{item?.command}</code></Callout> : ''}
+                        </>;
             
                     default:
                         return item![prop] as string;
