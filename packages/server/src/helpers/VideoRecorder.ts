@@ -9,14 +9,15 @@ import { Frame } from './FFmpegToJpeg';
 
 const ONE_DAY_MS = 24 * 60 * 60 * 1000 // 24 hr
 
-export class VideoRecorder extends FeedConsumer {
+export class VideoRecorder {
+    private readonly feed: Feed;
     private record?: VideoRecord;
     private ffmpeg?: ChildProcess;
     private timeout?: NodeJS.Timeout;
     private rotateInterval?: number = 60 * 60 * 1000; // 1 hr
 
     constructor(feed: Feed) {
-        super(feed);
+        this.feed = feed;
 
         this.start = this.start.bind(this);
         this.stop = this.stop.bind(this);
@@ -28,33 +29,23 @@ export class VideoRecorder extends FeedConsumer {
         this.start();
     }
 
-    handleFeedUpdate(next: Feed, prev: Feed): void {
-        this.restart();
-    }
-
-    handleFeedEnd(feed: Feed): void {
-        this.stop();
-    }
-
     start() {
-        if (!this.isEnabled()) {
-            return;
-        }
-
-        const feed = this.getFeed();
+        const feed = this.feed;
         const savePath = feed.savePath;
 
         if (!savePath) {
             throw new Error(`Save path is empty for feed ${feed.name} [${feed.id}]`);
         }
 
-        this.record = createVideoRecord(this.getFeed());
+        this.record = createVideoRecord(feed);
         this.startFFmpeg(this.record.path);
 
         this.initTimer();
     }
 
     stop() {
+        console.log('stopping vidrec');
+
         if (this.timeout) {
             clearTimeout(this.timeout);
         }
@@ -86,10 +77,6 @@ export class VideoRecorder extends FeedConsumer {
     }
 
     writeFrame(frame: Frame) {
-        if (!this.isEnabled()) {
-            return;
-        }
-
         if (!this.ffmpeg) {
             return;
         }
@@ -107,10 +94,6 @@ export class VideoRecorder extends FeedConsumer {
         }
 
         this.ffmpeg.stdin?.write(data);
-    }
-    
-    private isEnabled() {
-        return this.getFeed().saveVideo === true;
     }
 
     private startFFmpeg(outfile: string) {
@@ -157,7 +140,7 @@ export class VideoRecorder extends FeedConsumer {
             return;
         }
 
-        const savePath = this.getFeed().savePath;
+        const savePath = this.feed.savePath;
         if (!savePath) {
             return;
         }
@@ -186,6 +169,9 @@ export class VideoRecorder extends FeedConsumer {
         // since we'd like to break up videos cleanly on the day, 
         // we work back from midnight to figure out how long to wait
         const delay = remaining % this.rotateInterval;
+
+        console.log('restarting video in ', delay);
+
         this.timeout = setTimeout(this.restart, delay);
     }
 }

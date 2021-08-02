@@ -1,25 +1,35 @@
 import { Feed } from 'hastycam.interface';
-import { FeedConsumer } from '../helpers/FeedConsumer';
 import { MotionDetector } from '../helpers/MotionDetector';
 import { VideoRecorder } from '../helpers/VideoRecorder';
 import { FFmpegToJpeg, Frame } from '../helpers/FFmpegToJpeg';
+import { EventEmitter } from 'stream';
 
 type FFmpegArgs = string[];
 
-export class RtspToJpeg extends FeedConsumer {
+enum Events {
+    End = 'RtspStream:end'
+}
+
+export class RtspStream {
+    private readonly emitter = new EventEmitter();
     private readonly ffmpegToJpeg: FFmpegToJpeg;
     private readonly motionDetector: MotionDetector;
-    private readonly videoRecorder: VideoRecorder;
+    private readonly videoRecorder?: VideoRecorder;
 
     constructor(feed: Feed) {
-        super(feed);
-
-        this.ffmpegToJpeg = new FFmpegToJpeg(() => this.buildFFmpegArgs(feed), {
+        const ffmpegToJpegOptions = {
             frameProcessor: this.processFrame.bind(this),
-        });
+        };
+        this.ffmpegToJpeg = new FFmpegToJpeg(() => this.buildFFmpegArgs(feed), ffmpegToJpegOptions);
+        this.ffmpegToJpeg.onEnd(this.end.bind(this));
+        
         this.motionDetector = new MotionDetector(feed);
-        this.videoRecorder = new VideoRecorder(feed);
-        this.onFrame(this.videoRecorder.writeFrame);
+        
+        if (feed.saveVideo) {
+            this.videoRecorder = new VideoRecorder(feed);
+            this.onFrame(this.videoRecorder.writeFrame);
+            this.emitter.on(Events.End, this.videoRecorder.stop);
+        }
     }
 
     buildFFmpegArgs(feed: Feed): FFmpegArgs {
@@ -50,18 +60,9 @@ export class RtspToJpeg extends FeedConsumer {
         ];
     }
 
-    handleFeedUpdate(next: Feed, prev: Feed): void {
-        this.motionDetector.updateFeed(next);
-        this.videoRecorder.updateFeed(next);
-
-        this.ffmpegToJpeg.updateArgGenerator(() => this.buildFFmpegArgs(next));
-    }
-
-    handleFeedEnd(feed: Feed): void {
-        this.motionDetector.endFeed();
-        this.videoRecorder.endFeed();
-
+    end() {
         this.ffmpegToJpeg.stop();
+        this.emitter.emit(Events.End);
     }
 
     async getFrame() {
@@ -73,7 +74,7 @@ export class RtspToJpeg extends FeedConsumer {
     }
 
     onEnd(handler: () => void) {
-        return this.ffmpegToJpeg.onEnd(handler);
+        this.emitter.once(Events.End, handler);
     }
 
     private processFrame(frame: Frame): Promise<Frame> {

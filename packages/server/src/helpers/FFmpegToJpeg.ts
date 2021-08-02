@@ -31,12 +31,9 @@ export class FFmpegToJpeg {
     private readonly isDebug: boolean;
     private readonly frameProcessor?: (f: Frame) => Promise<Frame>;
     
-    private argGenerator: FFmpegArgGenerator;
     private ffmpeg: ChildProcess;
 
     constructor(argGenerator: FFmpegArgGenerator, options?: Options) {
-        this.argGenerator = argGenerator;
-        
         // options
         this.isDebug = options?.debug === true;
         this.frameProcessor = options?.frameProcessor;
@@ -56,8 +53,6 @@ export class FFmpegToJpeg {
         ff.on('error', this.ffmpegErrorHandler);
         ff.stderr.on('data', this.ffmpegStderrHandler);
         ff.stdout.on('data', this.frameChain.put);
-
-        this.ffmpeg = ff;
         return ff;
     }
 
@@ -69,25 +64,8 @@ export class FFmpegToJpeg {
         this.ffmpeg.stdout?.off('data', this.frameChain.put);
 
         // kill ffmpeg process
-        if (this.ffmpeg.connected && !this.ffmpeg.kill()) {
+        if (!this.ffmpeg.kill()) {
             throw new Error('Error killing ffmpeg process');
-        }
-    }
-
-    updateArgGenerator(next: FFmpegArgGenerator): void {
-        // build args for old feed
-        const prevArgs = this.argGenerator();
-
-        // build args for new FFmpeg process
-        this.argGenerator = next;
-        const newFFmpegArgs = this.argGenerator();
-
-        // check to see if we need to restart ffmpeg
-        if (prevArgs.join(' ') !== newFFmpegArgs.join(' ')) {
-            this.stop();
-
-            // respawn ffmpeg
-            this.start(newFFmpegArgs);
         }
     }
 

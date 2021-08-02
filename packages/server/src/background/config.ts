@@ -29,6 +29,26 @@ class ConfigImpl implements Config {
     get feeds() {
         return this.store.get('feeds');
     }
+
+    createOrUpdateFeed(feed: Feed) {
+        const feeds = this.feeds.slice();
+        const i = feeds.findIndex(f => f.id === feed.id);
+        if (i !== -1) {
+            feeds[i] = feed;
+            this.feeds = feeds;
+        } else {
+            this.feeds = this.feeds.concat(feed);
+        }
+    }
+
+    deleteFeed(id: string) {
+        const feeds = this.feeds.slice();
+        const i = feeds.findIndex(f => f.id === id);
+        if (i !== -1) {
+            feeds.splice(i, 1);
+            this.feeds = feeds;
+        }
+    }
 }
 
 export const config = new ConfigImpl();

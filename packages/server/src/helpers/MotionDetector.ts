@@ -6,22 +6,17 @@ import { Frame } from './FFmpegToJpeg';
 
 const DEFAULT_SAMPLE_INTERVAL = 1;
 
-export class MotionDetector extends FeedConsumer {
+export class MotionDetector {
+    private readonly feed: Feed;
     private prevPixels?: Buffer;
 
-    handleFeedUpdate(feed: Feed, prev: Feed): void {
-        // if video scale changes, frame sizes won't match, so we need to clear prev frame
-        this.prevPixels = undefined;
+    constructor(feed: Feed) {
+        this.feed = feed;
     }
 
-    handleFeedEnd(feed: Feed): void {
-        // clean up here
-        this.prevPixels = undefined;
-    }
-    
     async processFrame(frame: Frame): Promise<Frame> {
         const jpg = frame.buffer;
-        const feed = this.getFeed();
+        const feed = this.feed;
         const enabled = feed.detectMotion === true;
         
         if (!enabled) {

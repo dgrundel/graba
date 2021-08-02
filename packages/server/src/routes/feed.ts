@@ -1,7 +1,7 @@
 import express from 'express';
 import { Feed, validateFeed, ErrorMessage, mergeErrors } from 'hastycam.interface';
 import { config } from '../background/config';
-import { getAllStreams, getStream, addStream, deleteStream } from '../background/streams';
+import { getStream, stopStream, updateStream } from '../background/streams';
 import fs from 'fs';
 
 export const router = express.Router();
@@ -9,14 +9,7 @@ export const router = express.Router();
 const MJPEG_BOUNDARY = 'mjpegBoundary';
 
 router.get('/list', (req: any, res: any, next: () => void) => {
-    const streams = getAllStreams();
-    res.json(streams.map(stream => {
-        const feed = stream.getFeed();
-        return { 
-            id: feed.id,
-            name: feed.name,
-        };
-    }));
+    res.json(config.feeds.map(f => ({ id: f.id, name: f.name })));
 });
 
 router.get('/stream/:id', (req: any, res: any, next: () => void) => {
@@ -93,26 +86,10 @@ router.post('/', (req: any, res: any, next: () => void) => {
         ...savePathValidator(feed)
     );
     if (errors.length === 0) {
-        
         // add to or update config file
-        const feeds = config.feeds;
-        const i = feeds.findIndex(f => f.id === feed.id);
-        if (i !== -1) {
-            feeds.splice(i, 1, feed);
-        } else {
-            feeds.push(feed);
-        }
-        config.feeds = feeds;
-
+        config.createOrUpdateFeed(feed);
         // create/update stream
-        const stream = getStream(feed.id);
-        if (stream) {
-            // update existing
-            stream.updateFeed(feed);
-        } else {
-            // create new
-            addStream(feed);
-        }
+        updateStream(feed);
 
         res.json(feed);
     } else {
@@ -123,13 +100,11 @@ router.post('/', (req: any, res: any, next: () => void) => {
 router.delete('/:id', (req: any, res: any, next: () => void) => {
     const id = req.params.id;
 
-    const stream = getStream(id);
-    if (!stream) {
-        res.writeHead(404);
-        res.end('Not found.');
-        return;
+    try {
+        stopStream(id);
+        config.deleteFeed(id);
+        res.json(true);
+    } catch (e) {
+        res.status(500).json(e);
     }
-
-    deleteStream(id);
-    res.json(true);
 });
