@@ -20,7 +20,9 @@ export class VideoRecorder {
     constructor(feed: Feed) {
         this.feed = feed;
         this.rotateInterval = 60 * 60 * 1000; // 1 hr
-        this.motionlessFrames = new LimitCounter(feed.maxFps * 30); // 30 sec, roughly
+
+        const motionEndAfterFrameCount = feed.maxFps * (feed.motionEndTimeout || Feed.MIN_MOTION_END_TIMEOUT);
+        this.motionlessFrames = new LimitCounter(motionEndAfterFrameCount);
 
         this.start = this.start.bind(this);
         this.stop = this.stop.bind(this);
