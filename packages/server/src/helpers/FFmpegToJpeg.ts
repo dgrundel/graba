@@ -64,9 +64,7 @@ export class FFmpegToJpeg {
         this.ffmpeg.stdout?.off('data', this.frameChain.put);
 
         // kill ffmpeg process
-        if (!this.ffmpeg.kill()) {
-            throw new Error('Error killing ffmpeg process');
-        }
+        this.ffmpeg.kill();
     }
 
     async getNextFrame(): Promise<Frame> {
