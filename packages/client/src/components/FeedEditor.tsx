@@ -1,4 +1,5 @@
 import React from 'react';
+import prettyMs from 'pretty-ms';
 import { ActionButton, Text, Stack, TextField, PrimaryButton, Spinner, DefaultButton, Slider, TooltipHost, Icon, Toggle, Separator } from '@fluentui/react';
 import { Feed } from 'hastycam.interface';
 import { theme } from '../theme';
@@ -27,8 +28,9 @@ const feedFieldNames: Record<keyof Feed, string> = {
     scaleFactor: 'Scale factor',
     videoQuality: 'Video quality',
     saveVideo: 'Save video',
-    onlySaveMotion: 'Only save when motion detected',
     savePath: 'Save path',
+    onlySaveMotion: 'Only save when motion detected',
+    motionEndTimeout: 'Motion timeout',
     detectMotion: 'Motion detection',
     motionSampleInterval: 'Motion sampling interval',
     motionDiffThreshold: 'Motion diff threshold',
@@ -53,8 +55,12 @@ const feedFieldTooltips: Record<keyof Feed, string | JSX.Element | undefined> = 
         <em>This value is passed to FFmpeg's <code>qscale</code> argument.</em>
     </>,
     saveVideo: undefined,
-    onlySaveMotion: undefined,
     savePath: undefined,
+    onlySaveMotion: undefined,
+    motionEndTimeout: <>
+        When only saving video on motion detection, this is the <em>minimum</em> amount of 
+        time to wait for more motion to happen before recording is stopped.
+    </>,
     detectMotion: undefined,
     motionSampleInterval: <>
         Check every <em>n</em> pixels for motion.
@@ -200,7 +206,10 @@ export class FeedEditor extends React.Component<Props, State> {
                 
                 {this.renderFeedValue('saveVideo', value => value ? 'Enabled' : 'Disabled')}
                 {this.state.feed.saveVideo && this.state.feed.detectMotion ? 
-                    this.renderFeedValue('onlySaveMotion', value => value ? 'Enabled' : 'Disabled')
+                    <>
+                        {this.renderFeedValue('onlySaveMotion', value => value ? 'Enabled' : 'Disabled')}
+                        {this.renderFeedValue('motionEndTimeout', value => typeof value === 'number' ? prettyMs(value * 1000) : '')}
+                    </>
                     : undefined}
                 {this.state.feed.saveVideo ? this.renderFeedValue('savePath') : ''}
 
@@ -294,6 +303,19 @@ export class FeedEditor extends React.Component<Props, State> {
                     onChange={(e, onlySaveMotion) => this.setFeedData({ onlySaveMotion })}
                 />
                 <Note field={'onlySaveMotion'}/>
+
+                <Slider
+                    label={feedFieldNames.motionEndTimeout}
+                    disabled={this.state.feed.detectMotion !== true}
+                    min={Feed.MIN_MOTION_END_TIMEOUT}
+                    step={1}
+                    max={60 * 10} // 10 min
+                    value={this.state.feed.motionEndTimeout || Feed.MIN_MOTION_END_TIMEOUT}
+                    showValue
+                    onChange={(motionEndTimeout) => { this.setFeedData({ motionEndTimeout }) }}
+                    valueFormat={(n) => prettyMs(n * 1000)}
+                />
+                <Note field={'motionEndTimeout'}/>
 
                 <TextField
                     label={feedFieldNames.savePath}

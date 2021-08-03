@@ -13,8 +13,9 @@ export interface Feed {
 
     // storage
     saveVideo?: boolean;
-    onlySaveMotion?: boolean; // only save video when motion is detected
     savePath?: string;
+    onlySaveMotion?: boolean; // only save video when motion is detected
+    motionEndTimeout?: number; // seconds. how long to wait for more motion after motion has stopped before ending recording
 
     // motion detection
     detectMotion?: boolean;
@@ -26,6 +27,7 @@ export interface Feed {
 export namespace Feed {
     export const DEFAULT_VIDEO_QUALITY = 24;
     export const DEFAULT_MAX_FPS = 16;
+    export const MIN_MOTION_END_TIMEOUT = 1; // 1 sec
 }
 
 export const validateFeed = (feed: Partial<Feed>): ErrorMessage[] => {
@@ -47,6 +49,13 @@ export const validateFeed = (feed: Partial<Feed>): ErrorMessage[] => {
             feed.saveVideo === true,
             [
                 validateNotEmpty(feed, 'savePath', 'Storage path'),
+                ...validateIf(
+                    typeof feed.motionEndTimeout !== 'undefined',
+                    [
+                        validateNumeric(feed, 'motionEndTimeout', 'Motion timeout'),
+                        validateNumberGreaterThanOrEqual(feed, 'motionEndTimeout', Feed.MIN_MOTION_END_TIMEOUT, 'Motion timeout'),
+                    ]
+                ),
             ]
         ),
         ...validateIf(
