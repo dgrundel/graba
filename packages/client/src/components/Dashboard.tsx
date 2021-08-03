@@ -33,6 +33,15 @@ const recIndicatorStyle: CSSProperties = {
     textTransform: 'uppercase',
     borderRadius: '0.2em',
 };
+const motionRecIndicatorStyle: CSSProperties = {
+    ...recIndicatorStyle,
+    backgroundColor: 'rgba(255, 205, 0, 0.5)',
+    color: '#000',
+};
+const alwaysRecIndicator = <Text block variant="small" style={recIndicatorStyle}>Rec</Text>;
+const motionRecIndicator = <Text block variant="small" style={motionRecIndicatorStyle}>
+    <AppIcon icon={IconRun} size={'small'} />Rec
+</Text>;
 
 export class Dashboard extends React.Component<{}, State> {
     private readonly loader: Promise<LoaderResult>;
@@ -75,11 +84,10 @@ export class Dashboard extends React.Component<{}, State> {
 
                     <Grid columns={4}>
                         {this.state.feeds.map(feed => {
-                            const recIndicator = <Text block variant="small" style={recIndicatorStyle}>
-                                Rec
-                                {feed.onlySaveMotion ? <AppIcon icon={IconRun} size={'small'} /> : ''}
-                            </Text>;
-
+                            let recIndicator: React.ReactNode | undefined;
+                            if (feed.saveVideo) {
+                                recIndicator = feed.onlySaveMotion ? motionRecIndicator : alwaysRecIndicator;
+                            }
                             return <Overlay position="tr" element={feed.saveVideo ? recIndicator : undefined}>
                                 <img alt={feed.name} src={`http://localhost:4000/feed/still/${feed.id}`} style={{ maxWidth: '100%', objectFit: 'contain' }}/>
                             </Overlay>
