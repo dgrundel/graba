@@ -9,6 +9,8 @@ import { col, humanSize } from '../display';
 import { Interval } from './Interval';
 import { nanoid } from 'nanoid';
 import { theme } from '../theme';
+import { AppIcon } from './AppIcon';
+import { IconRun } from '@tabler/icons';
 
 interface LoaderResult {
     config: Config;
@@ -65,7 +67,6 @@ export class Dashboard extends React.Component<{}, State> {
     }
 
     render() {
-        const recIndicator = <Text block variant="smallPlus" style={recIndicatorStyle}>Rec</Text>;
 
         return <Spinner waitFor={this.loader}>
             <Interval callback={this.updateStats} interval={5000}>
@@ -74,6 +75,11 @@ export class Dashboard extends React.Component<{}, State> {
 
                     <Grid columns={4}>
                         {this.state.feeds.map(feed => {
+                            const recIndicator = <Text block variant="small" style={recIndicatorStyle}>
+                                Rec
+                                {feed.onlySaveMotion ? <AppIcon icon={IconRun} size={'small'} /> : ''}
+                            </Text>;
+
                             return <Overlay position="tr" element={feed.saveVideo ? recIndicator : undefined}>
                                 <img alt={feed.name} src={`http://localhost:4000/feed/still/${feed.id}`} style={{ maxWidth: '100%', objectFit: 'contain' }}/>
                             </Overlay>

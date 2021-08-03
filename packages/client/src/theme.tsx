@@ -1,33 +1,6 @@
 import { createTheme, registerIcons } from '@fluentui/react';
-import { IconCheck, IconPlus, IconTrash, IconChevronUp, IconChevronDown, IconChevronLeft, IconChevronRight, IconSettings, IconPlayerPlay, IconHome, IconVideo, IconDeviceFloppy, IconPencil, IconX, IconInfoCircle, IconHelp, IconPlayerRecord, IconAlertCircle, IconDownload } from '@tabler/icons';
-import { CSSProperties } from 'react';
-
-// const generated = ({
-//     palette: {
-//         themePrimary: '#54ebbb',
-//         themeLighterAlt: '#030907',
-//         themeLighter: '#0e261e',
-//         themeLight: '#194638',
-//         themeTertiary: '#338d70',
-//         themeSecondary: '#4acea5',
-//         themeDarkAlt: '#64edc1',
-//         themeDark: '#7befcb',
-//         themeDarker: '#9cf4d8',
-//         neutralLighterAlt: '#323130',
-//         neutralLighter: '#31302f',
-//         neutralLight: '#2f2e2d',
-//         neutralQuaternaryAlt: '#2c2b2a',
-//         neutralQuaternary: '#2a2928',
-//         neutralTertiaryAlt: '#282726',
-//         neutralTertiary: '#c8c8c8',
-//         neutralSecondary: '#d0d0d0',
-//         neutralPrimaryAlt: '#dadada',
-//         neutralPrimary: '#ffffff',
-//         neutralDark: '#f4f4f4',
-//         black: '#f8f8f8',
-//         white: '#323130',
-//     }
-// });
+import { IconCheck, IconPlus, IconTrash, IconChevronUp, IconChevronDown, IconChevronLeft, IconChevronRight, IconSettings, IconPlayerPlay, IconHome, IconVideo, IconDeviceFloppy, IconPencil, IconX, IconInfoCircle, IconHelp, IconPlayerRecord, IconAlertCircle, IconDownload, IconRun, TablerIconProps } from '@tabler/icons';
+import { AppIcon } from './components/AppIcon';
 
 const generated = {
     palette: {
@@ -62,7 +35,6 @@ export const theme = createTheme({
         fontFamily: "'AileronLight', sans-serif",
         fontWeight: 'regular',
         fontSize: '15px',
-        // letterSpacing: '0.03rem',
     },
     fonts: {
         xSmall: {
@@ -92,49 +64,41 @@ export const theme = createTheme({
     },
 });
 
-const iconProps = {
+const fluentIconProps: TablerIconProps = {
     style: {
-        width: '100%',
-        height: '100%',
-    } as CSSProperties,
-    stroke: 1.25,
-    size: 16,
-}
-
-const fluentIconProps = {
-    ...iconProps,
-    style: {
-        ...iconProps.style,
         position: 'relative', 
         top: '.15rem',
-    } as CSSProperties
+    }
 }
+
+const fluentIconContainerStyle = { verticalAlign: 'baseline' };
 
 registerIcons({
     icons: {
         // used by Fluent, needs special styling
-        CheckMark: <IconCheck {...fluentIconProps} />,
-        ChevronDown: <IconChevronDown {...fluentIconProps} />,
-        ChevronLeft: <IconChevronLeft {...fluentIconProps} />,
-        ChevronRight: <IconChevronRight {...fluentIconProps} />,
-        ChevronUp: <IconChevronUp {...fluentIconProps} />,
+        CheckMark: <AppIcon icon={IconCheck} style={fluentIconContainerStyle} iconProps={fluentIconProps} />,
+        ChevronDown: <AppIcon icon={IconChevronDown} style={fluentIconContainerStyle} iconProps={fluentIconProps} />,
+        ChevronLeft: <AppIcon icon={IconChevronLeft} style={fluentIconContainerStyle} iconProps={fluentIconProps} />,
+        ChevronRight: <AppIcon icon={IconChevronRight} style={fluentIconContainerStyle} iconProps={fluentIconProps} />,
+        ChevronUp: <AppIcon icon={IconChevronUp} style={fluentIconContainerStyle} iconProps={fluentIconProps} />,
         
         // used by Fluent, default styling
-        ErrorBadge: <IconAlertCircle {...iconProps} />,
+        ErrorBadge: <AppIcon icon={IconAlertCircle} />,
 
         // others
-        DeviceFloppy: <IconDeviceFloppy {...iconProps} />,
-        Download: <IconDownload {...iconProps} />,
-        Help: <IconHelp {...iconProps} />,
-        Home: <IconHome {...iconProps} />,
-        InfoCircle: <IconInfoCircle {...iconProps} />,
-        Pencil: <IconPencil {...iconProps} />,
-        PlayerPlay: <IconPlayerPlay {...iconProps} />,
-        PlayerRecord: <IconPlayerRecord {...iconProps} />,
-        Plus: <IconPlus {...iconProps} />,
-        Settings: <IconSettings {...iconProps} />,
-        Trash: <IconTrash {...iconProps} />,
-        Video: <IconVideo {...iconProps} />,
-        X: <IconX {...iconProps} />,
+        DeviceFloppy: <AppIcon icon={IconDeviceFloppy} />,
+        Download: <AppIcon icon={IconDownload} />,
+        Help: <AppIcon icon={IconHelp} />,
+        Home: <AppIcon icon={IconHome} />,
+        InfoCircle: <AppIcon icon={IconInfoCircle} />,
+        Pencil: <AppIcon icon={IconPencil} />,
+        PlayerPlay: <AppIcon icon={IconPlayerPlay} />,
+        PlayerRecord: <AppIcon icon={IconPlayerRecord} />,
+        Plus: <AppIcon icon={IconPlus} />,
+        Run: <AppIcon icon={IconRun} />,
+        Settings: <AppIcon icon={IconSettings} />,
+        Trash: <AppIcon icon={IconTrash} />,
+        Video: <AppIcon icon={IconVideo} />,
+        X: <AppIcon icon={IconX} />,
     }
 });
