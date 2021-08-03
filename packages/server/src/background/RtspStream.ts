@@ -36,15 +36,12 @@ export class RtspStream {
         const filters: string[] = [];
     
         // scale video
-        if (feed.scaleFactor) {
+        if (feed.scaleFactor !== 1.0) {
             filters.push(`scale='iw*${feed.scaleFactor}:ih*${feed.scaleFactor}'`);  
         }
     
         // set max fps
-        const maxFps = feed.maxFps || Feed.DEFAULT_MAX_FPS;
-        filters.push(`fps='fps=min(${maxFps},source_fps)'`); 
-    
-        const qualityLevel = feed.videoQuality || Feed.DEFAULT_VIDEO_QUALITY;
+        filters.push(`fps='fps=min(${feed.maxFps},source_fps)'`); 
     
         return [
             // '-re', // read input at native frame rate, "good for live streams"
@@ -52,7 +49,7 @@ export class RtspStream {
             '-filter:v', filters.join(','), 
             '-f', 'image2', // use image processor
             '-c:v', 'mjpeg', // output a jpg
-            '-qscale:v', qualityLevel.toString(), // set quality level
+            '-qscale:v', feed.videoQuality.toString(), // set quality level
             // '-frames:v', '1', // output a single frame
             '-update', '1', // reuse the same output (stdout in this case)
             'pipe:1', // pipe to stdout

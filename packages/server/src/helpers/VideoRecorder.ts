@@ -1,5 +1,4 @@
 import { Feed, VideoRecord } from 'hastycam.interface';
-import { FeedConsumer } from './FeedConsumer';
 import fs from 'fs';
 import { createVideoRecord, updateRecord } from '../background/VideoStorage';
 import { onExit } from './util';
@@ -21,7 +20,7 @@ export class VideoRecorder {
     constructor(feed: Feed) {
         this.feed = feed;
         this.rotateInterval = 60 * 60 * 1000; // 1 hr
-        this.motionlessFrames = new LimitCounter((feed.maxFps || Feed.DEFAULT_MAX_FPS) * 30); // 30 sec, roughly
+        this.motionlessFrames = new LimitCounter(feed.maxFps * 30); // 30 sec, roughly
 
         this.start = this.start.bind(this);
         this.stop = this.stop.bind(this);

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Text, PrimaryButton, Stack } from '@fluentui/react';
-import { Config } from 'hastycam.interface';
+import { Config, Feed } from 'hastycam.interface';
 import { Spinner } from './Spinner';
 import { theme } from '../theme';
 import { FeedEditor } from './FeedEditor';
@@ -41,8 +41,16 @@ export class ConfigEditor extends React.Component<{}, State> {
     }
 
     addFeed() {
+        const newFeed: Feed = { 
+            id: nanoid(FEED_ID_LENGTH),
+            name: '',
+            streamUrl: '',
+            maxFps: Feed.DEFAULT_MAX_FPS,
+            videoQuality: Feed.DEFAULT_VIDEO_QUALITY,
+            scaleFactor: 1.0,
+        };
         this.setState(prev => {
-            const feeds = prev.config.feeds.concat({ id: nanoid(FEED_ID_LENGTH), name: '', streamUrl: '' });
+            const feeds = prev.config.feeds.concat(newFeed);
             return {
                 config: {
                     ...prev.config,

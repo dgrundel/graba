@@ -7,9 +7,9 @@ export interface Feed {
 
     // stream processing (ffmpeg)
     streamUrl: string;
-    maxFps?: number;
-    scaleFactor?: number; // multiplied by width and height of video to resize
-    videoQuality?: number; // range 2-31, 31 is worst
+    maxFps: number;
+    scaleFactor: number; // multiplied by width and height of video to resize
+    videoQuality: number; // range 2-31, 31 is worst
 
     // storage
     saveVideo?: boolean;
