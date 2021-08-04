@@ -2,8 +2,9 @@ import * as path from 'path';
 import express from 'express';
 import cookieParser from 'cookie-parser';
 import { text, json } from 'body-parser';
-import logger from 'morgan';
+import morgan from 'morgan';
 import cors from 'cors';
+import { logger } from './helpers/logger';
 import { start as startFeeds } from './background/streams';
 import { router as indexRouter } from './routes/index';
 import { router as dashboardRouter } from './routes/dashboard';
@@ -22,8 +23,12 @@ startFeeds();
 const app = express();
 const PORT = 4000;
 
+app.use(morgan('combined', { 
+    stream: { 
+        write: message => logger.http(message.trim())
+    }
+}));
 app.use(cors());
-app.use(logger('dev'));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
@@ -31,6 +36,7 @@ app.use(text()); // body-parser
 app.use(json()); // body-parser
 app.use(express.static(path.join(__dirname, 'public')));
 
+// controllers
 app.use('/', indexRouter);
 app.use('/dashboard', dashboardRouter);
 app.use('/config', configRouter);
@@ -38,5 +44,5 @@ app.use('/feed', feedRouter);
 app.use('/playback', playbackRouter);
 
 app.listen(PORT, () => {
-    console.log(`Server is running at http://localhost:${PORT}`);
+    logger.http(`Server is running at http://localhost:${PORT}`);
 });
