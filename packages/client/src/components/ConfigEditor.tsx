@@ -48,6 +48,8 @@ export class ConfigEditor extends React.Component<{}, State> {
             maxFps: Feed.DEFAULT_MAX_FPS,
             videoQuality: Feed.DEFAULT_VIDEO_QUALITY,
             scaleFactor: 1.0,
+            motionSampleInterval: Feed.DEFAULT_MOTION_SAMPLE_INTERVAL,
+            motionDiffThreshold: Feed.DEFAULT_MOTION_DIFF_THRESHOLD,
         };
         this.setState(prev => {
             const feeds = prev.config.feeds.concat(newFeed);

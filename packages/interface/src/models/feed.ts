@@ -27,6 +27,8 @@ export interface Feed {
 export namespace Feed {
     export const DEFAULT_VIDEO_QUALITY = 24;
     export const DEFAULT_MAX_FPS = 16;
+    export const DEFAULT_MOTION_SAMPLE_INTERVAL = 2;
+    export const DEFAULT_MOTION_DIFF_THRESHOLD = .03;
     export const MIN_MOTION_END_TIMEOUT = 1; // 1 sec
 }
 
