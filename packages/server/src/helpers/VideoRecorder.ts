@@ -57,13 +57,16 @@ export class VideoRecorder {
 
         if (this.ffmpeg) {
             // kill ffmpeg process
-            if (!this.ffmpeg.kill()) {
-                throw new Error('Error killing ffmpeg process');
-            }
+            this.ffmpeg.kill();
             this.ffmpeg = undefined;
         }
 
         if (this.record) {
+            /**
+             * SOMETIMES THIS FILE DOESNT EXIST
+             * 
+             * ... and I don't know why, yet.
+             */
             const stats = fs.statSync(this.record.path);
 
             updateRecord({
@@ -131,13 +134,16 @@ export class VideoRecorder {
             Buffer.from('\n'),
         ]);
 
-        // console.log('motion detected', frame.motionDetected === true);
-
         if (!this.record?.thumbnailPath) {
             this.writeThumbnail(buffer);
         }
 
-        this.ffmpeg.stdin?.write(data);
+        if (!this.ffmpeg.stdin) {
+            console.error(this.ffmpeg);
+            throw new Error('ffmpeg has no stdin');
+        }
+
+        this.ffmpeg.stdin.write(data);
     }
 
     private isStarted(): boolean {

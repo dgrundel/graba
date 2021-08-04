@@ -1,4 +1,5 @@
 import { isPointInRegion, MotionRegion } from 'hastycam.interface';
+import { renderTextToPoints } from './PixelText';
 
 type Pixels = Uint8ClampedArray | Buffer;
 type MinMaxXY = {
@@ -111,6 +112,17 @@ export const frameDiff = (img1: Pixels, img2: Pixels, width: number, height: num
             pxAnalyzeCount++;
         }
     }
+
+    // render the diff percentage onto the image
+    const pct = ((pxDiffCount / pxAnalyzeCount) * 100).toFixed(6);
+    const renderOutput = renderTextToPoints(pct);
+    renderOutput.points.forEach(pt => {
+        const x = width - renderOutput.width + pt[0] - 2; // right edge, 2px offset
+        const y = pt[1] + 2; // top edge, 2px offset
+                
+        const pos = (y * width + x) * CHANNELS;
+        drawPixel(output, pos, 0, 255, 0);
+    });
 
     // return the number of different pixels
     return {
