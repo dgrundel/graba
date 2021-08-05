@@ -1,13 +1,12 @@
-
-export type ChainProcessor<T, R> = (t: T, prev?: R) => Promise<R | undefined>;
+type ProcessorResult<R> = Promise<R | undefined>;
+type ChainProcessor<T, R> = (t: T, prev?: R) => ProcessorResult<R>;
 
 export class Chain<T, R = T> {
-    private link: Promise<R | undefined>;
     private readonly processor: ChainProcessor<T, R>;
-    private run: Promise<void> = Promise.resolve();
-    private doResume?: () => void;
+    private link: ProcessorResult<R>;
+    private isEnded: boolean = false;
 
-    constructor(processor: ChainProcessor<T, R>, initialValue?: R) {
+    constructor(processor: ChainProcessor<T, R>, initialValue?: R | ProcessorResult<R>) {
         this.processor = processor;
         this.link = Promise.resolve(initialValue);
 
@@ -15,21 +14,14 @@ export class Chain<T, R = T> {
     }
 
     put(t: T) {
-        this.link = this.link.then((prev?: R) => {
-            return this.run.then(() => this.processor(t, prev));
-        });
-    }
-
-    stop() {
-        this.run = new Promise(resolve => {
-            this.doResume = resolve;
-        });
-    }
-
-    start() {
-        if (this.doResume) {
-            this.doResume();
-            this.doResume = undefined;
+        if (this.isEnded) {
+            return;
         }
+        this.link = this.link.then((prev?: R) => this.processor(t, prev));
+    }
+
+    end(): ProcessorResult<R> {
+        this.isEnded = true;
+        return new Promise(resolve => this.link.then(resolve));
     }
 }
