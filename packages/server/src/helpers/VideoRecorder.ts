@@ -1,9 +1,5 @@
-import { Feed, VideoRecord } from 'hastycam.interface';
-import fs from 'fs';
-import { createVideoRecord, updateRecord } from '../background/VideoStorage';
-import { onExit } from './util';
-import { ChildProcess, spawn } from 'child_process';
-import path from 'path';
+import { Feed } from 'hastycam.interface';
+import { VideoRecording } from './VideoRecording';
 import { Frame } from './FFmpegToJpeg';
 import { LimitCounter } from './LimitCounter';
 
@@ -13,16 +9,17 @@ export class VideoRecorder {
     private readonly feed: Feed;
     private readonly rotateInterval: number;
     private readonly motionlessFrames: LimitCounter;
-    private record?: VideoRecord;
-    private ffmpeg?: ChildProcess;
+    private recording?: VideoRecording;
     private timeout?: NodeJS.Timeout;
 
     constructor(feed: Feed) {
-        this.feed = feed;
-        this.rotateInterval = 60 * 60 * 1000; // 1 hr
+        if (!feed.saveVideo) {
+            throw new Error(`Feed ${feed.name} [${feed.id}] is not configured to save video`);
+        }
 
-        const motionEndAfterFrameCount = feed.maxFps * (feed.motionEndTimeout || Feed.MIN_MOTION_END_TIMEOUT);
-        this.motionlessFrames = new LimitCounter(motionEndAfterFrameCount);
+        if (!feed.savePath) {
+            throw new Error(`Save path is empty for feed ${feed.name} [${feed.id}]`);
+        }
 
         this.start = this.start.bind(this);
         this.stop = this.stop.bind(this);
@@ -30,23 +27,15 @@ export class VideoRecorder {
         this.writeFrame = this.writeFrame.bind(this);
         this.initTimer = this.initTimer.bind(this);
         
-        onExit(this.stop);
+        this.feed = feed;
+        this.rotateInterval = 60 * 60 * 1000; // 1 hr
+
+        const motionEndAfterFrameCount = feed.maxFps * (feed.motionEndTimeout || Feed.MIN_MOTION_END_TIMEOUT);
+        this.motionlessFrames = new LimitCounter(motionEndAfterFrameCount);
     }
 
     start() {
-        const feed = this.feed;
-        const savePath = feed.savePath;
-
-        if (!feed.saveVideo) {
-            throw new Error(`Feed ${feed.name} [${feed.id}] is not configured to save video`);
-        }
-
-        if (!savePath) {
-            throw new Error(`Save path is empty for feed ${feed.name} [${feed.id}]`);
-        }
-
-        this.record = createVideoRecord(feed);
-        this.startFFmpeg(this.record.path);
+        this.recording = new VideoRecording(this.feed);
         this.initTimer();
     }
 
@@ -55,32 +44,14 @@ export class VideoRecorder {
             clearTimeout(this.timeout);
         }
 
-        if (this.ffmpeg) {
-            // kill ffmpeg process
-            this.ffmpeg.kill();
-            this.ffmpeg = undefined;
-        }
-
-        if (this.record) {
-            /**
-             * SOMETIMES THIS FILE DOESNT EXIST
-             * 
-             * ... and I don't know why, yet.
-             */
-            const stats = fs.statSync(this.record.path);
-
-            updateRecord({
-                id: this.record.id,
-                endTime: Date.now(),
-                byteLength: stats.size,
-            });
-
-            this.record = undefined;
+        if (this.recording) {
+            this.recording.stop();
+            this.recording = undefined;
         }
     }
 
     restart() {
-        if (this.isStarted()) {
+        if (this.recording) {
             this.stop();
             this.start();
         }
@@ -96,7 +67,7 @@ export class VideoRecorder {
         }
 
         // if not started, check to see if we _can_ start
-        if (!this.isStarted()) {
+        if (!this.recording) {
             
             // if saveVideo is off, do nothing
             if (!this.feed.saveVideo) {
@@ -124,91 +95,9 @@ export class VideoRecorder {
         }
 
 
-        if (!this.ffmpeg) {
-            return;
+        if (this.recording) {
+            this.recording.writeFrame(frame);
         }
-
-        const buffer = frame.buffer;
-        const data = Buffer.concat([
-            buffer,
-            Buffer.from('\n'),
-        ]);
-
-        if (!this.record?.thumbnailPath) {
-            this.writeThumbnail(buffer);
-        }
-
-        if (!this.ffmpeg.stdin) {
-            console.error(this.ffmpeg);
-            throw new Error('ffmpeg has no stdin');
-        }
-
-        this.ffmpeg.stdin.write(data);
-    }
-
-    private isStarted(): boolean {
-        return !!(this.ffmpeg && this.record);
-    }
-
-    private startFFmpeg(outfile: string) {
-        const args = [
-            // use current time as timestamp for each frame
-            // we're piping in frames in real time, so use the
-            // actual current time as the timestamp
-            '-use_wallclock_as_timestamps', '1', 
-            // get input piped from stdin
-            '-f', 'image2pipe',
-            // input format is jpeg
-            '-c:v', 'mjpeg',
-            // input file is stdin/pipe
-            '-i', '-',
-            '-codec', 'copy',
-            outfile,
-        ];
-
-        this.ffmpeg = spawn('ffmpeg', args);
-        this.ffmpeg.on('close', this.ffmpegClose.bind(this));
-        this.ffmpeg.on('error', this.ffmpegError.bind(this));
-        this.ffmpeg.stderr!.on('data', this.ffmpegStderr.bind(this));
-        this.ffmpeg.stdout!.on('data', this.ffmpegStdout.bind(this));
-    }
-    
-    private ffmpegClose (code: number) {
-        // console.log('[ffmpeg]', `Exited with code ${code}`);
-    }
-    
-    private ffmpegError (err: Error) {
-        // console.error('[ffmpeg][ERROR]', err);
-    }
-    
-    private ffmpegStderr (buffer: Buffer) {
-        // console.error('[ffmpeg][stderr]', buffer.toString());
-    }
-
-    private ffmpegStdout (buffer: Buffer) {
-        // console.error('[ffmpeg][stdout]', buffer.toString());
-    }
-
-    private writeThumbnail(buffer: Buffer) {
-        if (!this.record) {
-            return;
-        }
-
-        const savePath = this.feed.savePath;
-        if (!savePath) {
-            return;
-        }
-
-        this.record.thumbnailPath = path.join(savePath, this.record.id + '.jpg');
-
-        const out = fs.createWriteStream(this.record.thumbnailPath);
-        out.write(buffer);
-        out.close();
-
-        updateRecord({
-            id: this.record.id,
-            thumbnailPath: this.record.thumbnailPath,
-        });
     }
 
     private initTimer() {
