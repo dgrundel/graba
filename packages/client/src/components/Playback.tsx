@@ -8,6 +8,7 @@ import { col, humanSize } from '../display';
 import { Modal } from './Modal';
 import { connect } from 'react-redux';
 import { flashMessage } from '../store/appReducer';
+import { Centered } from './Centered';
 
 interface DisplayRecord extends VideoRecord {
     stillUrl: string;
@@ -111,13 +112,13 @@ class Component extends React.Component<Props, State> {
 
     render() {
         return <Spinner waitFor={this.loader}>
-            <DetailsList
+            {this.state.records.length > 0 ?<DetailsList
                 items={this.state.records}
                 columns={detailListColumns}
                 layoutMode={DetailsListLayoutMode.justified}
                 selectionMode={SelectionMode.none}
                 onRenderItemColumn={renderItemColumn}
-            />
+            /> : <Centered>No videos yet. Configure one or more feeds to save video.</Centered>}
             <Modal
                 open={this.state.playId !== undefined}
                 onCancel={() => this.setState({ playId: undefined })}
