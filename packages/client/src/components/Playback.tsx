@@ -126,7 +126,7 @@ class Component extends React.Component<Props, State> {
                 this.state.playId === undefined
                     ? undefined
                     : <StreamImg
-                        style={{ maxWidth: '80vw', maxHeight: '80vh' }}
+                        style={{ maxWidth: '90vw', maxHeight: '90vh' }}
                         alt={this.state.playId}
                         src={`http://localhost:4000/playback/stream/${encodeURIComponent(this.state.playId)}`}
                     />
