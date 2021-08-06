@@ -1,6 +1,7 @@
 import { Chain } from './Chain';
 import { ChildProcess, spawn } from 'child_process';
 import { EventEmitter } from 'stream';
+import { logger } from './logger';
 
 type FFmpegArgs = string[];
 type FFmpegArgGenerator = () => string[];
@@ -88,16 +89,16 @@ export class FFmpegToJpeg {
     }
 
     private ffmpegCloseHandler(code: number) {
-        this.isDebug && console.log('[ffmpeg][close]', `exited with code ${code}`);
+        logger.debug('[ffmpeg][close]', `exited with code ${code}`);
         this.emitter.emit(Events.StreamEnd);
     }
 
     private ffmpegErrorHandler(err: Error) {
-        this.isDebug && console.error('[ffmpeg][error]', err);
+        logger.debug('[ffmpeg][error]', err);
     }
 
     private ffmpegStderrHandler(buffer: Buffer) {
-        this.isDebug && console.error('[ffmpeg][stderr]', buffer.toString());
+        logger.silly('[ffmpeg][stderr]', buffer.toString());
     }
 
     private async chainProcessor(data: Buffer, prev?: Buffer) {

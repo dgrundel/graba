@@ -6,6 +6,7 @@ import { ChildProcess, spawn } from 'child_process';
 import path from 'path';
 import { Frame } from './FFmpegToJpeg';
 import { Chain } from './Chain';
+import { logger } from './logger';
 
 export class VideoRecording {
     private readonly feed: Feed;
@@ -82,19 +83,19 @@ export class VideoRecording {
     }
     
     private ffmpegClose (code: number) {
-        // console.log('[ffmpeg]', `Exited with code ${code}`);
+        logger.debug('[ffmpeg]', `Exited with code ${code}`);
     }
     
     private ffmpegError (err: Error) {
-        // console.error('[ffmpeg][ERROR]', err);
+        logger.debug('[ffmpeg][ERROR]', err);
     }
     
     private ffmpegStderr (buffer: Buffer) {
-        // console.error('[ffmpeg][stderr]', buffer.toString());
+        logger.silly('[ffmpeg][stderr]', buffer.toString());
     }
 
     private ffmpegStdout (buffer: Buffer) {
-        // console.error('[ffmpeg][stdout]', buffer.toString());
+        logger.debug('[ffmpeg][stdout]', buffer.toString());
     }
     
     private async chainProcessor(frame: Frame, prev?: Frame): Promise<Frame> {
@@ -109,7 +110,6 @@ export class VideoRecording {
         }
 
         if (!this.ffmpeg.stdin) {
-            console.error(this.ffmpeg);
             throw new Error('ffmpeg has no stdin');
         }
 
