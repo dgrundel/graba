@@ -43,6 +43,13 @@ app.use('/config', configRouter);
 app.use('/feed', feedRouter);
 app.use('/playback', playbackRouter);
 
+// error logger
+app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+    logger.error(err);
+    next(err);
+});
+
+
 app.listen(PORT, () => {
     logger.http(`Server is running at http://localhost:${PORT}`);
 });
