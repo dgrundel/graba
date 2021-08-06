@@ -1,5 +1,4 @@
 import { Feed, MotionRegion } from 'hastycam.interface';
-import { FeedConsumer } from './FeedConsumer';
 import sharp from 'sharp';
 import { frameDiff } from './frameDiff';
 import { Frame } from './FFmpegToJpeg';
