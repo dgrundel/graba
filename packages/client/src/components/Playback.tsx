@@ -1,16 +1,21 @@
 import React, { CSSProperties, ReactNode } from 'react';
-import { VideoRecord } from 'hastycam.interface';
+import { Feed, VideoRecord } from 'hastycam.interface';
 import { Spinner } from './Spinner';
 import { deleteRequest, getJson } from '../fetch';
 import { ActionButton, DefaultButton, DetailsList, DetailsListLayoutMode, IColumn, MessageBarType, PrimaryButton, SelectionMode } from '@fluentui/react';
 import { StreamImg } from './StreamImg';
-import { col, humanSize } from '../display';
+import { col, humanSize } from '../util';
 import { Modal } from './Modal';
 import { connect } from 'react-redux';
 import { flashMessage } from '../store/appReducer';
 import { Centered } from './Centered';
+import { Sorter } from './Sorter';
+
+type FeedDisplay = Pick<Feed, 'name' | 'id'>;
+type RemoteData = [VideoRecord[], FeedDisplay[]];
 
 interface DisplayRecord extends VideoRecord {
+    feedName?: string;
     stillUrl: string;
     actions?: ReactNode;
 }
@@ -25,9 +30,16 @@ interface State {
     confirmDeleteId?: string;
 }
 
+const sortFieldNames = {
+    feedName: 'Feed',
+    startTime: 'Start Time',
+    endTime: 'End Time',
+    byteLength: 'Size',
+};
+
 const detailListColumns: IColumn[] = [
     col<DisplayRecord>('stillUrl', 'Preview', { minWidth: 60, maxWidth: 60 }),
-    col<DisplayRecord>('feedId', 'Feed'),
+    col<DisplayRecord>('feedName', 'Feed'),
     col<DisplayRecord>('startTime', 'Start'),
     col<DisplayRecord>('endTime', 'End'),
     col<DisplayRecord>('byteLength', 'Size', { minWidth: 60, maxWidth: 100 }),
@@ -63,24 +75,39 @@ const renderItemColumn = (item?: DisplayRecord, index?: number, column?: IColumn
 }
 
 class Component extends React.Component<Props, State> {
-    private readonly loader: Promise<VideoRecord[]>;
+    private readonly loader: Promise<RemoteData>;
 
     constructor(props: any) {
         super(props);
 
         this.state = {
-            records: []
+            records: [],
         };
 
-        this.loader = getJson<VideoRecord[]>('/playback/list');
+        this.loader = this.getData();
 
-        this.updateRecords = this.updateRecords.bind(this);
+        this.transformData = this.transformData.bind(this);
         this.deleteItem = this.deleteItem.bind(this);
     }
 
-    updateRecords(response: VideoRecord[]) {
+    getData(): Promise<RemoteData> {
+        return Promise.all([
+            getJson<VideoRecord[]>('/playback/list'),
+            getJson<FeedDisplay[]>('http://localhost:4000/feed/list'),
+        ]);
+    }
+
+    transformData(data: RemoteData) {
+        const [response, feeds] = data;
+
+        const feedNames = feeds.reduce((map: Record<string, string>, feed: FeedDisplay) => {
+            map[feed.id] = feed.name;
+            return map;
+        }, {});
+
         const records: DisplayRecord[] = response.map(r => ({
             ...r,
+            feedName: feedNames[r.feedId],
             stillUrl: `/playback/still/${r.id}`,
             actions: <span>
                 <ActionButton iconProps={{ iconName: 'PlayerPlay' }} onClick={() => this.setState({ playId: r.id })}>Play</ActionButton>
@@ -101,17 +128,25 @@ class Component extends React.Component<Props, State> {
                     body: JSON.stringify(err),
                 });
             })
-            .then(() => getJson<VideoRecord[]>('/playback/list'))
-            .then(this.updateRecords)
+            .then(() => this.getData())
+            .then(this.transformData)
             .then(() => this.setState({ confirmDeleteId: undefined }));
     }
 
     componentDidMount() {
-        this.loader.then(this.updateRecords);
+        this.loader.then(this.transformData);
     }
 
     render() {
         return <Spinner waitFor={this.loader}>
+
+            <Sorter 
+                items={this.state.records}
+                sortBy={'startTime'}
+                sortableBy={sortFieldNames}
+                onSort={(records: DisplayRecord[]) => this.setState({ records })}
+            />
+
             {this.state.records.length > 0 ?<DetailsList
                 items={this.state.records}
                 columns={detailListColumns}

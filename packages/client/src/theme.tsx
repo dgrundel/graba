@@ -1,5 +1,5 @@
 import { createTheme, registerIcons } from '@fluentui/react';
-import { IconCheck, IconPlus, IconTrash, IconChevronUp, IconChevronDown, IconChevronLeft, IconChevronRight, IconSettings, IconPlayerPlay, IconHome, IconVideo, IconDeviceFloppy, IconPencil, IconX, IconInfoCircle, IconHelp, IconPlayerRecord, IconAlertCircle, IconDownload, IconRun, TablerIconProps } from '@tabler/icons';
+import { IconCheck, IconPlus, IconTrash, IconChevronUp, IconChevronDown, IconChevronLeft, IconChevronRight, IconSettings, IconPlayerPlay, IconHome, IconVideo, IconDeviceFloppy, IconPencil, IconX, IconInfoCircle, IconHelp, IconPlayerRecord, IconAlertCircle, IconDownload, IconRun, TablerIconProps, IconSortAscending, IconSortDescending } from '@tabler/icons';
 import { AppIcon } from './components/AppIcon';
 
 const generated = {
@@ -97,6 +97,8 @@ registerIcons({
         Plus: <AppIcon icon={IconPlus} />,
         Run: <AppIcon icon={IconRun} />,
         Settings: <AppIcon icon={IconSettings} />,
+        SortAscending: <AppIcon icon={IconSortAscending} />,
+        SortDescending: <AppIcon icon={IconSortDescending} />,
         Trash: <AppIcon icon={IconTrash} />,
         Video: <AppIcon icon={IconVideo} />,
         X: <AppIcon icon={IconX} />,

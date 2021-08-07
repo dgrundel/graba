@@ -5,7 +5,7 @@ import { Spinner } from './Spinner';
 import { getJson } from '../fetch';
 import { Grid } from './Grid';
 import { Overlay } from './Overlay';
-import { col, humanSize } from '../display';
+import { col, humanSize } from '../util';
 import { Interval } from './Interval';
 import { nanoid } from 'nanoid';
 import { theme } from '../theme';
