@@ -53,13 +53,13 @@ export class Sorter<T> extends React.Component<Props<T>, State<T>> {
         
         return <Stack horizontal verticalAlign={'end'} tokens={{ childrenGap: 's2', }}>
             <Dropdown
-                    placeholder="Sort by"
-                    label="Sort by"
-                    selectedKey={this.state.sortBy as string}
-                    onChange={dropdownOnChange}
-                    multiSelect={false}
-                    options={dropdownOptions}
-                    dropdownWidth="auto"
+                placeholder="Sort by"
+                label="Sort by"
+                selectedKey={this.state.sortBy as string}
+                onChange={dropdownOnChange}
+                multiSelect={false}
+                options={dropdownOptions}
+                dropdownWidth="auto"
             />
             <IconButton iconProps={{ iconName }} onClick={iconOnClick}/>
         </Stack>;

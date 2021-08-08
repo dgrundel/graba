@@ -2,7 +2,7 @@ import React, { CSSProperties, ReactNode } from 'react';
 import { Feed, VideoRecord } from 'hastycam.interface';
 import { Spinner } from './Spinner';
 import { deleteRequest, getJson } from '../fetch';
-import { ActionButton, DefaultButton, DetailsList, DetailsListLayoutMode, IColumn, MessageBarType, PrimaryButton, SelectionMode } from '@fluentui/react';
+import { ActionButton, DefaultButton, DetailsList, DetailsListLayoutMode, IColumn, MessageBarType, PrimaryButton, SelectionMode, Stack } from '@fluentui/react';
 import { StreamImg } from './StreamImg';
 import { col, humanSize } from '../util';
 import { Modal } from './Modal';
@@ -10,14 +10,16 @@ import { connect } from 'react-redux';
 import { flashMessage } from '../store/appReducer';
 import { Centered } from './Centered';
 import { Sorter } from './Sorter';
+import { DateFilter } from './DateFilter';
 
 type FeedDisplay = Pick<Feed, 'name' | 'id'>;
 type RemoteData = [VideoRecord[], FeedDisplay[]];
 
 interface DisplayRecord extends VideoRecord {
-    feedName?: string;
     stillUrl: string;
+    feedName?: string;
     actions?: ReactNode;
+    hidden?: boolean;
 }
 
 interface Props {
@@ -32,8 +34,8 @@ interface State {
 
 const sortFieldNames = {
     feedName: 'Feed',
-    startTime: 'Start Time',
-    endTime: 'End Time',
+    startTime: 'Start time',
+    endTime: 'End time',
     byteLength: 'Size',
 };
 
@@ -116,7 +118,7 @@ class Component extends React.Component<Props, State> {
             </span>
         }));
 
-        this.setState({ records });
+        this.setState({ records, });
     }
 
     deleteItem(id: string) {
@@ -138,22 +140,38 @@ class Component extends React.Component<Props, State> {
     }
 
     render() {
+        const listItems = this.state.records.filter(r => r.hidden !== true);
+        const emptyListMessage = this.state.records.length === 0
+            ? 'No videos yet. Configure one or more feeds to save video.'
+            : 'No videos matched your filters.';
+
         return <Spinner waitFor={this.loader}>
 
-            <Sorter 
-                items={this.state.records}
-                sortBy={'startTime'}
-                sortableBy={sortFieldNames}
-                onSort={(records: DisplayRecord[]) => this.setState({ records })}
-            />
+            <Stack horizontal verticalAlign={'end'} tokens={{ childrenGap: 'm', }}>
+                <Sorter 
+                    items={this.state.records}
+                    sortBy={'startTime'}
+                    sortableBy={sortFieldNames}
+                    onSort={(records: DisplayRecord[]) => this.setState({ records })}
+                />
 
-            {this.state.records.length > 0 ?<DetailsList
-                items={this.state.records}
+                <DateFilter
+                    items={this.state.records}
+                    itemRangeStart={r => new Date(r.startTime)}
+                    itemRangeEnd={r => r.endTime ? new Date(r.endTime) : undefined}
+                    onFilter={(records) => this.setState({ records })}
+                    itemSetVisibility={(r, visible) => { r.hidden = visible !== true }}
+                />
+            </Stack>
+
+            {listItems.length > 0 ? <DetailsList
+                items={listItems}
                 columns={detailListColumns}
                 layoutMode={DetailsListLayoutMode.justified}
                 selectionMode={SelectionMode.none}
                 onRenderItemColumn={renderItemColumn}
-            /> : <Centered>No videos yet. Configure one or more feeds to save video.</Centered>}
+            /> : <Centered>{emptyListMessage}</Centered>}
+
             <Modal
                 open={this.state.playId !== undefined}
                 onCancel={() => this.setState({ playId: undefined })}
@@ -166,6 +184,7 @@ class Component extends React.Component<Props, State> {
                         src={`http://localhost:4000/playback/stream/${encodeURIComponent(this.state.playId)}`}
                     />
             }</Modal>
+
             <Modal
                 open={this.state.confirmDeleteId !== undefined}
                 onCancel={() => this.setState({ confirmDeleteId: undefined })}

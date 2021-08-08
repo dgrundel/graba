@@ -1,5 +1,5 @@
 import { createTheme, registerIcons } from '@fluentui/react';
-import { IconCheck, IconPlus, IconTrash, IconChevronUp, IconChevronDown, IconChevronLeft, IconChevronRight, IconSettings, IconPlayerPlay, IconHome, IconVideo, IconDeviceFloppy, IconPencil, IconX, IconInfoCircle, IconHelp, IconPlayerRecord, IconAlertCircle, IconDownload, IconRun, TablerIconProps, IconSortAscending, IconSortDescending } from '@tabler/icons';
+import { IconCheck, IconPlus, IconTrash, IconChevronUp, IconChevronDown, IconChevronLeft, IconChevronRight, IconSettings, IconPlayerPlay, IconHome, IconVideo, IconDeviceFloppy, IconPencil, IconX, IconInfoCircle, IconHelp, IconPlayerRecord, IconAlertCircle, IconDownload, IconRun, TablerIconProps, IconSortAscending, IconSortDescending, IconCalendarOff, IconCalendar } from '@tabler/icons';
 import { AppIcon } from './components/AppIcon';
 
 const generated = {
@@ -76,6 +76,7 @@ const fluentIconContainerStyle = { verticalAlign: 'baseline' };
 registerIcons({
     icons: {
         // used by Fluent, needs special styling
+        Calendar: <AppIcon icon={IconCalendar} style={fluentIconContainerStyle} iconProps={fluentIconProps} />,
         CheckMark: <AppIcon icon={IconCheck} style={fluentIconContainerStyle} iconProps={fluentIconProps} />,
         ChevronDown: <AppIcon icon={IconChevronDown} style={fluentIconContainerStyle} iconProps={fluentIconProps} />,
         ChevronLeft: <AppIcon icon={IconChevronLeft} style={fluentIconContainerStyle} iconProps={fluentIconProps} />,
@@ -86,6 +87,7 @@ registerIcons({
         ErrorBadge: <AppIcon icon={IconAlertCircle} />,
 
         // others
+        CalendarOff: <AppIcon icon={IconCalendarOff} />,
         DeviceFloppy: <AppIcon icon={IconDeviceFloppy} />,
         Download: <AppIcon icon={IconDownload} />,
         Help: <AppIcon icon={IconHelp} />,
