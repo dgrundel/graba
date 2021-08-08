@@ -1,5 +1,6 @@
 import React from 'react';
 import spinnerSvg from '../svg/hasty-nostroke.svg';
+import { theme } from '../theme';
 import './Spinner.scss';
 
 interface Props {
@@ -9,6 +10,26 @@ interface Props {
 interface State {
     ready: boolean;
 }
+
+const spinnerStyle: React.CSSProperties = {
+    display: 'block',
+    position: 'fixed',
+    top: 0,
+    right: 0,
+    bottom: 0,
+    left: 0,
+    textAlign: 'center',
+    lineHeight: '100vh',
+    backgroundColor: theme.palette.white,
+    opacity: 0.75,
+};
+
+const spinnerImgStyle: React.CSSProperties = {
+    animationName: 'spinner-animate',
+    animationDuration: '1.5s',
+    animationIterationCount: 'infinite',
+    transformOrigin: '50% 50%',
+};
 
 export class Spinner extends React.Component<Props, State> {
 
@@ -32,8 +53,8 @@ export class Spinner extends React.Component<Props, State> {
 
         // if not ready, show loading indicator
         return (
-            <div className="spinner">
-                <img alt="Loading..." src={spinnerSvg}/>
+            <div className="spinner" style={spinnerStyle}>
+                <img alt="Loading..." src={spinnerSvg} style={spinnerImgStyle}/>
             </div>
         );
     }
