@@ -2,6 +2,7 @@ import { Dropdown, IDropdownOption, Stack } from '@fluentui/react';
 import React, { CSSProperties, FormEvent } from 'react';
 import { Feed } from '../../../interface/build';
 import { getJson } from '../fetch';
+import { Grid } from './Grid';
 import { Spinner } from './Spinner';
 import { StreamImg } from './StreamImg';
 import './Watch.scss';
@@ -12,6 +13,12 @@ interface State {
     feeds: FeedDisplay[];
     selectedFeeds: Set<string>;
 }
+
+const streamImgStyle = {
+    width: '100%',
+    height: '100%',
+    objectFit: "cover",
+} as CSSProperties;
 
 export class Watch extends React.Component<{}, State> {
     private readonly loader: Promise<FeedDisplay[]>;
@@ -56,20 +63,6 @@ export class Watch extends React.Component<{}, State> {
     }
 
     render() {
-        const displayGridStyle = {
-            display: 'grid',
-            gridTemplateColumns: '1fr 1fr',
-            gridTemplateRows: '1fr 1fr',
-            gridGap: '1rem',
-            maxWidth: '100%',
-        };
-
-        const imgStyle = {
-            width: '100%',
-            height: '100%',
-            objectFit: "cover",
-        } as CSSProperties;
-
         const dropdownOptions = this.state.feeds.map(f => ({ key: f.id, text: f.name }));
 
         return (
@@ -84,11 +77,12 @@ export class Watch extends React.Component<{}, State> {
                         options={dropdownOptions}
                     />
 
-                    <div style={displayGridStyle}>
+                    <Grid columns={2}>
                         {this.state.feeds.filter(f => this.state.selectedFeeds.has(f.id)).map(feed => {
-                            return <StreamImg key={feed.id} style={imgStyle} alt={feed.name} src={`http://localhost:4000/feed/stream/${encodeURIComponent(feed.id)}`}/>
+                            const imgSrc = `http://localhost:4000/feed/stream/${encodeURIComponent(feed.id)}`;
+                            return <StreamImg key={feed.id} style={streamImgStyle} alt={feed.name} src={imgSrc}/>;
                         })}
-                    </div>
+                    </Grid>
                 </Stack>
             </Spinner>
         );

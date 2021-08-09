@@ -13,25 +13,22 @@ interface State {
 
 const DEFAULT_GAP = theme.spacing.m;
 
-const templateToStr = (template?: number | string): string => {
-    if (typeof template === 'string') {
-        return template;
-    }
-    
-    return `repeat(${template || 1}, 1fr)`;
-}
-
 export class Grid extends React.Component<Props, State> {
     private readonly style: React.CSSProperties;
 
     constructor(props: Props) {
         super(props);
 
+        // always set columns to something
+        const columns = typeof props.columns === 'string' ? props.columns : `repeat(${props.columns || 1}, 1fr)`;
+        // don't set rows if undefined
+        const rows = typeof props.rows === 'number' ? `repeat(${props.rows}, 1fr)` : props.rows;
+
         const builtInStyle: CSSProperties = {
             display: 'grid',
             gap: typeof props.gap !== 'undefined' ? props.gap : DEFAULT_GAP,
-            gridTemplateRows: templateToStr(props.rows),
-            gridTemplateColumns: templateToStr(props.columns),
+            gridTemplateRows: rows,
+            gridTemplateColumns: columns,
         };
 
         this.style = {
