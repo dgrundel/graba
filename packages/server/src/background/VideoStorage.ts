@@ -1,7 +1,7 @@
 import conf from 'conf';
 import path from 'path';
 import { nanoid } from 'nanoid';
-import { Feed, VideoRecord } from 'hastycam.interface';
+import { Feed, VideoRecord } from 'graba.interface';
 
 const MAX_FILE_NAME_LENGTH = 255 - 4; // 4 chars for file ext
 

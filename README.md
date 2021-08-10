@@ -1,4 +1,4 @@
-![Graba](docs/hasty-128.png)
+![Graba](docs/graba-128.png)
 
 # Graba
 

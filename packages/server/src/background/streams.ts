@@ -1,4 +1,4 @@
-import { Feed } from 'hastycam.interface';
+import { Feed } from 'graba.interface';
 import { config } from './config';
 import { RtspStream } from './RtspStream';
 

@@ -1,5 +1,5 @@
 import express from 'express';
-import { Feed, validateFeed, ErrorMessage, mergeErrors } from 'hastycam.interface';
+import { Feed, validateFeed, ErrorMessage, mergeErrors } from 'graba.interface';
 import { config } from '../background/config';
 import { getStream, stopStream, updateStream } from '../background/streams';
 import fs from 'fs';

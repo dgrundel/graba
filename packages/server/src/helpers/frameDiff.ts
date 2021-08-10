@@ -1,4 +1,4 @@
-import { isPointInRegion, MotionRegion } from 'hastycam.interface';
+import { isPointInRegion, MotionRegion } from 'graba.interface';
 import { renderTextToPoints } from './PixelText';
 
 type Pixels = Uint8ClampedArray | Buffer;

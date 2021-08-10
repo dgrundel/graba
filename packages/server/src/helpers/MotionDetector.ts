@@ -1,4 +1,4 @@
-import { Feed } from 'hastycam.interface';
+import { Feed } from 'graba.interface';
 import sharp from 'sharp';
 import { frameDiff } from './frameDiff';
 import { Frame } from './FFmpegToJpeg';

@@ -1,4 +1,4 @@
-import { Feed, VideoRecord } from 'hastycam.interface';
+import { Feed, VideoRecord } from 'graba.interface';
 import fs from 'fs';
 import { createVideoRecord, updateRecord } from '../background/VideoStorage';
 import { onExit } from './util';

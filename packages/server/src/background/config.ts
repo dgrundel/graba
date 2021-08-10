@@ -1,5 +1,5 @@
 import conf from 'conf';
-import { Config, Feed } from 'hastycam.interface';
+import { Config, Feed } from 'graba.interface';
 
 const CONFIG_NAME = 'appConfig';
 const DEFAULTS = {

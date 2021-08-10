@@ -1,4 +1,4 @@
-import { Feed } from 'hastycam.interface';
+import { Feed } from 'graba.interface';
 import { MotionDetector } from '../helpers/MotionDetector';
 import { VideoRecorder } from '../helpers/VideoRecorder';
 import { FFmpegToJpeg, Frame } from '../helpers/FFmpegToJpeg';

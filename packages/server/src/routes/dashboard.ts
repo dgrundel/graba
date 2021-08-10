@@ -1,7 +1,7 @@
 import { pid } from 'process';
 import express from 'express';
 import si from 'systeminformation';
-import { SystemStats } from 'hastycam.interface';
+import { SystemStats } from 'graba.interface';
 
 export const router = express.Router();
 

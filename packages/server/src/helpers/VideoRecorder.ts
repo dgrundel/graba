@@ -1,4 +1,4 @@
-import { Feed } from 'hastycam.interface';
+import { Feed } from 'graba.interface';
 import { VideoRecording } from './VideoRecording';
 import { Frame } from './FFmpegToJpeg';
 import { LimitCounter } from './LimitCounter';
