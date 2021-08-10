@@ -1,5 +1,5 @@
 import React from 'react';
-import { Feed, MotionRegion as Region, Point, percentToImageOffsetPx, isPointInRegion } from 'hastycam.interface';
+import { Feed, MotionRegion as Region, Point, percentToImageOffsetPx, isPointInRegion } from 'graba.interface';
 
 interface Props {
     feed: Feed;

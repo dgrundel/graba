@@ -1,5 +1,5 @@
 import React, { CSSProperties, ReactNode } from 'react';
-import { Feed, VideoRecord } from 'hastycam.interface';
+import { Feed, VideoRecord } from 'graba.interface';
 import { Spinner } from './Spinner';
 import { deleteRequest, getJson } from '../fetch';
 import { ActionButton, DefaultButton, DetailsList, DetailsListLayoutMode, IColumn, MessageBarType, PrimaryButton, SelectionMode, Stack } from '@fluentui/react';
@@ -11,6 +11,7 @@ import { flashMessage } from '../store/appReducer';
 import { Centered } from './Centered';
 import { Sorter } from './Sorter';
 import { DateFilter } from './DateFilter';
+import { Link } from 'react-router-dom';
 
 type FeedDisplay = Pick<Feed, 'name' | 'id'>;
 type RemoteData = [VideoRecord[], FeedDisplay[]];
@@ -139,14 +140,30 @@ class Component extends React.Component<Props, State> {
         this.loader.then(this.transformData);
     }
 
-    render() {
-        const listItems = this.state.records.filter(r => r.hidden !== true);
+    renderEmptyListMessage() {
         const emptyListMessage = this.state.records.length === 0
-            ? 'No videos yet. Configure one or more feeds to save video.'
+            ? 'No videos yet. Enable video save for one or more feeds.'
             : 'No videos matched your filters.';
 
-        return <Spinner waitFor={this.loader}>
+        const linkProps = {
+            component: PrimaryButton,
+            iconProps: {
+                iconName: 'Settings',
+            },
+        };
 
+        return <Centered>
+            <Stack tokens={{ childrenGap: 'm', }} style={{ textAlign: 'center' }}>
+                <Stack.Item>{emptyListMessage}</Stack.Item>
+                <Stack.Item>
+                    <Link to="/config" {...linkProps}>Configure</Link>
+                </Stack.Item>
+            </Stack>
+        </Centered>;
+    }
+
+    renderList(listItems: DisplayRecord[]) {
+        return <>
             <Stack horizontal verticalAlign={'end'} tokens={{ childrenGap: 'm', }}>
                 <Sorter 
                     items={this.state.records}
@@ -164,13 +181,13 @@ class Component extends React.Component<Props, State> {
                 />
             </Stack>
 
-            {listItems.length > 0 ? <DetailsList
+            <DetailsList
                 items={listItems}
                 columns={detailListColumns}
                 layoutMode={DetailsListLayoutMode.justified}
                 selectionMode={SelectionMode.none}
                 onRenderItemColumn={renderItemColumn}
-            /> : <Centered>{emptyListMessage}</Centered>}
+            />
 
             <Modal
                 open={this.state.playId !== undefined}
@@ -195,6 +212,14 @@ class Component extends React.Component<Props, State> {
             >
                 Are you sure you want to delete this recording?
             </Modal>
+        </>;
+    }
+
+    render() {
+        const listItems = this.state.records.filter(r => r.hidden !== true);
+
+        return <Spinner waitFor={this.loader}>
+            {listItems.length > 0 ? this.renderList(listItems) : this.renderEmptyListMessage()}            
         </Spinner>;
     }
 }

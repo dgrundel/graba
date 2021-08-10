@@ -1,6 +1,6 @@
-![HastyCam](docs/hasty-128.png)
+![Graba](docs/hasty-128.png)
 
-# HastyCam
+# Graba
 
 A minimal node app to view, record, and detect motion in security camera streams.
 
@@ -21,6 +21,7 @@ Emphasis on limiting resource usage.
 - [Fluent UI](https://developer.microsoft.com/en-us/fluentui#/)
 - [Tabler Icons](https://tabler-icons.io)
 - [Aileron font](https://fontlibrary.org/en/font/aileron)
+- [Joszika font](https://fontlibrary.org/en/font/joszika)
 
 ### Other stuff
 

@@ -1,7 +1,7 @@
 import React from 'react';
 import prettyMs from 'pretty-ms';
 import { ActionButton, Text, Stack, TextField, PrimaryButton, Spinner, DefaultButton, Slider, TooltipHost, Icon, Toggle, Separator } from '@fluentui/react';
-import { Feed } from 'hastycam.interface';
+import { Feed } from 'graba.interface';
 import { theme } from '../theme';
 import { postJson } from '../fetch';
 import { nanoid } from 'nanoid';

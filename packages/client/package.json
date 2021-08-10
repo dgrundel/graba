@@ -1,5 +1,5 @@
 {
-    "name": "hastycam.client",
+    "name": "graba.client",
     "version": "0.1.0",
     "private": true,
     "proxy": "http://localhost:4000/",
@@ -16,7 +16,7 @@
         "@types/react-dom": "^17.0.8",
         "@types/react-redux": "^7.1.18",
         "@types/react-router-dom": "^5.1.7",
-        "hastycam.interface": "*",
+        "graba.interface": "*",
         "nanoid": "^3.1.23",
         "node-sass": "^6.0.1",
         "pretty-ms": "^7.0.1",

@@ -1,6 +1,6 @@
 import React, { CSSProperties } from 'react';
-import { Text, Stack, ProgressIndicator, DetailsList, IColumn, DetailsListLayoutMode, SelectionMode, Separator, Callout, DirectionalHint } from '@fluentui/react';
-import { Config, Feed, SystemStats } from 'hastycam.interface';
+import { Text, Stack, ProgressIndicator, DetailsList, IColumn, DetailsListLayoutMode, SelectionMode, Separator, Callout, DirectionalHint, PrimaryButton } from '@fluentui/react';
+import { Config, Feed, SystemStats } from 'graba.interface';
 import { Spinner } from './Spinner';
 import { getJson } from '../fetch';
 import { Grid } from './Grid';
@@ -11,6 +11,7 @@ import { nanoid } from 'nanoid';
 import { theme } from '../theme';
 import { AppIcon } from './AppIcon';
 import { IconRun } from '@tabler/icons';
+import { Link } from 'react-router-dom';
 
 interface LoaderResult {
     config: Config;
@@ -80,24 +81,48 @@ export class Dashboard extends React.Component<{}, State> {
         return <Spinner waitFor={this.loader}>
             <Interval callback={this.updateStats} interval={5000}>
                 <Stack tokens={{ childrenGap: 'm', }}>
-                    <Text block variant="xLarge">Feeds</Text>
-
-                    <Grid columns={4}>
-                        {this.state.feeds.map(feed => {
-                            let recIndicator: React.ReactNode | undefined;
-                            if (feed.saveVideo) {
-                                recIndicator = feed.onlySaveMotion ? motionRecIndicator : alwaysRecIndicator;
-                            }
-                            return <Overlay position="tr" element={feed.saveVideo ? recIndicator : undefined}>
-                                <img alt={feed.name} src={`http://localhost:4000/feed/still/${feed.id}`} style={{ maxWidth: '100%', objectFit: 'contain' }}/>
-                            </Overlay>
-                        })}
-                    </Grid>
-
+                    {this.renderFeedStills()}
                     {this.renderStats()}
                 </Stack>
             </Interval>
         </Spinner>;
+    }
+
+    renderFeedStills() {
+        const linkProps = {
+            component: PrimaryButton,
+            iconProps: {
+                iconName: 'Settings',
+            },
+        };
+
+        let content: React.ReactNode = undefined;
+
+        if (this.state.feeds.length === 0) {
+            content = <Stack tokens={{ childrenGap: 'm', }}>
+                <Stack.Item>No feeds configured.</Stack.Item>
+                <Stack.Item>
+                    <Link to="/config" {...linkProps}>Configure</Link>
+                </Stack.Item>
+            </Stack>;
+        } else {
+            content = <Grid columns={4}>
+                {this.state.feeds.map(feed => {
+                    let recIndicator: React.ReactNode | undefined;
+                    if (feed.saveVideo) {
+                        recIndicator = feed.onlySaveMotion ? motionRecIndicator : alwaysRecIndicator;
+                    }
+                    return <Overlay position="tr" element={feed.saveVideo ? recIndicator : undefined}>
+                        <img alt={feed.name} src={`http://localhost:4000/feed/still/${feed.id}`} style={{ maxWidth: '100%', objectFit: 'contain' }}/>
+                    </Overlay>
+                })}
+            </Grid>;
+        }
+
+        return <>
+            <Text block variant="xLarge">Feeds</Text>
+            {content}
+        </>;
     }
 
     renderStats() {

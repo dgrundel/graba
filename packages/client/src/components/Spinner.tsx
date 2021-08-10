@@ -1,5 +1,5 @@
 import React from 'react';
-import spinnerSvg from '../svg/hasty-nostroke.svg';
+import spinnerSvg from '../svg/graba-nostroke.svg';
 import { theme } from '../theme';
 import './Spinner.scss';
 

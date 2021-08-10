@@ -1,5 +1,5 @@
 {
-  "name": "hastycam",
+  "name": "graba",
   "private": true,
   "scripts": {
     "dev": "lerna run dev --stream",

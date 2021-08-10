@@ -1,6 +1,6 @@
 import React from 'react';
 import { Text, PrimaryButton, Stack } from '@fluentui/react';
-import { Config, Feed } from 'hastycam.interface';
+import { Config, Feed } from 'graba.interface';
 import { Spinner } from './Spinner';
 import { theme } from '../theme';
 import { FeedEditor } from './FeedEditor';
