@@ -58,7 +58,9 @@ const feedFieldTooltips: Record<keyof Feed, string | JSX.Element | undefined> = 
     </>,
     saveVideo: undefined,
     savePath: undefined,
-    onlySaveMotion: undefined,
+    onlySaveMotion: <>
+        Requires motion detection enabled.
+    </>,
     motionEndTimeout: <>
         When only saving video on motion detection, this is the <em>minimum</em> amount of 
         time to wait for more motion to happen before recording is stopped.
@@ -99,9 +101,10 @@ const noteStyles = {
 
 const Note = (props: { field: keyof Feed; }) => {
     const content = feedFieldTooltips[props.field] || null;
-    return content ? <Text block variant="small" style={noteStyles}>
-        {content}
-    </Text> : null;
+    if (content) {
+        return <Text block variant="small" style={noteStyles}>{content}</Text>
+    }
+    return null;
 };
 
 export class FeedEditor extends React.Component<Props, State> {
@@ -245,6 +248,8 @@ export class FeedEditor extends React.Component<Props, State> {
 
                 <Separator styles={separatorStyles} />
 
+                <Text block variant="large">Stream</Text>
+
                 <TextField
                     label={feedFieldNames.streamUrl}
                     value={this.state.feed.streamUrl}
@@ -290,6 +295,8 @@ export class FeedEditor extends React.Component<Props, State> {
 
                 <Separator styles={separatorStyles} />
 
+                <Text block variant="large">Storage</Text>
+
                 <Toggle 
                     label={feedFieldNames.saveVideo} 
                     inlineLabel
@@ -297,6 +304,13 @@ export class FeedEditor extends React.Component<Props, State> {
                     onChange={(e, saveVideo) => this.setFeedData({ saveVideo })}
                 />
                 <Note field={'saveVideo'}/>
+
+                <TextField
+                    label={feedFieldNames.savePath}
+                    value={this.state.feed.savePath}
+                    onChange={(e, savePath) => { this.setFeedData({ savePath }) }}
+                />
+                <Note field={'savePath'}/>
 
                 <Toggle 
                     label={feedFieldNames.onlySaveMotion}
@@ -320,14 +334,9 @@ export class FeedEditor extends React.Component<Props, State> {
                 />
                 <Note field={'motionEndTimeout'}/>
 
-                <TextField
-                    label={feedFieldNames.savePath}
-                    value={this.state.feed.savePath}
-                    onChange={(e, savePath) => { this.setFeedData({ savePath }) }}
-                />
-                <Note field={'savePath'}/>
-
                 <Separator styles={separatorStyles} />
+
+                <Text block variant="large">Motion Detection</Text>
 
                 <Toggle 
                     label={feedFieldNames.detectMotion} 
