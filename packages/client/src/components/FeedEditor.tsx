@@ -11,6 +11,7 @@ import { RegionEditor } from './RegionEditor';
 interface Props {
     feed: Feed;
     deleteFeed: (id: string) => void;
+    updateConfig: (feed: Feed) => void;
 }
 
 interface State {
@@ -136,10 +137,11 @@ export class FeedEditor extends React.Component<Props, State> {
 
         postJson<Feed>('/feed/', this.state.feed)
             .then(feed => {
-                console.log({ feed });
-                this.setState({ 
+                this.setState({
+                    feed,
                     editing: false
                 });
+                this.props.updateConfig(feed);
             })
             .catch((errs: any) => {
                 if (Array.isArray(errs)) {

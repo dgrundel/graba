@@ -30,6 +30,7 @@ export class ConfigEditor extends React.Component<{}, State> {
 
         this.addFeed = this.addFeed.bind(this);
         this.deleteFeed = this.deleteFeed.bind(this);
+        this.updateFeed = this.updateFeed.bind(this);
     }
 
     componentDidMount() {
@@ -68,6 +69,23 @@ export class ConfigEditor extends React.Component<{}, State> {
             .then(config => this.setState({ config }));
     }
 
+    updateFeed(feed: Feed) {
+        this.setState(prev => {
+            const feeds = prev.config.feeds.slice();
+            const i = feeds.findIndex(f => f.id === feed.id);
+            if (i !== -1) {
+                feeds.splice(i, 1, feed);
+            }
+
+            return {
+                config: {
+                    ...prev.config,
+                    feeds,
+                },
+            };
+        });
+    }
+
     render() {
         return <Spinner waitFor={this.loader}>
             <Stack tokens={{ childrenGap: 'm', }}>
@@ -80,7 +98,7 @@ export class ConfigEditor extends React.Component<{}, State> {
                 <Grid columns={2}>
                     {this.state.config.feeds.map(feed => {
                         return <Stack key={feed.id} tokens={{ childrenGap: 's1', padding: 'm' }} style={{ backgroundColor: theme.palette.neutralLighter }}>
-                            <FeedEditor feed={feed} deleteFeed={this.deleteFeed}/>
+                            <FeedEditor feed={feed} deleteFeed={this.deleteFeed} updateConfig={this.updateFeed} />
                         </Stack>;
                     })}
                 </Grid>
