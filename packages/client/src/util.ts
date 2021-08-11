@@ -53,3 +53,23 @@ export const sortObjects = <T>(items: T[], key: keyof T, desc?: boolean) => {
         }
     });
 };
+
+const REPLACEMENT_CHAR = '*';
+export const hideAuthInUrl = (url: string): string => {
+    try {
+        // hack: the URL constructor only plays nice with http(s) URLs
+        const parsed = new URL(url.replace(/^rtsp:\/\//, 'http://'));
+        if (parsed.username) {
+            parsed.username = new Array(parsed.username.length).fill(REPLACEMENT_CHAR).join('')
+        }
+        if (parsed.password) {
+            parsed.password = new Array(parsed.password.length).fill(REPLACEMENT_CHAR).join('')
+        }
+        // un-hack: flip protocol back to rtsp
+        return parsed.toString().replace(/^http:\/\//, 'rtsp://');
+    } catch (e) {
+        console.error(`hideAuthInUrl: Error parsing url "${url}"`, e);
+    }
+    
+    return url;
+};

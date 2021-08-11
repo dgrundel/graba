@@ -7,6 +7,7 @@ import { postJson } from '../fetch';
 import { nanoid } from 'nanoid';
 import { Grid } from './Grid';
 import { RegionEditor } from './RegionEditor';
+import { hideAuthInUrl } from '../util';
 
 interface Props {
     feed: Feed;
@@ -199,7 +200,7 @@ export class FeedEditor extends React.Component<Props, State> {
         return <Stack horizontal tokens={{ childrenGap: 'm', }}>
             <Stack grow tokens={{ childrenGap: 's1', }}>
 
-                {this.renderFeedValue('streamUrl')}
+                {this.renderFeedValue('streamUrl', hideAuthInUrl)}
                 {this.renderFeedValue('maxFps')}
                 {this.renderFeedValue('scaleFactor')}
                 {this.renderFeedValue('videoQuality')}
