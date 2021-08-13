@@ -139,6 +139,9 @@ export class SettingsEditor extends React.Component<{}, State> {
                     </div>
                     <div>
                         <TextField
+                            type="password"
+                            canRevealPassword
+                            revealPasswordAriaLabel="Show password"
                             label={Config.FIELD_NAMES.smtpPassword}
                             value={this.state.config.smtpPassword}
                             onChange={(e, smtpPassword) => { this.setConfigData({ smtpPassword }) }}
