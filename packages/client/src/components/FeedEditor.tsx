@@ -1,6 +1,6 @@
 import React from 'react';
 import prettyMs from 'pretty-ms';
-import { ActionButton, Text, Stack, TextField, PrimaryButton, Spinner, DefaultButton, Slider, TooltipHost, Icon, Toggle, Separator } from '@fluentui/react';
+import { ActionButton, Text, Stack, TextField, PrimaryButton, Spinner, DefaultButton, Slider, TooltipHost, Icon, Toggle, Separator, MessageBar, MessageBarType } from '@fluentui/react';
 import { Feed } from 'graba.interface';
 import { theme } from '../theme';
 import { postJson } from '../fetch';
@@ -350,7 +350,9 @@ export class FeedEditor extends React.Component<Props, State> {
             </Stack>
 
             <div>
-                {this.state.error ? <Text block style={{ color: theme.palette.redDark }}>{this.state.error}</Text> : ''}
+                {this.state.error 
+                    ? <MessageBar messageBarType={MessageBarType.error}>{this.state.error}</MessageBar>
+                    : undefined}
                 {this.state.editing ? this.renderForm() : this.renderData()}
             </div>    
                 

@@ -1,13 +1,15 @@
 import React from 'react';
-import { Text, Stack, TextField, Toggle, Separator } from '@fluentui/react';
+import { Text, Stack, TextField, Toggle, Separator, MessageBar, MessageBarType, PrimaryButton, Spinner as FluentSpinner } from '@fluentui/react';
 import { Config } from 'graba.interface';
 import { Spinner } from './Spinner';
 import { theme } from '../theme';
-import { getJson } from '../fetch';
+import { getJson, postJson } from '../fetch';
 import { Grid } from './Grid';
 
 interface State {
     config: Config;
+    saving: boolean;
+    error?: string;
 }
 
 const separatorStyles = {
@@ -39,10 +41,13 @@ export class SettingsEditor extends React.Component<{}, State> {
         this.state = {
             config: {
                 feeds: [],
-            }
+            },
+            saving: false,
         };
 
         this.loader = getJson<Config>('http://localhost:4000/config');
+
+        this.save = this.save.bind(this);
     }
 
     componentDidMount() {
@@ -51,6 +56,24 @@ export class SettingsEditor extends React.Component<{}, State> {
                 config
             });
         });
+    }
+
+    save() {
+        this.setState({ saving: true, error: undefined });
+
+        postJson<Config>('/config/', this.state.config)
+            .then(config => {
+                this.setState({ config });
+            })
+            .catch((errs: any) => {
+                if (Array.isArray(errs)) {
+                    const err = errs.map(e => e.message).join(' ');
+                    this.setState({ error: err });
+                } else {
+                    this.setState({ error: errs.toString() });
+                }
+            })
+            .finally(() => this.setState({ saving: false }));
     }
 
     setConfigData(data: Partial<Config>) {
@@ -73,6 +96,7 @@ export class SettingsEditor extends React.Component<{}, State> {
                             label={Config.FIELD_NAMES.smtpServer}
                             value={this.state.config.smtpServer}
                             onChange={(e, smtpServer) => { this.setConfigData({ smtpServer }) }}
+                            disabled={this.state.saving}
                         />
                         <Note field="smtpServer" />
                     </div>
@@ -88,6 +112,7 @@ export class SettingsEditor extends React.Component<{}, State> {
                                     }
                                 }
                             }}
+                            disabled={this.state.saving}
                         />
                         <Note field="smtpPort" />
                     </div>
@@ -98,6 +123,7 @@ export class SettingsEditor extends React.Component<{}, State> {
                     inlineLabel
                     defaultChecked={this.state.config.smtpSecure !== false}
                     onChange={(e, smtpSecure) => this.setConfigData({ smtpSecure })}
+                    disabled={this.state.saving}
                 />
                 <Note field="smtpSecure" />
 
@@ -107,6 +133,7 @@ export class SettingsEditor extends React.Component<{}, State> {
                             label={Config.FIELD_NAMES.smtpUser}
                             value={this.state.config.smtpUser}
                             onChange={(e, smtpUser) => { this.setConfigData({ smtpUser }) }}
+                            disabled={this.state.saving}
                         />
                         <Note field="smtpUser" />
                     </div>
@@ -115,6 +142,7 @@ export class SettingsEditor extends React.Component<{}, State> {
                             label={Config.FIELD_NAMES.smtpPassword}
                             value={this.state.config.smtpPassword}
                             onChange={(e, smtpPassword) => { this.setConfigData({ smtpPassword }) }}
+                            disabled={this.state.saving}
                         />
                         <Note field="smtpPassword" />
                     </div>
@@ -134,6 +162,7 @@ export class SettingsEditor extends React.Component<{}, State> {
                             label={Config.FIELD_NAMES.emailTo}
                             value={this.state.config.emailTo}
                             onChange={(e, emailTo) => { this.setConfigData({ emailTo }) }}
+                            disabled={this.state.saving}
                         />
                         <Note field="emailTo" />
                     </div>
@@ -142,6 +171,7 @@ export class SettingsEditor extends React.Component<{}, State> {
                             label={Config.FIELD_NAMES.emailFrom}
                             value={this.state.config.emailFrom}
                             onChange={(e, emailFrom) => { this.setConfigData({ emailFrom }) }}
+                            disabled={this.state.saving}
                         />
                         <Note field="emailFrom" />
                     </div>
@@ -150,14 +180,34 @@ export class SettingsEditor extends React.Component<{}, State> {
         </>;
     }
 
+    renderSaveButton() {
+        return <Stack horizontal>
+            {this.state.saving
+                ? <FluentSpinner label="Saving..." ariaLive="assertive" labelPosition="right" />
+                : <PrimaryButton iconProps={{ iconName: 'DeviceFloppy' }} text="Save Settings" onClick={this.save}/>}
+        </Stack>
+    }
+
     render() {
         return <Spinner waitFor={this.loader}>
             <Stack tokens={{ childrenGap: 'm', }}>
+                {this.state.error 
+                    ? <MessageBar messageBarType={MessageBarType.error}>{this.state.error}</MessageBar>
+                    : undefined}
+
+                {this.renderSaveButton()}
+                
+                <Separator styles={separatorStyles} />
+
                 {this.renderSmtpConfig()}
 
                 <Separator styles={separatorStyles} />
 
                 {this.renderAlertConfig()}
+
+                <Separator styles={separatorStyles} />
+
+                {this.renderSaveButton()}
             </Stack>
         </Spinner>;
     }
