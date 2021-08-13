@@ -10,6 +10,9 @@ export interface Config {
     smtpSecure?: boolean;
     smtpUser?: string;
     smtpPassword?: string;
+
+    emailFrom?: string;
+    emailTo?: string;
 }
 
 export namespace Config {
@@ -20,16 +23,28 @@ export namespace Config {
         smtpSecure: 'Use SSL for SMTP',
         smtpUser: 'SMTP username',
         smtpPassword: 'SMTP password',
+        emailFrom: 'Email from',
+        emailTo: 'Email to',
     };
     
     export const FIELD_TOOLTIPS: Record<keyof Config, string | JSX.Element | undefined> = {
         feeds: undefined,
-        smtpServer: <></>,
-        smtpPort: <></>,
+        smtpServer: undefined,
+        smtpPort: <>
+            Port used by your SMTP server.
+            Defaults to 465 for SSL connections, 587 otherwise.
+        </>,
         smtpSecure: <>
             If enabled, use a secure connection to SMTP server.
         </>,
-        smtpUser: <></>,
-        smtpPassword: <></>,
+        smtpUser: undefined,
+        smtpPassword: undefined,
+        emailFrom: <>
+            The address displayed in the "From" header for messages
+            sent by this server.
+        </>,
+        emailTo: <>
+            Where to send email alerts. Probably your personal email address.
+        </>,
     };
 }

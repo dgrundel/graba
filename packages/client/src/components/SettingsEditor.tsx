@@ -62,9 +62,9 @@ export class SettingsEditor extends React.Component<{}, State> {
         }))
     }
 
-    renderMailConfig() {
+    renderSmtpConfig() {
         return <>
-            <Text block variant="xLarge">Outgoing Mail</Text>
+            <Text block variant="xLarge">Outgoing Mail (SMTP) Server</Text>
 
             <Stack tokens={{ childrenGap: 's2', }}>
                 <Grid columns="3fr 1fr">
@@ -123,13 +123,41 @@ export class SettingsEditor extends React.Component<{}, State> {
         </>;
     }
 
+    renderAlertConfig() {
+        return <>
+            <Text block variant="xLarge">Alerts</Text>
+
+            <Stack tokens={{ childrenGap: 's2', }}>
+                <Grid columns={2}>
+                    <div>
+                        <TextField
+                            label={Config.FIELD_NAMES.emailTo}
+                            value={this.state.config.emailTo}
+                            onChange={(e, emailTo) => { this.setConfigData({ emailTo }) }}
+                        />
+                        <Note field="emailTo" />
+                    </div>
+                    <div>
+                        <TextField
+                            label={Config.FIELD_NAMES.emailFrom}
+                            value={this.state.config.emailFrom}
+                            onChange={(e, emailFrom) => { this.setConfigData({ emailFrom }) }}
+                        />
+                        <Note field="emailFrom" />
+                    </div>
+                </Grid>
+            </Stack>
+        </>;
+    }
+
     render() {
         return <Spinner waitFor={this.loader}>
             <Stack tokens={{ childrenGap: 'm', }}>
-                {this.renderMailConfig()}
+                {this.renderSmtpConfig()}
 
                 <Separator styles={separatorStyles} />
 
+                {this.renderAlertConfig()}
             </Stack>
         </Spinner>;
     }
