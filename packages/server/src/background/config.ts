@@ -49,6 +49,16 @@ class ConfigImpl implements Config {
             this.feeds = feeds;
         }
     }
+
+    update(updates: Partial<Config>) {
+        // remove feeds
+        delete updates['feeds'];
+
+        Object.keys(updates).forEach(k => {
+            const key = k as keyof Config;
+            this.store.set(key, updates[key]);
+        });
+    }
 }
 
 export const config = new ConfigImpl();

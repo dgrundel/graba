@@ -1,5 +1,6 @@
 import { Feed } from './feed';
 import React from 'react';
+import { ErrorMessage, mergeErrors, validateIf, validateNotEmpty, validateNumberGreaterThanOrEqual, validateNumberLessThanOrEqual, validateNumeric } from '../validator/validators';
 
 export interface Config {
     feeds: Feed[];
@@ -47,4 +48,19 @@ export namespace Config {
             Where to send email alerts. Probably your personal email address.
         </>,
     };
+}
+
+const keyAndLabel = (k: keyof Config): [keyof Config, string] => {
+    return [k, Config.FIELD_NAMES[k]];
+}
+
+export const validateConfig = (config: Partial<Config>): ErrorMessage[] => {
+    return mergeErrors(
+        ...validateIf(
+            typeof config.smtpPort !== 'undefined',
+            [
+                validateNumeric(config, ...keyAndLabel('smtpPort')),
+            ]
+        ),
+    );
 }
