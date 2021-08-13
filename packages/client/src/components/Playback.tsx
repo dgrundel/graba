@@ -12,6 +12,7 @@ import { Centered } from './Centered';
 import { Sorter } from './Sorter';
 import { DateFilter } from './DateFilter';
 import { Link } from 'react-router-dom';
+import { AppRoute } from '../routes';
 
 type FeedDisplay = Pick<Feed, 'name' | 'id'>;
 type RemoteData = [VideoRecord[], FeedDisplay[]];
@@ -148,7 +149,7 @@ class Component extends React.Component<Props, State> {
         const linkProps = {
             component: PrimaryButton,
             iconProps: {
-                iconName: 'Settings',
+                iconName: AppRoute.icons[AppRoute.Configure],
             },
         };
 
@@ -156,7 +157,7 @@ class Component extends React.Component<Props, State> {
             <Stack tokens={{ childrenGap: 'm', }} style={{ textAlign: 'center' }}>
                 <Stack.Item>{emptyListMessage}</Stack.Item>
                 <Stack.Item>
-                    <Link to="/config" {...linkProps}>Configure</Link>
+                    <Link to={AppRoute.urls[AppRoute.Configure]} {...linkProps}>Configure</Link>
                 </Stack.Item>
             </Stack>
         </Centered>;

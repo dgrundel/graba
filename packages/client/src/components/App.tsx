@@ -15,6 +15,7 @@ import { connect } from 'react-redux';
 import { RootState } from '../store/store';
 import { AppMessage } from '../store/appReducer';
 import { MessageBar } from '@fluentui/react';
+import { AppRoute } from '../routes';
 
 interface Props {
     messages: AppMessage[];
@@ -45,16 +46,16 @@ class Component extends React.Component<Props, State> {
                         </div>
 
                         <Switch>
-                            <Route exact path="/">
+                            <Route exact path={AppRoute.urls[AppRoute.Dashboard]}>
                                 <Dashboard />
                             </Route>
-                            <Route path="/watch">
+                            <Route path={AppRoute.urls[AppRoute.WatchLive]}>
                                 <Watch />
                             </Route>
-                            <Route path="/playback">
+                            <Route path={AppRoute.urls[AppRoute.Playback]}>
                                 <Playback />
                             </Route>
-                            <Route path="/config">
+                            <Route path={AppRoute.urls[AppRoute.Configure]}>
                                 <ConfigEditor />
                             </Route>
                         </Switch>

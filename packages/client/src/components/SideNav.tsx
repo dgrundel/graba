@@ -2,6 +2,7 @@ import { IComponentAsProps, INavButtonProps, INavLink, INavLinkGroup, Nav } from
 import {
     NavLink, useLocation
 } from "react-router-dom";
+import { AppRoute } from '../routes';
 
 const CustomLink = (props: IComponentAsProps<INavButtonProps>) => {
     const url = props.link!.url;
@@ -19,39 +20,29 @@ const CustomLink = (props: IComponentAsProps<INavButtonProps>) => {
     return <NavLink exact={isExact} to={url} component={Nested}/>;
 };
 
-export const SideNav = () => {
-    const links: INavLink[] = [{
-        name: 'Dashboard',
-        url: '/',
-        icon: 'Home',
-        exact: true,
-    },{
-        name: 'Watch Live',
-        url: '/watch',
-        icon: 'Video',
-    },{
-        name: 'Playback',
-        url: '/playback',
-        icon: 'PlayerPlay',
-    },{
-        name: 'Configure',
-        url: '/config',
-        icon: 'Settings',
-    }].map(link => ({
-        ...link, 
-        key: link.url 
-    }));
-    const navLinkGroups: INavLinkGroup[] = [{
-        links
-    }];
+const navLinkForRoute = (r: AppRoute, exact?: boolean): INavLink => ({
+    name: r,
+    url: AppRoute.urls[r],
+    key: AppRoute.urls[r], 
+    icon: AppRoute.icons[r],
+    exact,
+});
 
-    return (
-        <nav className="side-nav">
-            <Nav
-                selectedKey={useLocation().pathname}
-                groups={navLinkGroups}
-                linkAs={CustomLink}
-            />
-        </nav>
-    );
+const navLinkGroups: INavLinkGroup[] = [{
+    links: [
+        navLinkForRoute(AppRoute.Dashboard, true),
+        navLinkForRoute(AppRoute.WatchLive),
+        navLinkForRoute(AppRoute.Playback),
+        navLinkForRoute(AppRoute.Configure),
+    ]
+}];
+
+export const SideNav = () => {
+    return <nav className="side-nav">
+        <Nav
+            selectedKey={useLocation().pathname}
+            groups={navLinkGroups}
+            linkAs={CustomLink}
+        />
+    </nav>;
 };

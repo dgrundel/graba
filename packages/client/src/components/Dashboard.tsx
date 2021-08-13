@@ -12,6 +12,7 @@ import { theme } from '../theme';
 import { AppIcon } from './AppIcon';
 import { IconRun } from '@tabler/icons';
 import { Link } from 'react-router-dom';
+import { AppRoute } from '../routes';
 
 interface LoaderResult {
     config: Config;
@@ -92,7 +93,7 @@ export class Dashboard extends React.Component<{}, State> {
         const linkProps = {
             component: PrimaryButton,
             iconProps: {
-                iconName: 'Settings',
+                iconName: AppRoute.icons[AppRoute.Configure],
             },
         };
 
@@ -102,7 +103,7 @@ export class Dashboard extends React.Component<{}, State> {
             content = <Stack tokens={{ childrenGap: 'm', }}>
                 <Stack.Item>No feeds configured.</Stack.Item>
                 <Stack.Item>
-                    <Link to="/config" {...linkProps}>Configure</Link>
+                    <Link to={AppRoute.urls[AppRoute.Configure]} {...linkProps}>Configure</Link>
                 </Stack.Item>
             </Stack>;
         } else {
