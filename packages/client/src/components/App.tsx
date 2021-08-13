@@ -6,7 +6,7 @@ import {
 } from "react-router-dom";
 import './App.scss';
 import { Watch } from './Watch';
-import { ConfigEditor } from './ConfigEditor';
+import { FeedConfigEditor } from './FeedConfigEditor';
 import { SideNav } from './SideNav';
 import { theme } from '../theme';
 import { Playback } from './Playback';
@@ -16,6 +16,7 @@ import { RootState } from '../store/store';
 import { AppMessage } from '../store/appReducer';
 import { MessageBar } from '@fluentui/react';
 import { AppRoute } from '../routes';
+import { SettingsEditor } from './SettingsEditor';
 
 interface Props {
     messages: AppMessage[];
@@ -55,8 +56,11 @@ class Component extends React.Component<Props, State> {
                             <Route path={AppRoute.urls[AppRoute.Playback]}>
                                 <Playback />
                             </Route>
-                            <Route path={AppRoute.urls[AppRoute.Configure]}>
-                                <ConfigEditor />
+                            <Route path={AppRoute.urls[AppRoute.FeedSetup]}>
+                                <FeedConfigEditor />
+                            </Route>
+                            <Route path={AppRoute.urls[AppRoute.Settings]}>
+                                <SettingsEditor />
                             </Route>
                         </Switch>
                     </div>

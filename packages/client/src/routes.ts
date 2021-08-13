@@ -1,8 +1,9 @@
 export enum AppRoute {
     Dashboard = 'Dashboard',
-    WatchLive = 'Watch Live',
+    WatchLive = 'Live View',
     Playback = 'Playback',
-    Configure = 'Configure',
+    FeedSetup = 'Feed Config',
+    Settings = 'Settings',
 };
 
 export namespace AppRoute {
@@ -10,14 +11,16 @@ export namespace AppRoute {
         [AppRoute.Dashboard]: '/',
         [AppRoute.WatchLive]: '/watch',
         [AppRoute.Playback]: '/playback',
-        [AppRoute.Configure]: '/config',
+        [AppRoute.FeedSetup]: '/feeds',
+        [AppRoute.Settings]: '/settings',
     }
 
     export const icons: Record<AppRoute, string> = {
         [AppRoute.Dashboard]: 'Home',
         [AppRoute.WatchLive]: 'Video',
         [AppRoute.Playback]: 'PlayerPlay',
-        [AppRoute.Configure]: 'Settings',
+        [AppRoute.FeedSetup]: 'SettingsAutomation',
+        [AppRoute.Settings]: 'AdjustmentsHorizontal',
     }
 }
 

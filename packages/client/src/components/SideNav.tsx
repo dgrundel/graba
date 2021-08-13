@@ -33,7 +33,8 @@ const navLinkGroups: INavLinkGroup[] = [{
         navLinkForRoute(AppRoute.Dashboard, true),
         navLinkForRoute(AppRoute.WatchLive),
         navLinkForRoute(AppRoute.Playback),
-        navLinkForRoute(AppRoute.Configure),
+        navLinkForRoute(AppRoute.FeedSetup),
+        navLinkForRoute(AppRoute.Settings),
     ]
 }];
 

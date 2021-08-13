@@ -93,7 +93,7 @@ export class Dashboard extends React.Component<{}, State> {
         const linkProps = {
             component: PrimaryButton,
             iconProps: {
-                iconName: AppRoute.icons[AppRoute.Configure],
+                iconName: AppRoute.icons[AppRoute.FeedSetup],
             },
         };
 
@@ -103,7 +103,7 @@ export class Dashboard extends React.Component<{}, State> {
             content = <Stack tokens={{ childrenGap: 'm', }}>
                 <Stack.Item>No feeds configured.</Stack.Item>
                 <Stack.Item>
-                    <Link to={AppRoute.urls[AppRoute.Configure]} {...linkProps}>Configure</Link>
+                    <Link to={AppRoute.urls[AppRoute.FeedSetup]} {...linkProps}>Configure</Link>
                 </Stack.Item>
             </Stack>;
         } else {

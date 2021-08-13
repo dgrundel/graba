@@ -1,5 +1,5 @@
 import { createTheme, registerIcons } from '@fluentui/react';
-import { IconCheck, IconPlus, IconTrash, IconChevronUp, IconChevronDown, IconChevronLeft, IconChevronRight, IconSettings, IconPlayerPlay, IconHome, IconVideo, IconDeviceFloppy, IconPencil, IconX, IconInfoCircle, IconHelp, IconPlayerRecord, IconAlertCircle, IconDownload, IconRun, TablerIconProps, IconSortAscending, IconSortDescending, IconCalendarOff, IconCalendar } from '@tabler/icons';
+import { IconCheck, IconPlus, IconTrash, IconChevronUp, IconChevronDown, IconChevronLeft, IconChevronRight, IconSettings, IconPlayerPlay, IconHome, IconVideo, IconDeviceFloppy, IconPencil, IconX, IconInfoCircle, IconHelp, IconPlayerRecord, IconAlertCircle, IconDownload, IconRun, TablerIconProps, IconSortAscending, IconSortDescending, IconCalendarOff, IconCalendar, IconAdjustmentsHorizontal, IconSettingsAutomation } from '@tabler/icons';
 import { AppIcon } from './components/AppIcon';
 
 const lightPalette = {
@@ -113,6 +113,7 @@ registerIcons({
         ErrorBadge: <AppIcon icon={IconAlertCircle} />,
 
         // others
+        AdjustmentsHorizontal: <AppIcon icon={IconAdjustmentsHorizontal} />,
         CalendarOff: <AppIcon icon={IconCalendarOff} />,
         DeviceFloppy: <AppIcon icon={IconDeviceFloppy} />,
         Download: <AppIcon icon={IconDownload} />,
@@ -125,6 +126,7 @@ registerIcons({
         Plus: <AppIcon icon={IconPlus} />,
         Run: <AppIcon icon={IconRun} />,
         Settings: <AppIcon icon={IconSettings} />,
+        SettingsAutomation: <AppIcon icon={IconSettingsAutomation} />,
         SortAscending: <AppIcon icon={IconSortAscending} />,
         SortDescending: <AppIcon icon={IconSortDescending} />,
         Trash: <AppIcon icon={IconTrash} />,

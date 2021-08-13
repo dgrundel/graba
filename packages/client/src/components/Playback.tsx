@@ -149,7 +149,7 @@ class Component extends React.Component<Props, State> {
         const linkProps = {
             component: PrimaryButton,
             iconProps: {
-                iconName: AppRoute.icons[AppRoute.Configure],
+                iconName: AppRoute.icons[AppRoute.FeedSetup],
             },
         };
 
@@ -157,7 +157,7 @@ class Component extends React.Component<Props, State> {
             <Stack tokens={{ childrenGap: 'm', }} style={{ textAlign: 'center' }}>
                 <Stack.Item>{emptyListMessage}</Stack.Item>
                 <Stack.Item>
-                    <Link to={AppRoute.urls[AppRoute.Configure]} {...linkProps}>Configure</Link>
+                    <Link to={AppRoute.urls[AppRoute.FeedSetup]} {...linkProps}>Configure</Link>
                 </Stack.Item>
             </Stack>
         </Centered>;
