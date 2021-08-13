@@ -22,69 +22,6 @@ interface State {
     error?: string;
 }
 
-const feedFieldNames: Record<keyof Feed, string> = {
-    id: 'id',
-    name: 'Name',
-    streamUrl: 'Stream URL',
-    maxFps: 'Max FPS',
-    scaleFactor: 'Scale factor',
-    videoQuality: 'Video quality',
-    saveVideo: 'Save video',
-    savePath: 'Save path',
-    onlySaveMotion: 'Only save when motion detected',
-    motionEndTimeout: 'Motion timeout',
-    detectMotion: 'Motion detection',
-    motionSampleInterval: 'Motion sampling interval',
-    motionDiffThreshold: 'Motion diff threshold',
-    motionRegions: 'Motion regions',
-};
-
-const feedFieldTooltips: Record<keyof Feed, string | JSX.Element | undefined> = {
-    id: undefined,
-    name: undefined,
-    streamUrl: undefined,
-    maxFps: <>
-        Set an upper bound for video frame rate.
-        Lower values improve performance of background video processing and viewing in browser.
-    </>,
-    scaleFactor: <>
-        Scale the width and height of the video.
-        Lower values improve performance of background video processing and viewing in browser.
-    </>,
-    videoQuality: <>
-        Quality level of the video output. 
-        Range is 2-31 where a lower number represents better quality.
-        <em>This value is passed to FFmpeg's <code>qscale</code> argument.</em>
-    </>,
-    saveVideo: undefined,
-    savePath: undefined,
-    onlySaveMotion: <>
-        Requires motion detection enabled.
-    </>,
-    motionEndTimeout: <>
-        When only saving video on motion detection, this is the <em>minimum</em> amount of 
-        time to wait for more motion to happen before recording is stopped.
-    </>,
-    detectMotion: undefined,
-    motionSampleInterval: <>
-        Check every <em>n</em> pixels for motion.
-        When set to a value greater than <strong>1</strong>, video frame pixel data will
-        be sampled during motion detection. Larger values improve performance by lowering
-        the number of pixels checked for motion but also reduce the effectiveness of Motion
-        detection.
-    </>,
-    motionDiffThreshold: <>
-        Percentage of pixels in a frame that must be different to be considered "motion".
-        Lower values increase sensitivity of motion detection.
-    </>,
-    motionRegions: <>
-        <strong>Optional.</strong> Click and drag to define motion detection regions in image.
-        If no regions are set, motion detection will be performed on the entire video frame.
-        Setting regions can also improve performance by limiting the amount of pixels on which motion 
-        detection is performed.
-    </>,
-};
-
 const separatorStyles = {
     root: {
         '::before': { 
@@ -93,16 +30,14 @@ const separatorStyles = {
     }
 };
 
-const noteStyles = { 
-    color: theme.palette.neutralTertiary,
-    marginTop: 0,
-    marginBottom: theme.spacing.s1,
-};
-
 const Note = (props: { field: keyof Feed; }) => {
-    const content = feedFieldTooltips[props.field] || null;
+    const content = Feed.FIELD_TOOLTIPS[props.field] || null;
     if (content) {
-        return <Text block variant="small" style={noteStyles}>{content}</Text>
+        return <Text block variant="small" style={{ 
+            color: theme.palette.neutralTertiary,
+            marginTop: 0,
+            marginBottom: theme.spacing.s1,
+        }}>{content}</Text>
     }
     return null;
 };
@@ -170,8 +105,8 @@ export class FeedEditor extends React.Component<Props, State> {
     renderFeedValue<K extends keyof Feed>(key: K, displayFn?: (value: Feed[K]) => string | React.ReactNode) {
         const v = this.state.feed[key];
         const value = displayFn ? displayFn(v) : v;
-        const label = feedFieldNames[key];
-        const tooltip = feedFieldTooltips[key];
+        const label = Feed.FIELD_NAMES[key];
+        const tooltip = Feed.FIELD_TOOLTIPS[key];
 
         if (!value) {
             return;
@@ -240,7 +175,7 @@ export class FeedEditor extends React.Component<Props, State> {
         return <Stack horizontal tokens={{ childrenGap: 'm', }}>
             <Stack grow tokens={{ childrenGap: 's1', }}>
                 <TextField
-                    label={feedFieldNames.name}
+                    label={Feed.FIELD_NAMES.name}
                     value={this.state.feed.name}
                     onChange={(e, name) => { this.setFeedData({ name }) }}
                 />
@@ -251,14 +186,14 @@ export class FeedEditor extends React.Component<Props, State> {
                 <Text block variant="large">Stream</Text>
 
                 <TextField
-                    label={feedFieldNames.streamUrl}
+                    label={Feed.FIELD_NAMES.streamUrl}
                     value={this.state.feed.streamUrl}
                     onChange={(e, streamUrl) => { this.setFeedData({ streamUrl }) }}
                 />
                 <Note field={'streamUrl'}/>
 
                 <Slider
-                    label={feedFieldNames.maxFps}
+                    label={Feed.FIELD_NAMES.maxFps}
                     min={0}
                     step={1}
                     max={60}
@@ -270,7 +205,7 @@ export class FeedEditor extends React.Component<Props, State> {
                 <Note field={'maxFps'}/>
 
                 <Slider
-                    label={feedFieldNames.scaleFactor}
+                    label={Feed.FIELD_NAMES.scaleFactor}
                     min={0}
                     step={0.05}
                     max={2}
@@ -282,7 +217,7 @@ export class FeedEditor extends React.Component<Props, State> {
                 <Note field={'scaleFactor'}/>
 
                 <Slider
-                    label={feedFieldNames.videoQuality}
+                    label={Feed.FIELD_NAMES.videoQuality}
                     min={-31}
                     step={1}
                     max={-2}
@@ -298,7 +233,7 @@ export class FeedEditor extends React.Component<Props, State> {
                 <Text block variant="large">Storage</Text>
 
                 <Toggle 
-                    label={feedFieldNames.saveVideo} 
+                    label={Feed.FIELD_NAMES.saveVideo} 
                     inlineLabel
                     defaultChecked={this.state.feed.saveVideo === true}
                     onChange={(e, saveVideo) => this.setFeedData({ saveVideo })}
@@ -306,14 +241,14 @@ export class FeedEditor extends React.Component<Props, State> {
                 <Note field={'saveVideo'}/>
 
                 <TextField
-                    label={feedFieldNames.savePath}
+                    label={Feed.FIELD_NAMES.savePath}
                     value={this.state.feed.savePath}
                     onChange={(e, savePath) => { this.setFeedData({ savePath }) }}
                 />
                 <Note field={'savePath'}/>
 
                 <Toggle 
-                    label={feedFieldNames.onlySaveMotion}
+                    label={Feed.FIELD_NAMES.onlySaveMotion}
                     disabled={!(this.state.feed.saveVideo && this.state.feed.detectMotion)}
                     inlineLabel
                     defaultChecked={this.state.feed.onlySaveMotion === true}
@@ -322,7 +257,7 @@ export class FeedEditor extends React.Component<Props, State> {
                 <Note field={'onlySaveMotion'}/>
 
                 <Slider
-                    label={feedFieldNames.motionEndTimeout}
+                    label={Feed.FIELD_NAMES.motionEndTimeout}
                     disabled={this.state.feed.detectMotion !== true}
                     min={Feed.MIN_MOTION_END_TIMEOUT}
                     step={1}
@@ -339,7 +274,7 @@ export class FeedEditor extends React.Component<Props, State> {
                 <Text block variant="large">Motion Detection</Text>
 
                 <Toggle 
-                    label={feedFieldNames.detectMotion} 
+                    label={Feed.FIELD_NAMES.detectMotion} 
                     inlineLabel
                     defaultChecked={this.state.feed.detectMotion === true}
                     onChange={(e, detectMotion) => this.setFeedData({ detectMotion })}
@@ -347,7 +282,7 @@ export class FeedEditor extends React.Component<Props, State> {
                 <Note field={'detectMotion'}/>
 
                 <Slider
-                    label={feedFieldNames.motionSampleInterval}
+                    label={Feed.FIELD_NAMES.motionSampleInterval}
                     disabled={this.state.feed.detectMotion !== true}
                     min={1}
                     step={1}
@@ -360,7 +295,7 @@ export class FeedEditor extends React.Component<Props, State> {
                 <Note field={'motionSampleInterval'}/>
                 
                 <Slider
-                    label={feedFieldNames.motionDiffThreshold}
+                    label={Feed.FIELD_NAMES.motionDiffThreshold}
                     disabled={this.state.feed.detectMotion !== true}
                     min={0.0}
                     step={0.0005}
