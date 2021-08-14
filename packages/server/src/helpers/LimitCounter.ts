@@ -19,4 +19,8 @@ export class LimitCounter {
     reset() {
         this.counter = 0;
     }
+
+    value() {
+        return this.counter;
+    }
 }

@@ -23,6 +23,9 @@ export interface Feed {
     motionSampleInterval?: number;
     motionDiffThreshold?: number;
     motionRegions?: MotionRegion[];
+
+    // alerts
+    alertOnMotion?: boolean;
 }
 
 export namespace Feed {
@@ -48,6 +51,7 @@ export namespace Feed {
         motionSampleInterval: 'Motion sampling interval',
         motionDiffThreshold: 'Motion diff threshold',
         motionRegions: 'Motion regions',
+        alertOnMotion: 'Alert when motion detected',
     };
     
     export const FIELD_TOOLTIPS: Record<keyof Feed, string | JSX.Element | undefined> = {
@@ -94,6 +98,7 @@ export namespace Feed {
             Setting regions can also improve performance by limiting the amount of pixels on which motion 
             detection is performed.
         </>,
+        alertOnMotion: undefined,
     };
 }
 

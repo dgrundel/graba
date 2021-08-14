@@ -165,6 +165,10 @@ export class FeedEditor extends React.Component<Props, State> {
                     'motionDiffThreshold',
                     interval => interval?.toFixed(4) || '',
                 ) : ''}
+
+                <Separator styles={separatorStyles} />
+                
+                {this.renderFeedValue('alertOnMotion', value => value ? 'Enabled' : 'Disabled')}
             </Stack>
 
             <img alt={this.state.feed.name} src={`http://localhost:4000/feed/still/${this.state.feed.id}`} style={{ maxWidth: '15vw', objectFit: 'contain' }}/>
@@ -319,6 +323,18 @@ export class FeedEditor extends React.Component<Props, State> {
                         onChange={motionRegions => { this.setFeedData({ motionRegions }) }}
                     />
                 </> : undefined}
+
+                <Separator styles={separatorStyles} />
+
+                <Text block variant="large">Alerts</Text>
+
+                <Toggle 
+                    label={Feed.FIELD_NAMES.alertOnMotion} 
+                    inlineLabel
+                    defaultChecked={this.state.feed.alertOnMotion === true}
+                    onChange={(e, alertOnMotion) => this.setFeedData({ alertOnMotion })}
+                />
+                <Note field={'alertOnMotion'}/>
             </Stack>
         </Stack>;
     }

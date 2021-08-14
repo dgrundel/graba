@@ -9,6 +9,8 @@ type FFmpegArgGenerator = () => string[];
 export interface Frame {
     buffer: Buffer;
     motionDetected?: boolean;
+    isMotionStart?: boolean;
+    isMotionEnd?: boolean;
 }
 
 interface Options {

@@ -6,59 +6,58 @@ const DEFAULTS = {
     feeds: [],
 };
 
-class ConfigImpl implements Config {
-    private readonly store: conf<Config>;
+const store = new conf<Config>({
+    configName: CONFIG_NAME,
+    defaults: DEFAULTS,
+});
 
-    constructor() {
-        this.store = new conf<Config>({
-            configName: CONFIG_NAME,
-            defaults: DEFAULTS,
-        });
-    }
-
-    toObject(): Config {
-        return {
-            ...this.store.store
-        };
-    }
-
-    set feeds(value: Feed[]) {
-        this.store.set('feeds', value);
-    }
-
-    get feeds() {
-        return this.store.get('feeds');
-    }
-
-    createOrUpdateFeed(feed: Feed) {
-        const feeds = this.feeds.slice();
+const configHelpers = {
+    toObject: (): Config => {
+        return { ...store.store };
+    },
+    createOrUpdateFeed: (feed: Feed): void => {
+        const feeds = store.get('feeds').slice();
         const i = feeds.findIndex(f => f.id === feed.id);
         if (i !== -1) {
             feeds[i] = feed;
-            this.feeds = feeds;
         } else {
-            this.feeds = this.feeds.concat(feed);
+            feeds.push(feed);
         }
-    }
-
-    deleteFeed(id: string) {
-        const feeds = this.feeds.slice();
+        store.set('feeds', feeds);
+    },
+    deleteFeed: (id: string): void => {
+        const feeds = store.get('feeds').slice();
         const i = feeds.findIndex(f => f.id === id);
         if (i !== -1) {
             feeds.splice(i, 1);
-            this.feeds = feeds;
+            store.set('feeds', feeds);
         }
-    }
-
+    },
     update(updates: Partial<Config>) {
         // remove feeds
         delete updates['feeds'];
 
         Object.keys(updates).forEach(k => {
             const key = k as keyof Config;
-            this.store.set(key, updates[key]);
+            store.set(key, updates[key]);
         });
     }
 }
 
-export const config = new ConfigImpl();
+/**
+ * Configuration backed by JSON store.
+ * 
+ * Proxy enables us to have generic getters and setters that we can
+ * redirect to the conf `get` and `set` methods.
+ */
+export const config = new Proxy(configHelpers, { 
+    get: (target, key) => {
+        return target.hasOwnProperty(key)
+            ? target[key as keyof typeof configHelpers]
+            : store.get(key as keyof Config);
+    },
+    set: (target, key, value) => {
+        store.set(key as keyof Config, value);
+        return true;
+    },
+}) as Config & typeof configHelpers;

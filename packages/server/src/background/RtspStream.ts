@@ -2,6 +2,7 @@ import { Feed } from 'graba.interface';
 import { MotionDetector } from '../helpers/MotionDetector';
 import { VideoRecorder } from '../helpers/VideoRecorder';
 import { FFmpegToJpeg, Frame } from '../helpers/FFmpegToJpeg';
+import { Mailer } from '../helpers/Mailer';
 import { EventEmitter } from 'stream';
 
 type FFmpegArgs = string[];
@@ -15,6 +16,7 @@ export class RtspStream {
     private readonly ffmpegToJpeg: FFmpegToJpeg;
     private readonly motionDetector: MotionDetector;
     private readonly videoRecorder?: VideoRecorder;
+    private readonly mailer?: Mailer;
 
     constructor(feed: Feed) {
         const ffmpegToJpegOptions = {
@@ -29,6 +31,15 @@ export class RtspStream {
             this.videoRecorder = new VideoRecorder(feed);
             this.onFrame(this.videoRecorder.writeFrame);
             this.emitter.on(Events.End, this.videoRecorder.stop);
+        }
+
+        if (feed.alertOnMotion) {
+            this.mailer = new Mailer();
+            this.onFrame(frame => {
+                if (frame.isMotionStart) {
+                    this.mailer?.send(frame.buffer);
+                }
+            });
         }
     }
 
