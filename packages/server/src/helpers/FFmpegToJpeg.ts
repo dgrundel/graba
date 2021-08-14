@@ -67,7 +67,7 @@ export class FFmpegToJpeg {
         this.ffmpeg.stdout?.off('data', this.frameChain.put);
 
         // kill ffmpeg process
-        this.ffmpeg.kill();
+        this.ffmpeg.kill('SIGINT');
     }
 
     async getNextFrame(): Promise<Frame> {
@@ -91,7 +91,7 @@ export class FFmpegToJpeg {
     }
 
     private ffmpegCloseHandler(code: number) {
-        logger.debug('[ffmpeg][close]', `exited with code ${code}`);
+        logger.debug(`[ffmpeg][close] exited with code ${code}`);
         this.emitter.emit(Events.StreamEnd);
     }
 

@@ -43,14 +43,10 @@ export class VideoRecording {
         }
 
         this.chain.end().then(() => {
-            this.ffmpeg.kill();
-            const stats = fs.statSync(this.record.path);
-    
-            updateRecord({
-                id: this.record.id,
-                endTime: Date.now(),
-                byteLength: stats.size,
-            });
+            const killSuccess = this.ffmpeg.kill('SIGINT');
+            if (!killSuccess) {
+                logger.warn('Error killing ffmpeg', this.ffmpeg);
+            }
         });
     }
 
@@ -82,20 +78,32 @@ export class VideoRecording {
         return ffmpeg;
     }
     
-    private ffmpegClose (code: number) {
-        logger.debug('[ffmpeg]', `Exited with code ${code}`);
+    private ffmpegClose (code: number, signal: string) {
+        logger.debug(`[ffmpeg][close] Exited with code ${code}, signal "${signal}"`);
+
+        // after ffmpeg has closed, try to update the record
+        try {
+            const stats = fs.statSync(this.record.path);
+            updateRecord({
+                id: this.record.id,
+                endTime: Date.now(),
+                byteLength: stats.size,
+            });
+        } catch (e) {
+            logger.error('Error caught attempting to update video record', this.record, e);
+        }
     }
     
     private ffmpegError (err: Error) {
-        logger.debug('[ffmpeg][ERROR]', err);
+        logger.debug('[ffmpeg][error]', err);
     }
     
     private ffmpegStderr (buffer: Buffer) {
-        logger.silly('[ffmpeg][stderr]', buffer.toString());
+        logger.silly('[ffmpeg][stderr]' + buffer.toString());
     }
 
     private ffmpegStdout (buffer: Buffer) {
-        logger.debug('[ffmpeg][stdout]', buffer.toString());
+        logger.debug('[ffmpeg][stdout]' + buffer.toString());
     }
     
     private async chainProcessor(frame: Frame, prev?: Frame): Promise<Frame> {
