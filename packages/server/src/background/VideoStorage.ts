@@ -3,7 +3,7 @@ import path from 'path';
 import { nanoid } from 'nanoid';
 import { Feed, VideoRecord } from 'graba.interface';
 
-const MAX_FILE_NAME_LENGTH = 255 - 4; // 4 chars for file ext
+const MAX_FILE_NAME_LENGTH = 245; // 255 is the usual max, minus some wiggle room
 
 interface VideoStorage {
     records: {
