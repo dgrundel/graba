@@ -1,14 +1,12 @@
 import { Feed } from 'graba.interface';
 import { VideoRecording } from './VideoRecording';
 import { Frame } from './FFmpegToJpeg';
-import { LimitCounter } from './LimitCounter';
 
 const ONE_DAY_MS = 24 * 60 * 60 * 1000 // 24 hr
 
 export class VideoRecorder {
     private readonly feed: Feed;
     private readonly rotateInterval: number;
-    private readonly motionlessFrames: LimitCounter;
     private recording?: VideoRecording;
     private timeout?: NodeJS.Timeout;
 
@@ -29,9 +27,6 @@ export class VideoRecorder {
         
         this.feed = feed;
         this.rotateInterval = 60 * 60 * 1000; // 1 hr
-
-        const motionEndAfterFrameCount = feed.maxFps * (feed.motionEndTimeout || Feed.MIN_MOTION_END_TIMEOUT);
-        this.motionlessFrames = new LimitCounter(motionEndAfterFrameCount);
     }
 
     start() {
@@ -58,22 +53,13 @@ export class VideoRecorder {
     }
 
     writeFrame(frame: Frame) {
-        if (frame.motionDetected) {
-            // reset count on motion detect
-            this.motionlessFrames.reset()
-        } else {
-            // only increment up to the limit, past that it's pointless
-            this.motionlessFrames.increment();
+        // if saveVideo is off, do nothing
+        if (!this.feed.saveVideo) {
+            return;
         }
-
+        
         // if not started, check to see if we _can_ start
         if (!this.recording) {
-            
-            // if saveVideo is off, do nothing
-            if (!this.feed.saveVideo) {
-                return;
-            }
-            
             // onlySaveMotion is false, so we save everything
             if (this.feed.onlySaveMotion !== true) {
                 this.start();
@@ -89,7 +75,7 @@ export class VideoRecorder {
 
         // recorder is started
         // if we're only saving on motion, check to see if we should stop recording
-        } else if (this.feed.onlySaveMotion === true && this.motionlessFrames.hasReachedLimit()) {
+        } else if (this.feed.onlySaveMotion === true && frame.isMotionEnd) {
             this.stop();
             return;
         }
