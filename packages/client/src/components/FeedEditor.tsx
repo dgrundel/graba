@@ -157,6 +157,11 @@ export class FeedEditor extends React.Component<Props, State> {
                 <Separator styles={separatorStyles} />
                 
                 {this.renderFeedValue('detectMotion', value => value ? 'Enabled' : 'Disabled')}
+                
+                {this.state.feed.detectMotion ? this.renderFeedValue(
+                    'alertOnMotion', 
+                    value => value ? 'Enabled' : 'Disabled'
+                ) : ''}
                 {this.state.feed.detectMotion ? this.renderFeedValue(
                     'motionSampleInterval',
                     interval => interval?.toFixed(0) || '',
@@ -168,7 +173,6 @@ export class FeedEditor extends React.Component<Props, State> {
 
                 <Separator styles={separatorStyles} />
                 
-                {this.renderFeedValue('alertOnMotion', value => value ? 'Enabled' : 'Disabled')}
             </Stack>
 
             <img alt={this.state.feed.name} src={`http://localhost:4000/feed/still/${this.state.feed.id}`} style={{ maxWidth: '15vw', objectFit: 'contain' }}/>
@@ -239,7 +243,7 @@ export class FeedEditor extends React.Component<Props, State> {
                 <Toggle 
                     label={Feed.FIELD_NAMES.saveVideo} 
                     inlineLabel
-                    defaultChecked={this.state.feed.saveVideo === true}
+                    checked={this.state.feed.saveVideo === true}
                     onChange={(e, saveVideo) => this.setFeedData({ saveVideo })}
                 />
                 <Note field={'saveVideo'}/>
@@ -255,7 +259,7 @@ export class FeedEditor extends React.Component<Props, State> {
                     label={Feed.FIELD_NAMES.onlySaveMotion}
                     disabled={!(this.state.feed.saveVideo && this.state.feed.detectMotion)}
                     inlineLabel
-                    defaultChecked={this.state.feed.onlySaveMotion === true}
+                    checked={this.state.feed.onlySaveMotion === true}
                     onChange={(e, onlySaveMotion) => this.setFeedData({ onlySaveMotion })}
                 />
                 <Note field={'onlySaveMotion'}/>
@@ -280,10 +284,19 @@ export class FeedEditor extends React.Component<Props, State> {
                 <Toggle 
                     label={Feed.FIELD_NAMES.detectMotion} 
                     inlineLabel
-                    defaultChecked={this.state.feed.detectMotion === true}
+                    checked={this.state.feed.detectMotion === true}
                     onChange={(e, detectMotion) => this.setFeedData({ detectMotion })}
                 />
                 <Note field={'detectMotion'}/>
+
+                <Toggle 
+                    label={Feed.FIELD_NAMES.alertOnMotion}
+                    disabled={this.state.feed.detectMotion !== true}
+                    inlineLabel
+                    checked={this.state.feed.alertOnMotion === true}
+                    onChange={(e, alertOnMotion) => this.setFeedData({ alertOnMotion })}
+                />
+                <Note field={'alertOnMotion'}/>
 
                 <Slider
                     label={Feed.FIELD_NAMES.motionSampleInterval}
@@ -323,18 +336,6 @@ export class FeedEditor extends React.Component<Props, State> {
                         onChange={motionRegions => { this.setFeedData({ motionRegions }) }}
                     />
                 </> : undefined}
-
-                <Separator styles={separatorStyles} />
-
-                <Text block variant="large">Alerts</Text>
-
-                <Toggle 
-                    label={Feed.FIELD_NAMES.alertOnMotion} 
-                    inlineLabel
-                    defaultChecked={this.state.feed.alertOnMotion === true}
-                    onChange={(e, alertOnMotion) => this.setFeedData({ alertOnMotion })}
-                />
-                <Note field={'alertOnMotion'}/>
             </Stack>
         </Stack>;
     }

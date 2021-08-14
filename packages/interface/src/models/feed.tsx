@@ -46,12 +46,12 @@ export namespace Feed {
         saveVideo: 'Save video',
         savePath: 'Save path',
         onlySaveMotion: 'Only save when motion detected',
-        motionEndTimeout: 'Motion timeout',
+        motionEndTimeout: 'Motion end timeout',
         detectMotion: 'Motion detection',
         motionSampleInterval: 'Motion sampling interval',
         motionDiffThreshold: 'Motion diff threshold',
         motionRegions: 'Motion regions',
-        alertOnMotion: 'Alert when motion detected',
+        alertOnMotion: 'Send alert when motion detected',
     };
     
     export const FIELD_TOOLTIPS: Record<keyof Feed, string | JSX.Element | undefined> = {

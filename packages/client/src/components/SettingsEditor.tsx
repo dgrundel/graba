@@ -121,7 +121,7 @@ export class SettingsEditor extends React.Component<{}, State> {
                 <Toggle 
                     label={Config.FIELD_NAMES.smtpSecure} 
                     inlineLabel
-                    defaultChecked={this.state.config.smtpSecure !== false}
+                    checked={this.state.config.smtpSecure !== false}
                     onChange={(e, smtpSecure) => this.setConfigData({ smtpSecure })}
                     disabled={this.state.saving}
                 />
