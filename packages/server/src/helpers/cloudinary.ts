@@ -10,14 +10,25 @@ const preconfigure = () => {
     });
 };
 
+const ONE_MINUTE = 1000 * 60;
+const UPLOAD_PUBLIC_TIMEOUT = ONE_MINUTE * 15;
+
 export const uploadImage = (image: string): Promise<string> => {
     return new Promise((resolve, reject) => {
         preconfigure();
 
-        const callback = (err: cloudinary.UploadApiErrorResponse, result: cloudinary.UploadApiResponse): void => {
+        const callback: cloudinary.UploadResponseCallback = (err?: cloudinary.UploadApiErrorResponse, result?: cloudinary.UploadApiResponse): void => {
             if (err) {
                 logger.error('Error returned from Cloudinary', err);
                 reject(err);
+                return;
+            }
+
+            if (!result) {
+                const message = 'No result returned from Cloudinary';
+                logger.error(message);
+                reject(new Error(message));
+                return;
             }
 
             logger.debug('Cloudinary upload successful', {
@@ -30,7 +41,15 @@ export const uploadImage = (image: string): Promise<string> => {
             resolve(result.secure_url);
         };
 
-        cloudinary.v2.uploader.upload(image, callback);
+        const options: cloudinary.UploadApiOptions = {
+            access_type: "anonymous",
+            start: (new Date()).toISOString(),
+            end: (new Date(Date.now() + UPLOAD_PUBLIC_TIMEOUT)).toISOString(),
+        };
+
+        logger.debug('Uploading image to Cloudinary with options', options);
+
+        cloudinary.v2.uploader.upload(image, options, callback);
     });
 };
     
