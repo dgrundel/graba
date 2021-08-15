@@ -85,9 +85,20 @@ export class SettingsEditor extends React.Component<{}, State> {
         }))
     }
 
-    renderSmtpConfig() {
+    renderEmailAlertConfig() {
         return <>
-            <Text block variant="xLarge">Outgoing Mail (SMTP) Server</Text>
+            <Text block variant="xLarge">Email Alerts</Text>
+
+            <Toggle 
+                label={Config.FIELD_NAMES.enableEmailAlerts} 
+                inlineLabel
+                checked={this.state.config.enableEmailAlerts === true}
+                onChange={(e, enableEmailAlerts) => this.setConfigData({ enableEmailAlerts })}
+                disabled={this.state.saving}
+            />
+            <Note field="enableEmailAlerts" />
+            
+            <Text block variant="large">Outgoing Mail (SMTP) Server</Text>
 
             <Stack tokens={{ childrenGap: 's2', }}>
                 <Grid columns="3fr 1fr">
@@ -141,7 +152,7 @@ export class SettingsEditor extends React.Component<{}, State> {
                         <TextField
                             type="password"
                             canRevealPassword
-                            revealPasswordAriaLabel="Show password"
+                            revealPasswordAriaLabel={`Show ${Config.FIELD_NAMES.smtpPassword}`}
                             label={Config.FIELD_NAMES.smtpPassword}
                             value={this.state.config.smtpPassword}
                             onChange={(e, smtpPassword) => { this.setConfigData({ smtpPassword }) }}
@@ -151,12 +162,8 @@ export class SettingsEditor extends React.Component<{}, State> {
                     </div>
                 </Grid>
             </Stack>
-        </>;
-    }
 
-    renderAlertConfig() {
-        return <>
-            <Text block variant="xLarge">Alerts</Text>
+            <Text block variant="large">Email Addresses</Text>
 
             <Stack tokens={{ childrenGap: 's2', }}>
                 <Grid columns={2}>
@@ -183,6 +190,77 @@ export class SettingsEditor extends React.Component<{}, State> {
         </>;
     }
 
+    renderSMSAlertConfig() {
+        return <>
+            <Text block variant="xLarge">SMS/MMS Alerts</Text>
+
+            <Toggle 
+                label={Config.FIELD_NAMES.enableSMSAlerts} 
+                inlineLabel
+                checked={this.state.config.enableSMSAlerts === true}
+                onChange={(e, enableSMSAlerts) => this.setConfigData({ enableSMSAlerts })}
+                disabled={this.state.saving}
+            />
+            <Note field="enableSMSAlerts" />
+            
+            <Text block variant="large">Twilio Settings</Text>
+            
+            <Stack tokens={{ childrenGap: 's2', }}>
+                <Grid columns={2}>
+                    <div>
+                        <TextField
+                            type="password"
+                            canRevealPassword
+                            revealPasswordAriaLabel={`Show ${Config.FIELD_NAMES.twilioAccountSid}`}
+                            label={Config.FIELD_NAMES.twilioAccountSid}
+                            value={this.state.config.twilioAccountSid}
+                            onChange={(e, twilioAccountSid) => { this.setConfigData({ twilioAccountSid }) }}
+                            disabled={this.state.saving}
+                        />
+                        <Note field="twilioAccountSid" />
+                    </div>
+                    <div>
+                        <TextField
+                            type="password"
+                            canRevealPassword
+                            revealPasswordAriaLabel={`Show ${Config.FIELD_NAMES.twilioAuthToken}`}
+                            label={Config.FIELD_NAMES.twilioAuthToken}
+                            value={this.state.config.twilioAuthToken}
+                            onChange={(e, twilioAuthToken) => { this.setConfigData({ twilioAuthToken }) }}
+                            disabled={this.state.saving}
+                        />
+                        <Note field="twilioAuthToken" />
+                    </div>
+                </Grid>
+            </Stack>
+
+            <Text block variant="large">Phone Numbers</Text>
+
+            <Stack tokens={{ childrenGap: 's2', }}>
+                <Grid columns={2}>
+                    <div>
+                        <TextField
+                            label={Config.FIELD_NAMES.smsTo}
+                            value={this.state.config.smsTo}
+                            onChange={(e, smsTo) => { this.setConfigData({ smsTo }) }}
+                            disabled={this.state.saving}
+                        />
+                        <Note field="smsTo" />
+                    </div>
+                    <div>
+                        <TextField
+                            label={Config.FIELD_NAMES.smsFrom}
+                            value={this.state.config.smsFrom}
+                            onChange={(e, smsFrom) => { this.setConfigData({ smsFrom }) }}
+                            disabled={this.state.saving}
+                        />
+                        <Note field="smsFrom" />
+                    </div>
+                </Grid>
+            </Stack>
+        </>;
+    }
+
     renderSaveButton() {
         return <Stack horizontal>
             {this.state.saving
@@ -202,11 +280,11 @@ export class SettingsEditor extends React.Component<{}, State> {
                 
                 <Separator styles={separatorStyles} />
 
-                {this.renderSmtpConfig()}
+                {this.renderEmailAlertConfig()}
 
                 <Separator styles={separatorStyles} />
 
-                {this.renderAlertConfig()}
+                {this.renderSMSAlertConfig()}
 
                 <Separator styles={separatorStyles} />
 
