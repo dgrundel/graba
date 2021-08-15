@@ -27,6 +27,11 @@ export interface Config {
     // sms/mms numbers
     smsFrom?: string;
     smsTo?: string;
+
+    // cloudinary api credentials
+    cloudinaryCloudName?: string;
+    cloudinaryApiKey?: string;
+    cloudinaryApiSecret?: string;
 }
 
 export namespace Config {
@@ -45,6 +50,9 @@ export namespace Config {
         twilioAuthToken: 'Twilio Auth Token',
         smsFrom: 'SMS/MMS from',
         smsTo: 'SMS/MMS to',
+        cloudinaryCloudName: 'Cloudinary cloud name',
+        cloudinaryApiKey: 'Cloudinary API key',
+        cloudinaryApiSecret: 'Cloudinary API secret',
     };
     
     export const FIELD_TOOLTIPS: Record<keyof Config, string | JSX.Element | undefined> = {
@@ -84,6 +92,9 @@ export namespace Config {
             The phone number to which alert SMS/MMS message will be sent.
             Probably your actual mobile phone number.
         </>,
+        cloudinaryCloudName: undefined,
+        cloudinaryApiKey: undefined,
+        cloudinaryApiSecret: undefined,
     };
 }
 

@@ -3,7 +3,9 @@ import { MotionDetector } from '../helpers/MotionDetector';
 import { VideoRecorder } from '../helpers/VideoRecorder';
 import { FFmpegToJpeg, Frame } from '../helpers/FFmpegToJpeg';
 import { AlertMailer } from '../helpers/AlertMailer';
+import { AlertSMS } from '../helpers/AlertSMS';
 import { EventEmitter } from 'stream';
+import { config } from './config';
 
 type FFmpegArgs = string[];
 
@@ -17,6 +19,7 @@ export class RtspStream {
     private readonly motionDetector: MotionDetector;
     private readonly videoRecorder?: VideoRecorder;
     private readonly mailer?: AlertMailer;
+    private readonly sms?: AlertSMS;
 
     constructor(feed: Feed) {
         const ffmpegToJpegOptions = {
@@ -33,9 +36,14 @@ export class RtspStream {
             this.emitter.on(Events.End, this.videoRecorder.stop);
         }
 
-        if (feed.alertOnMotion) {
+        if (feed.alertOnMotion && config.enableEmailAlerts) {
             this.mailer = new AlertMailer(feed);
             this.onFrame(this.mailer.onFrame);
+        }
+
+        if (feed.alertOnMotion && config.enableSMSAlerts) {
+            this.sms = new AlertSMS(feed);
+            this.onFrame(this.sms.onFrame);
         }
     }
 

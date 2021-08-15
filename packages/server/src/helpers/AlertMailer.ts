@@ -27,6 +27,10 @@ export class AlertMailer {
     }
 
     onFrame(frame: Frame) {
+        if (config.enableEmailAlerts !== true) {
+            return;
+        }
+
         if (this.feed.alertOnMotion !== true) {
             return;
         }

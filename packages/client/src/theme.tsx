@@ -2,6 +2,8 @@ import { createTheme, registerIcons } from '@fluentui/react';
 import { IconCheck, IconPlus, IconTrash, IconChevronUp, IconChevronDown, IconChevronLeft, IconChevronRight, IconSettings, IconPlayerPlay, IconHome, IconVideo, IconDeviceFloppy, IconPencil, IconX, IconInfoCircle, IconHelp, IconPlayerRecord, IconAlertCircle, IconDownload, IconRun, TablerIconProps, IconSortAscending, IconSortDescending, IconCalendarOff, IconCalendar, IconAdjustmentsHorizontal, IconSettingsAutomation, IconEye, IconEyeOff } from '@tabler/icons';
 import { AppIcon } from './components/AppIcon';
 
+const useDarkTheme = false;
+
 const lightPalette = {
     themePrimary: '#0078d4',
     themeLighterAlt: '#eff6fc',
@@ -56,7 +58,7 @@ const darkPalette = {
 };
 
 export const theme = createTheme({
-    palette: darkPalette,
+    palette: useDarkTheme ? darkPalette: lightPalette,
     defaultFontStyle: { 
         fontFamily: "'AileronLight', sans-serif",
         fontWeight: 'regular',
