@@ -1,6 +1,6 @@
 import { Feed } from './feed';
 import React from 'react';
-import { ErrorMessage, mergeErrors, validateIf, validateNotEmpty, validateNumberGreaterThanOrEqual, validateNumberLessThanOrEqual, validateNumeric } from '../validator/validators';
+import { Validator } from '../validator/Validator';
 
 export interface Config {
     feeds: Feed[];
@@ -98,17 +98,25 @@ export namespace Config {
     };
 }
 
-const keyAndLabel = (k: keyof Config): [keyof Config, string] => {
-    return [k, Config.FIELD_NAMES[k]];
-}
+export const validateConfig = (config: Partial<Config>) => {
+    return Validator.of(config, Config.FIELD_NAMES)
+        .when(config.enableEmailAlerts === true, v => {
+            v.notEmpty('smtpServer');
+            v.notEmpty('smtpUser');
+            v.notEmpty('smtpPassword');
 
-export const validateConfig = (config: Partial<Config>): ErrorMessage[] => {
-    return mergeErrors(
-        ...validateIf(
-            typeof config.smtpPort !== 'undefined',
-            [
-                validateNumeric(config, ...keyAndLabel('smtpPort')),
-            ]
-        ),
-    );
+            v.when(typeof config.smtpPort !== 'undefined', v2 => {
+                v2.numeric('smtpPort')
+            });
+        })
+        .when(config.enableSMSAlerts === true, v => {
+            v.notEmpty('twilioAccountSid');
+            v.notEmpty('twilioAuthToken');
+            v.notEmpty('smsFrom');
+            v.notEmpty('smsTo');
+            v.notEmpty('cloudinaryCloudName');
+            v.notEmpty('cloudinaryApiKey');
+            v.notEmpty('cloudinaryApiSecret');
+        })
+        .getErrors();
 }
