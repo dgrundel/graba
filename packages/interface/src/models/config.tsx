@@ -1,6 +1,6 @@
 import { Feed } from './feed';
 import React from 'react';
-import { Validator } from '../validator/Validator';
+import { ErrorMessage, Validator } from '../validator/Validator';
 
 export interface Config {
     feeds: Feed[];
@@ -98,8 +98,8 @@ export namespace Config {
     };
 }
 
-export const validateConfig = (config: Partial<Config>) => {
-    return Validator.of(config, Config.FIELD_NAMES)
+export const validateConfig = (config: Partial<Config>): ErrorMessage<Config>[] => {
+    return Validator.of(config as Config, Config.FIELD_NAMES)
         .when(config.enableEmailAlerts === true, v => {
             v.notEmpty('smtpServer');
             v.notEmpty('smtpUser');

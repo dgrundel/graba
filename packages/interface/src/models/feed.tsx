@@ -1,6 +1,6 @@
-import { ErrorMessage, mergeErrors, validateIf, validateNotEmpty, validateNumberGreaterThanOrEqual, validateNumberLessThanOrEqual, validateNumeric } from '../validator/validators';
 import { MotionRegion } from './geometry';
 import React from 'react';
+import { ErrorMessage, Validator } from '../validator/Validator';
 
 export interface Feed {
     id: string;
@@ -102,53 +102,36 @@ export namespace Feed {
     };
 }
 
-export const validateFeed = (feed: Partial<Feed>): ErrorMessage[] => {
-    return mergeErrors(
-        validateNotEmpty(feed, 'id'),
-        validateNotEmpty(feed, 'name', 'Feed name'),
-        validateNotEmpty(feed, 'streamUrl', 'Stream URL'),
-        validateNumeric(feed, 'maxFps', 'Max FPS'),
-        validateNumeric(feed, 'scaleFactor', 'Scale factor'),
-        ...validateIf(
-            validateNotEmpty(feed, 'videoQuality', 'Video quality'),
-            [
-                validateNumeric(feed, 'videoQuality', 'Video quality'),
-                validateNumberGreaterThanOrEqual(feed, 'videoQuality', 2, 'Video quality'),
-                validateNumberLessThanOrEqual(feed, 'videoQuality', 31, 'Video quality'),
-            ]
-        ),
-        ...validateIf(
-            feed.saveVideo === true,
-            [
-                validateNotEmpty(feed, 'savePath', 'Storage path'),
-                ...validateIf(
-                    typeof feed.motionEndTimeout !== 'undefined',
-                    [
-                        validateNumeric(feed, 'motionEndTimeout', 'Motion timeout'),
-                        validateNumberGreaterThanOrEqual(feed, 'motionEndTimeout', Feed.MIN_MOTION_END_TIMEOUT, 'Motion timeout'),
-                    ]
-                ),
-            ]
-        ),
-        ...validateIf(
-            feed.detectMotion === true,
-            [
-                ...validateIf(
-                    typeof feed.motionSampleInterval !== 'undefined',
-                    [
-                        validateNumeric(feed, 'motionSampleInterval', 'Motion sampling interval'),
-                        validateNumberGreaterThanOrEqual(feed, 'motionSampleInterval', 1, 'Motion sampling interval'),
-                    ]
-                ),
-                ...validateIf(
-                    typeof feed.motionDiffThreshold !== 'undefined',
-                    [
-                        validateNumeric(feed, 'motionDiffThreshold', 'Motion detection threshold'),
-                        validateNumberLessThanOrEqual(feed, 'motionDiffThreshold', 1, 'Motion detection threshold'),
-                        validateNumberGreaterThanOrEqual(feed, 'motionDiffThreshold', 0, 'Motion detection threshold'),
-                    ]
-                ),
-            ]
-        ),
-    );
+export const validateFeed = (feed: Partial<Feed>): ErrorMessage<Feed>[] => {
+    return Validator.of(feed as Feed, Feed.FIELD_NAMES)
+        .notEmpty('id')
+        .notEmpty('name')
+        .notEmpty('streamUrl')
+        .numeric('maxFps')
+        .numeric('scaleFactor')
+        .when(v => v.notEmpty('videoQuality'), v => {
+            v.numeric('videoQuality');
+            v.greaterThanOrEq('videoQuality', 2);
+            v.lessThanOrEq('videoQuality', 31);
+        })
+        .when(feed.saveVideo, v => {
+            v.notEmpty('savePath');
+            v.when(typeof feed.motionEndTimeout !== 'undefined', v2 => {
+                v2.numeric('motionEndTimeout');
+                v2.greaterThanOrEq('motionEndTimeout', Feed.MIN_MOTION_END_TIMEOUT);
+            });
+        })
+        .when(feed.detectMotion, v => {
+            v.when(typeof feed.motionSampleInterval !== 'undefined', v2 => {
+                v2.numeric('motionSampleInterval');
+                v2.greaterThanOrEq('motionSampleInterval', 1);
+            });
+
+            v.when(typeof feed.motionDiffThreshold !== 'undefined', v2 => {
+                v2.numeric('motionDiffThreshold');
+                v2.lessThanOrEq('motionDiffThreshold', 1);
+                v2.greaterThanOrEq('motionDiffThreshold', 0);
+            });
+        })
+        .getErrors();
 }

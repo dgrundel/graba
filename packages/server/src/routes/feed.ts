@@ -1,5 +1,5 @@
 import express from 'express';
-import { Feed, validateFeed, ErrorMessage, mergeErrors } from 'graba.interface';
+import { Feed, validateFeed, ErrorMessage, Validator } from 'graba.interface';
 import { config } from '../background/config';
 import { getStream, stopStream, updateStream } from '../background/streams';
 import fs from 'fs';
@@ -66,12 +66,12 @@ router.get('/still/:id', (req: any, res: any, next: () => void) => {
     })
 });
 
-const savePathValidator = (feed: Feed): ErrorMessage[] => {
+const savePathValidator = (feed: Feed): ErrorMessage<Feed>[] => {
     if (feed.saveVideo && feed.savePath) {
         try {
             fs.accessSync(feed.savePath, fs.constants.R_OK | fs.constants.W_OK);
         } catch (e) {
-            return [{ field: 'savePath', message: e.message }];
+            return [{ key: 'savePath', message: e.message }];
         }
     }
 
@@ -80,11 +80,12 @@ const savePathValidator = (feed: Feed): ErrorMessage[] => {
 
 router.post('/', (req: any, res: any, next: () => void) => {
     const feed = req.body;
-        
-    const errors = mergeErrors(
-        ...validateFeed(feed),
-        ...savePathValidator(feed)
-    );
+    
+    const errors = Validator.of(feed, Feed.FIELD_NAMES)
+        .withErrors(validateFeed(feed))
+        .withErrors(savePathValidator(feed))
+        .getErrors();
+
     if (errors.length === 0) {
         // add to or update config file
         config.createOrUpdateFeed(feed);
