@@ -44,6 +44,8 @@ const configHelpers = {
     }
 }
 
+export type ConfigType = Config & typeof configHelpers;
+
 /**
  * Configuration backed by JSON store.
  * 
@@ -60,4 +62,4 @@ export const config = new Proxy(configHelpers, {
         store.set(key as keyof Config, value);
         return true;
     },
-}) as Config & typeof configHelpers;
+}) as ConfigType;

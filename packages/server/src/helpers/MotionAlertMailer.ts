@@ -1,28 +1,17 @@
 import { nanoid } from 'nanoid';
-import { createTransport, Transporter } from 'nodemailer';
 import { Feed } from 'graba.interface';
 import { config } from '../background/config';
-import { logger } from './logger';
 import { Frame } from './FFmpegToJpeg';
+import { sendEmail } from './sendEmail';
 
 const MAX_FILE_NAME_LENGTH = 245; // 255 is the usual max, minus some wiggle room
 
-export class AlertMailer {
+export class MotionAlertMailer {
     private readonly feed: Feed;
-    private readonly mailTransport: Transporter<any>;
 
     constructor(feed: Feed) {
         this.feed = feed;
-        this.mailTransport = createTransport({
-            host: config.smtpServer,
-            port: config.smtpPort,
-            secure: config.smtpSecure,
-            auth: {
-                user: config.smtpUser,
-                pass: config.smtpPassword,
-            },
-        });
-
+        
         this.onFrame = this.onFrame.bind(this);
     }
 
@@ -41,16 +30,9 @@ export class AlertMailer {
     }
 
     private async send(image: Buffer) {
-        if (!config.emailTo) {
-            logger.error('Cannot send email because no recipient defined.');
-            return;
-        }
-        
         const cid = nanoid();
 
-        const info = await this.mailTransport.sendMail({
-            from: config.emailFrom,
-            to: config.emailTo,
+        const mailOptions = {
             subject: `Motion Alert: ${this.feed.name}`,
             text: `
 ## Motion Alert
@@ -63,7 +45,7 @@ Motion on feed "${this.feed.name}". See attached image.
 
 <hr>
 
-<img src="cid:${cid}"/>
+<img src="cid:${cid}" style="max-width: 100%"/>
 `,
             attachments: [{
                 cid,
@@ -71,9 +53,9 @@ Motion on feed "${this.feed.name}". See attached image.
                 contentType: 'image/jpeg',
                 content: image,
             }]
-        });
-
-        logger.info("Email sent", info);
+        };
+        
+        sendEmail(mailOptions);
     }
 
     private generateFileName = () => {

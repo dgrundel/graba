@@ -2,8 +2,8 @@ import { Feed } from 'graba.interface';
 import { MotionDetector } from '../helpers/MotionDetector';
 import { VideoRecorder } from '../helpers/VideoRecorder';
 import { FFmpegToJpeg, Frame } from '../helpers/FFmpegToJpeg';
-import { AlertMailer } from '../helpers/AlertMailer';
-import { AlertSMS } from '../helpers/AlertSMS';
+import { MotionAlertMailer } from '../helpers/MotionAlertMailer';
+import { MotionAlertSMS } from '../helpers/MotionAlertSMS';
 import { EventEmitter } from 'stream';
 import { config } from './config';
 
@@ -18,8 +18,8 @@ export class RtspStream {
     private readonly ffmpegToJpeg: FFmpegToJpeg;
     private readonly motionDetector: MotionDetector;
     private readonly videoRecorder?: VideoRecorder;
-    private readonly mailer?: AlertMailer;
-    private readonly sms?: AlertSMS;
+    private readonly mailer?: MotionAlertMailer;
+    private readonly sms?: MotionAlertSMS;
 
     constructor(feed: Feed) {
         const ffmpegToJpegOptions = {
@@ -37,12 +37,12 @@ export class RtspStream {
         }
 
         if (feed.alertOnMotion && config.enableEmailAlerts) {
-            this.mailer = new AlertMailer(feed);
+            this.mailer = new MotionAlertMailer(feed);
             this.onFrame(this.mailer.onFrame);
         }
 
         if (feed.alertOnMotion && config.enableSMSAlerts) {
-            this.sms = new AlertSMS(feed);
+            this.sms = new MotionAlertSMS(feed);
             this.onFrame(this.sms.onFrame);
         }
     }
