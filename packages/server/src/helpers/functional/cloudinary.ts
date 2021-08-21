@@ -1,5 +1,5 @@
 import cloudinary from 'cloudinary';
-import { config } from '../background/config';
+import { config } from '../../background/config';
 import { logger } from './logger';
 
 const preconfigure = () => {

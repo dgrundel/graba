@@ -1,6 +1,6 @@
-import { config } from '../background/config';
+import { config } from '../../background/config';
 import { logger } from './logger';
-import { CachingFactory } from './CachingFactory';
+import { CachingFactory } from '../CachingFactory';
 import twilio from 'twilio';
 import { uploadImage } from './cloudinary';
 

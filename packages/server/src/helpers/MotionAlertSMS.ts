@@ -1,7 +1,7 @@
 import { Feed } from 'graba.interface';
 import { Frame } from './FFmpegToJpeg';
 import { config } from '../background/config';
-import { sendSms } from './sendSms';
+import { sendSms } from './functional/sendSms';
 
 export class MotionAlertSMS {
     private readonly feed: Feed;

@@ -1,12 +1,12 @@
 import { Feed, VideoRecord } from 'graba.interface';
 import fs from 'fs';
 import { createVideoRecord, updateRecord } from '../background/VideoStorage';
-import { onExit } from './util';
+import { onExit } from './functional/util';
 import { ChildProcess, spawn } from 'child_process';
 import path from 'path';
 import { Frame } from './FFmpegToJpeg';
 import { Chain } from './Chain';
-import { logger } from './logger';
+import { logger } from './functional/logger';
 
 export class VideoRecording {
     private readonly feed: Feed;

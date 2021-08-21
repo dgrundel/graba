@@ -2,7 +2,7 @@ import { nanoid } from 'nanoid';
 import { Feed } from 'graba.interface';
 import { config } from '../background/config';
 import { Frame } from './FFmpegToJpeg';
-import { sendEmail } from './sendEmail';
+import { sendEmail } from './functional/sendEmail';
 
 const MAX_FILE_NAME_LENGTH = 245; // 255 is the usual max, minus some wiggle room
 

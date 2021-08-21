@@ -1,7 +1,7 @@
 import { Chain } from './Chain';
 import { ChildProcess, spawn } from 'child_process';
 import { EventEmitter } from 'stream';
-import { logger } from './logger';
+import { logger } from './functional/logger';
 
 type FFmpegArgs = string[];
 type FFmpegArgGenerator = () => string[];

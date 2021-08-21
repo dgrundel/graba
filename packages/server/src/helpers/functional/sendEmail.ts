@@ -1,7 +1,7 @@
 import { createTransport } from 'nodemailer';
-import { config } from '../background/config';
+import { config } from '../../background/config';
 import { logger } from './logger';
-import { CachingFactory } from './CachingFactory';
+import { CachingFactory } from '../CachingFactory';
 import Mail from 'nodemailer/lib/mailer';
 
 /**

@@ -1,9 +1,9 @@
 import { Feed } from 'graba.interface';
 import sharp from 'sharp';
-import { frameDiff } from './frameDiff';
+import { frameDiff } from './functional/frameDiff';
 import { Frame } from './FFmpegToJpeg';
 import { LimitCounter } from './LimitCounter';
-import { logger } from './logger';
+import { logger } from './functional/logger';
 
 const DEFAULT_SAMPLE_INTERVAL = 1;
 

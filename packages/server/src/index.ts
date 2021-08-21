@@ -4,7 +4,7 @@ import cookieParser from 'cookie-parser';
 import { text, json } from 'body-parser';
 import morgan from 'morgan';
 import cors from 'cors';
-import { logger } from './helpers/logger';
+import { logger } from './helpers/functional/logger';
 import { start as startFeeds } from './background/streams';
 import { router as indexRouter } from './routes/index';
 import { router as dashboardRouter } from './routes/dashboard';
