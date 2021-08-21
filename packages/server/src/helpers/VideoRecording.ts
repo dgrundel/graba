@@ -90,7 +90,10 @@ export class VideoRecording {
                 byteLength: stats.size,
             });
         } catch (e) {
-            logger.error('Error caught attempting to update video record', this.record, e);
+            logger.error('Error caught attempting to update video record', {
+                record: this.record,
+                error: e
+            });
         }
     }
     
