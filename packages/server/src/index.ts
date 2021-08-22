@@ -6,6 +6,7 @@ import morgan from 'morgan';
 import cors from 'cors';
 import { logger } from './helpers/functional/logger';
 import { start as startFeeds } from './background/streams';
+import { start as startStats } from './background/stats';
 import { router as indexRouter } from './routes/index';
 import { router as dashboardRouter } from './routes/dashboard';
 import { router as configRouter } from './routes/config';
@@ -16,6 +17,7 @@ import { router as playbackRouter } from './routes/playback';
  * Start background process(es)
  */
 startFeeds();
+startStats();
 
 /**
  * Set up express
