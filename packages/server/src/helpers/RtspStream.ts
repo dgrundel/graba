@@ -1,11 +1,9 @@
 import { Feed } from 'graba.interface';
-import { MotionDetector } from '../helpers/MotionDetector';
-import { VideoRecorder } from '../helpers/VideoRecorder';
-import { FFmpegToJpeg, Frame } from '../helpers/FFmpegToJpeg';
-import { MotionAlert } from '../helpers/MotionAlert';
+import { MotionDetector } from './MotionDetector';
+import { VideoRecorder } from './VideoRecorder';
+import { FFmpegToJpeg, Frame } from './FFmpegToJpeg';
+import { MotionAlert } from './MotionAlert';
 import { EventEmitter } from 'stream';
-
-type FFmpegArgs = string[];
 
 enum Events {
     End = 'RtspStream:end'
@@ -39,7 +37,7 @@ export class RtspStream {
         }
     }
 
-    buildFFmpegArgs(feed: Feed): FFmpegArgs {
+    buildFFmpegArgs(feed: Feed): string[] {
         const filters: string[] = [];
     
         // scale video

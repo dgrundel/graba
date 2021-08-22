@@ -1,6 +1,6 @@
 import { Feed, VideoRecord } from 'graba.interface';
 import fs from 'fs';
-import { createVideoRecord, updateRecord } from '../background/VideoStorage';
+import { createVideoRecord, updateRecord } from '../background/videoStorage';
 import { onExit } from './functional/util';
 import { ChildProcess, spawn } from 'child_process';
 import path from 'path';

@@ -1,6 +1,6 @@
 import { Feed } from 'graba.interface';
 import { config } from './config';
-import { RtspStream } from './RtspStream';
+import { RtspStream } from '../helpers/RtspStream';
 
 const streams: Record<string, RtspStream> = {};
 
