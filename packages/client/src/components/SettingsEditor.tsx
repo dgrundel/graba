@@ -1,5 +1,5 @@
 import React from 'react';
-import { Text, Stack, TextField, Toggle, Separator, MessageBar, MessageBarType, PrimaryButton, Spinner as FluentSpinner } from '@fluentui/react';
+import { Text, Stack, TextField, Toggle, Separator, MessageBar, MessageBarType, PrimaryButton, Spinner as FluentSpinner, Slider } from '@fluentui/react';
 import { Config } from 'graba.interface';
 import { Spinner } from './Spinner';
 import { theme } from '../theme';
@@ -286,6 +286,34 @@ export class SettingsEditor extends React.Component<{}, State> {
             </Grid>
         </>;
     }
+    
+    renderDiskSpaceAlertConfig() {
+        return <>
+            <Text block variant="xLarge">Disk Space Alerts</Text>
+
+            <Toggle 
+                label={Config.FIELD_NAMES.enableDiskSpaceAlerts} 
+                inlineLabel
+                checked={this.state.config.enableDiskSpaceAlerts === true}
+                onChange={(e, enableDiskSpaceAlerts) => this.setConfigData({ enableDiskSpaceAlerts })}
+                disabled={this.state.saving}
+            />
+            <Note field="enableDiskSpaceAlerts" />
+            
+            <Slider
+                label={Config.FIELD_NAMES.diskSpaceAlertThreshold}
+                disabled={this.state.config.enableDiskSpaceAlerts !== true}
+                min={0.0}
+                step={0.01}
+                max={1.0}
+                value={this.state.config.diskSpaceAlertThreshold || 1}
+                showValue
+                onChange={(diskSpaceAlertThreshold) => { this.setConfigData({ diskSpaceAlertThreshold }) }}
+                valueFormat={(n) => (n * 100).toFixed(0) + '%'}
+            />
+            <Note field={'diskSpaceAlertThreshold'}/>
+        </>;
+    }
 
     renderSaveButton() {
         return <Stack horizontal>
@@ -311,6 +339,10 @@ export class SettingsEditor extends React.Component<{}, State> {
                 <Separator styles={separatorStyles} />
 
                 {this.renderSMSAlertConfig()}
+
+                <Separator styles={separatorStyles} />
+
+                {this.renderDiskSpaceAlertConfig()}
 
                 <Separator styles={separatorStyles} />
 

@@ -5,9 +5,15 @@ import { ErrorMessage, Validator } from '../validator/Validator';
 export interface Config {
     feeds: Feed[];
 
-    // alert toggles
+    // alert method toggles
     enableEmailAlerts?: boolean;
     enableSMSAlerts?: boolean;
+
+    // alert type toggles
+    enableDiskSpaceAlerts?: boolean;
+
+    // alert params
+    diskSpaceAlertThreshold?: number;
 
     // outgoing mail server
     smtpServer?: string;
@@ -39,6 +45,8 @@ export namespace Config {
         feeds: 'Feeds',
         enableEmailAlerts: 'Enable email alerts',
         enableSMSAlerts: 'Enable SMS/MMS alerts',
+        enableDiskSpaceAlerts: 'Enable disk space alerts',
+        diskSpaceAlertThreshold: 'Disk space alert threshold',
         smtpServer: 'SMTP server',
         smtpPort: 'SMTP port',
         smtpSecure: 'Use SSL for SMTP',
@@ -59,6 +67,10 @@ export namespace Config {
         feeds: undefined,
         enableEmailAlerts: undefined,
         enableSMSAlerts: undefined,
+        enableDiskSpaceAlerts: undefined,
+        diskSpaceAlertThreshold: <>
+            Alert when disk usage exceeds this percentage.
+        </>,
         smtpServer: undefined,
         smtpPort: <>
             Port used by your SMTP server.
@@ -117,6 +129,11 @@ export const validateConfig = (config: Partial<Config>): ErrorMessage<Config>[] 
             v.notEmpty('cloudinaryCloudName');
             v.notEmpty('cloudinaryApiKey');
             v.notEmpty('cloudinaryApiSecret');
+        })
+        .when(config.enableDiskSpaceAlerts === true, v => {
+            v.numeric('diskSpaceAlertThreshold');
+            v.greaterThanOrEq('diskSpaceAlertThreshold', 0);
+            v.lessThanOrEq('diskSpaceAlertThreshold', 1);
         })
         .getErrors();
 }
