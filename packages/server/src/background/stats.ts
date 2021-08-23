@@ -3,8 +3,9 @@ import si from 'systeminformation';
 import { SystemStats } from 'graba.interface';
 import { Chain } from '../helpers/Chain';
 import { EventEmitter } from 'stream';
+import { SystemStatAlert } from '../helpers/SystemStatAlert';
 
-const STAT_UPDATE_INTERVAL_MS = 1000 * 60 * 15;
+const STAT_UPDATE_INTERVAL_MS = 1000 * 60 * 10;
 
 enum Events {
     Updated = 'SystemStats:updated'
@@ -98,4 +99,7 @@ export const onStatUpdate = (handler: (stats: SystemStats, prev?: SystemStats) =
 export const start = () => {
     // automatically update current stats at regular interval
     setInterval(updateStats, STAT_UPDATE_INTERVAL_MS);
+
+    const alerts = new SystemStatAlert();
+    onStatUpdate(alerts.onStatUpdate);
 };
