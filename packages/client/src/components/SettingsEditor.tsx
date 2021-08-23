@@ -32,6 +32,17 @@ const Note = (props: { field: keyof Config; }) => {
     return null;
 };
 
+interface SectionProps { 
+    title?: string;
+    children?: React.ReactNode | React.ReactNode[];
+};
+const Section = (props: SectionProps) => {
+    return <Stack tokens={{ padding: 'm' }} style={{ backgroundColor: theme.palette.neutralLighter }}>
+        {props.title ? <Text block variant="large" style={{ marginBottom: theme.spacing.m }}>{props.title}</Text> : undefined}
+        {props.children}
+    </Stack>;
+};
+
 export class SettingsEditor extends React.Component<{}, State> {
     private readonly loader: Promise<Config>;
 
@@ -98,9 +109,7 @@ export class SettingsEditor extends React.Component<{}, State> {
             />
             <Note field="enableEmailAlerts" />
             
-            <Text block variant="large">Outgoing Mail (SMTP) Server</Text>
-
-            <Stack tokens={{ childrenGap: 's2', }}>
+            <Section title="Outgoing Mail (SMTP) Server">
                 <Grid columns="3fr 1fr">
                     <div>
                         <TextField
@@ -161,30 +170,30 @@ export class SettingsEditor extends React.Component<{}, State> {
                         <Note field="smtpPassword" />
                     </div>
                 </Grid>
-            </Stack>
+            </Section>
 
-            <Text block variant="large">Email Addresses</Text>
-
-            <Grid columns={2}>
-                <div>
-                    <TextField
-                        label={Config.FIELD_NAMES.emailTo}
-                        value={this.state.config.emailTo}
-                        onChange={(e, emailTo) => { this.setConfigData({ emailTo }) }}
-                        disabled={this.state.saving}
-                    />
-                    <Note field="emailTo" />
-                </div>
-                <div>
-                    <TextField
-                        label={Config.FIELD_NAMES.emailFrom}
-                        value={this.state.config.emailFrom}
-                        onChange={(e, emailFrom) => { this.setConfigData({ emailFrom }) }}
-                        disabled={this.state.saving}
-                    />
-                    <Note field="emailFrom" />
-                </div>
-            </Grid>
+            <Section title="Email Addresses">
+                <Grid columns={2}>
+                    <div>
+                        <TextField
+                            label={Config.FIELD_NAMES.emailTo}
+                            value={this.state.config.emailTo}
+                            onChange={(e, emailTo) => { this.setConfigData({ emailTo }) }}
+                            disabled={this.state.saving}
+                        />
+                        <Note field="emailTo" />
+                    </div>
+                    <div>
+                        <TextField
+                            label={Config.FIELD_NAMES.emailFrom}
+                            value={this.state.config.emailFrom}
+                            onChange={(e, emailFrom) => { this.setConfigData({ emailFrom }) }}
+                            disabled={this.state.saving}
+                        />
+                        <Note field="emailFrom" />
+                    </div>
+                </Grid>
+            </Section>
         </>;
     }
 
@@ -201,89 +210,89 @@ export class SettingsEditor extends React.Component<{}, State> {
             />
             <Note field="enableSMSAlerts" />
             
-            <Text block variant="large">Phone Numbers</Text>
+            <Section title="Phone Numbers">
+                <Grid columns={2}>
+                    <div>
+                        <TextField
+                            label={Config.FIELD_NAMES.smsTo}
+                            value={this.state.config.smsTo}
+                            onChange={(e, smsTo) => { this.setConfigData({ smsTo }) }}
+                            disabled={this.state.saving}
+                        />
+                        <Note field="smsTo" />
+                    </div>
+                    <div>
+                        <TextField
+                            label={Config.FIELD_NAMES.smsFrom}
+                            value={this.state.config.smsFrom}
+                            onChange={(e, smsFrom) => { this.setConfigData({ smsFrom }) }}
+                            disabled={this.state.saving}
+                        />
+                        <Note field="smsFrom" />
+                    </div>
+                </Grid>
+            </Section>
 
-            <Grid columns={2}>
-                <div>
-                    <TextField
-                        label={Config.FIELD_NAMES.smsTo}
-                        value={this.state.config.smsTo}
-                        onChange={(e, smsTo) => { this.setConfigData({ smsTo }) }}
-                        disabled={this.state.saving}
-                    />
-                    <Note field="smsTo" />
-                </div>
-                <div>
-                    <TextField
-                        label={Config.FIELD_NAMES.smsFrom}
-                        value={this.state.config.smsFrom}
-                        onChange={(e, smsFrom) => { this.setConfigData({ smsFrom }) }}
-                        disabled={this.state.saving}
-                    />
-                    <Note field="smsFrom" />
-                </div>
-            </Grid>
+            <Section title="Twilio Settings">
+                <Grid columns={2}>
+                    <div>
+                        <TextField
+                            label={Config.FIELD_NAMES.twilioAccountSid}
+                            value={this.state.config.twilioAccountSid}
+                            onChange={(e, twilioAccountSid) => { this.setConfigData({ twilioAccountSid }) }}
+                            disabled={this.state.saving}
+                        />
+                        <Note field="twilioAccountSid" />
+                    </div>
+                    <div>
+                        <TextField
+                            type="password"
+                            canRevealPassword
+                            revealPasswordAriaLabel={`Show ${Config.FIELD_NAMES.twilioAuthToken}`}
+                            label={Config.FIELD_NAMES.twilioAuthToken}
+                            value={this.state.config.twilioAuthToken}
+                            onChange={(e, twilioAuthToken) => { this.setConfigData({ twilioAuthToken }) }}
+                            disabled={this.state.saving}
+                        />
+                        <Note field="twilioAuthToken" />
+                    </div>
+                </Grid>
+            </Section>
 
-            <Text block variant="large">Twilio Settings</Text>
-            
-            <Grid columns={2}>
-                <div>
-                    <TextField
-                        label={Config.FIELD_NAMES.twilioAccountSid}
-                        value={this.state.config.twilioAccountSid}
-                        onChange={(e, twilioAccountSid) => { this.setConfigData({ twilioAccountSid }) }}
-                        disabled={this.state.saving}
-                    />
-                    <Note field="twilioAccountSid" />
-                </div>
-                <div>
-                    <TextField
-                        type="password"
-                        canRevealPassword
-                        revealPasswordAriaLabel={`Show ${Config.FIELD_NAMES.twilioAuthToken}`}
-                        label={Config.FIELD_NAMES.twilioAuthToken}
-                        value={this.state.config.twilioAuthToken}
-                        onChange={(e, twilioAuthToken) => { this.setConfigData({ twilioAuthToken }) }}
-                        disabled={this.state.saving}
-                    />
-                    <Note field="twilioAuthToken" />
-                </div>
-            </Grid>
-
-            <Text block variant="large">Cloudinary Settings</Text>
-            
-            <Grid columns={3}>
-                <div>
-                    <TextField
-                        label={Config.FIELD_NAMES.cloudinaryCloudName}
-                        value={this.state.config.cloudinaryCloudName}
-                        onChange={(e, cloudinaryCloudName) => { this.setConfigData({ cloudinaryCloudName }) }}
-                        disabled={this.state.saving}
-                    />
-                    <Note field="cloudinaryCloudName" />
-                </div>
-                <div>
-                    <TextField
-                        label={Config.FIELD_NAMES.cloudinaryApiKey}
-                        value={this.state.config.cloudinaryApiKey}
-                        onChange={(e, cloudinaryApiKey) => { this.setConfigData({ cloudinaryApiKey }) }}
-                        disabled={this.state.saving}
-                    />
-                    <Note field="cloudinaryApiKey" />
-                </div>
-                <div>
-                    <TextField
-                        type="password"
-                        canRevealPassword
-                        revealPasswordAriaLabel={`Show ${Config.FIELD_NAMES.cloudinaryApiSecret}`}
-                        label={Config.FIELD_NAMES.cloudinaryApiSecret}
-                        value={this.state.config.cloudinaryApiSecret}
-                        onChange={(e, cloudinaryApiSecret) => { this.setConfigData({ cloudinaryApiSecret }) }}
-                        disabled={this.state.saving}
-                    />
-                    <Note field="cloudinaryApiSecret" />
-                </div>
-            </Grid>
+            <Section title="Cloudinary Settings">
+                <Grid columns={3}>
+                    <div>
+                        <TextField
+                            label={Config.FIELD_NAMES.cloudinaryCloudName}
+                            value={this.state.config.cloudinaryCloudName}
+                            onChange={(e, cloudinaryCloudName) => { this.setConfigData({ cloudinaryCloudName }) }}
+                            disabled={this.state.saving}
+                        />
+                        <Note field="cloudinaryCloudName" />
+                    </div>
+                    <div>
+                        <TextField
+                            label={Config.FIELD_NAMES.cloudinaryApiKey}
+                            value={this.state.config.cloudinaryApiKey}
+                            onChange={(e, cloudinaryApiKey) => { this.setConfigData({ cloudinaryApiKey }) }}
+                            disabled={this.state.saving}
+                        />
+                        <Note field="cloudinaryApiKey" />
+                    </div>
+                    <div>
+                        <TextField
+                            type="password"
+                            canRevealPassword
+                            revealPasswordAriaLabel={`Show ${Config.FIELD_NAMES.cloudinaryApiSecret}`}
+                            label={Config.FIELD_NAMES.cloudinaryApiSecret}
+                            value={this.state.config.cloudinaryApiSecret}
+                            onChange={(e, cloudinaryApiSecret) => { this.setConfigData({ cloudinaryApiSecret }) }}
+                            disabled={this.state.saving}
+                        />
+                        <Note field="cloudinaryApiSecret" />
+                    </div>
+                </Grid>
+            </Section>
         </>;
     }
     
